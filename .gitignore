@@ -1,0 +1,8 @@
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+ecotrace_log.csv
+*.pdf
+.env
