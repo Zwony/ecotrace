@@ -1,15 +1,19 @@
 Metadata-Version: 2.4
 Name: ecotrace
-Version: 0.2.2
+Version: 0.2.3
 Summary:  A lightweight Python library to measure the carbon footprint of your code
 Author-email: Emre Ozkal <emreozkal03@gmail.com>
+Project-URL: Homepage, https://github.com/Zwony/ecotrace
+Project-URL: Repository, https://github.com/Zwony/ecotrace
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: psutil
 Requires-Dist: py-cpuinfo
 Requires-Dist: fpdf2
 Requires-Dist: nvidia-ml-py
 Requires-Dist: wmi; sys_platform == "win32"
+Dynamic: license-file
 
 # 🌱 EcoTrace
 
