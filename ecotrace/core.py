@@ -136,7 +136,6 @@ class EcoTrace:
         except Exception as e:
             print(f"\n[EcoTrace] PDF Error: {e}")
 
-    # --- DIGER METODLAR (AYNEN KORUNDU) ---
     def _load_tdp_database(self):
         tdp_dict = {}
         if not os.path.exists(self.csv_path): return tdp_dict
@@ -166,18 +165,17 @@ class EcoTrace:
         brand = info.get("brand_raw", "Unknown CPU")
         clean_brand = brand.lower()
         clean_brand = clean_brand.replace("(r)", "").replace("(tm)", "")
-        # "13th gen", "12th gen" gibi nesil öneklerini temizle
         import re
         clean_brand = re.sub(r'\d+th\s+gen', '', clean_brand)
-        clean_brand = " ".join(clean_brand.split())  # çift boşlukları temizle
+        clean_brand = " ".join(clean_brand.split())
 
         found_tdp = 65.0
 
-        # 1. Tam eşleşme — en güvenilir
+        # 1. Exact match
         if clean_brand in self.tdp_db:
             found_tdp = self.tdp_db[clean_brand]
         else:
-            # 2. Kısmi eşleşme — fallback
+            # 2. Partial match — fallback
             for model_name, tdp in self.tdp_db.items():
                 if model_name == clean_brand:
                     found_tdp = tdp
@@ -189,7 +187,7 @@ class EcoTrace:
         return {"brand": brand, "cores": psutil.cpu_count(logical=False), "tdp": found_tdp}
     
     def _get_gpu_info(self):
-        # 1. NVIDIA — pynvml ile
+        # 1. NVIDIA
         try:
             import nvidia_ml_py as pynvml
             pynvml.nvmlInit()
@@ -200,7 +198,7 @@ class EcoTrace:
         except Exception:
             pass
 
-        # 2. AMD / Intel — wmi ile (Windows)
+        # 2. AMD / Intel — via WMI (Windows only)
         try:
             import wmi
             w = wmi.WMI()
