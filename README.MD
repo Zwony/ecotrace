@@ -176,6 +176,17 @@ Pull requests and issues are welcome!
 
 ---
 
+## 💬 Community & Support
+
+Join the EcoTrace community to contribute, ask questions, and connect with other developers.
+
+[![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Discord&logo=discord&style=for-the-badge)](https://discord.gg/hs58XXb3Uq)
+
+- 🐛 Report bugs
+- 💡 Suggest new features
+- 💻 Share your hardware TDP data to grow the database
+- 🛠️ Get installation and usage support
+
 ## 👤 Author
 
 **Emre Özkal** — [emreozkal03@gmail.com](mailto:emreozkal03@gmail.com)
