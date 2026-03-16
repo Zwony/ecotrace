@@ -1,0 +1,7 @@
+psutil
+py-cpuinfo
+fpdf2
+nvidia-ml-py
+
+[:sys_platform == "win32"]
+wmi

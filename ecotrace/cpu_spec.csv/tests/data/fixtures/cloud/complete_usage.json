@@ -1,0 +1,7 @@
+{
+   "usage": {
+    "instance_per_server": 4,
+    "hours_use_time": 2,
+    "hour_electrical_consumption": 200
+  }
+}

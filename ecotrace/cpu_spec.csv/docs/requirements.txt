@@ -1,0 +1,5 @@
+markdown==3.10.2
+mkdocs-material==9.7.4
+mkdocs
+mkdocs-render-swagger-plugin
+mkdocs-macros-plugin

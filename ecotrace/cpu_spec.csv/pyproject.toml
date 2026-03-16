@@ -1,0 +1,71 @@
+[tool.poetry]
+name = "boaviztapi"
+version = "2.0.4"
+description = "An API to access Boavizta's methodologies and footprint reference data"
+authors = []
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.12.5"
+pydantic-settings = "^2.0"
+fastapi = "^0.128.0"
+uvicorn = "^0.40"
+pandas = "^2.3.3"
+aiofile = "^3.9.0"
+numpy = "^2.4.1"
+scipy = "^1.17.0"
+rapidfuzz = "^3.14.3"
+markdown = "^3.10"
+mangum = "^0.20.0"
+importlib-metadata = "^8.7.1"
+pyyaml = "^6.0.3"
+toml = "^0.10.2"
+
+# Security updates
+aiohttp = "^3.13.3"
+urllib3 = "^2.6.3"
+
+[tool.poetry.group.dev]
+optional = true
+include-groups = ["csv"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.2"
+pytest-asyncio = "^1.3.0"
+atomicwrites = "^1.4.1"
+httpx = "^0.28.1"
+requests = "^2.32.3"
+pre-commit = "^4.2.0"
+ruff = "^0.14.14"
+
+[tool.poetry.group.csv]
+optional = true
+
+[tool.poetry.group.csv.dependencies]
+chkcsv = "^1.2.0"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.3"
+mkdocs-material = "^9.4.4"
+mkdocs-render-swagger-plugin = "^0.1.0"
+mkdocs-macros-plugin = "^1.0.4"
+linkcheckmd = "^1.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+force-exclude = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true

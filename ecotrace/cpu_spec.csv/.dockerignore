@@ -1,0 +1,10 @@
+# Exclude everything
+*
+
+# Include files needed for build and release
+!pyproject.toml
+!poetry.lock
+!README.md
+
+# Include code
+!boaviztapi/

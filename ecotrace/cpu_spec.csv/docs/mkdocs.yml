@@ -1,0 +1,96 @@
+site_name: Boavizta API documentation
+dev_addr: '0.0.0.0:8080'
+plugins:
+    - render_swagger
+    - search
+    - macros
+
+markdown_extensions:
+    - attr_list
+    - md_in_html
+    - pymdownx.arithmatex:
+        generic: true
+    - pymdownx.highlight:
+        anchor_linenums: true
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
+    - admonition
+    - pymdownx.details
+    - footnotes
+
+nav:
+    - Introduction: index.md
+    - Q&A : q&a.md
+    - Getting started:
+        - Datavizta: https://datavizta.boavizta.org/" target="_blank
+        - Try the API (OpenAPI): !ENV [API_URL, https://api.boavizta.org/docs" target="_blank]
+        - Get the impacts of a cpu: getting_started/cpu_component.md
+        - Get the impacts of a server: getting_started/single_server.md
+        - Get the impacts of a cloud instance (AWS): getting_started/single_cloud_instance.md
+        - Get started with consumption profiles : getting_started/consumption_profile.md
+        - Get started with terminal and peripherals: getting_started/end_user_devices.md
+    - Explanations:
+        - Boavizta database: Explanations/boavizta_db.md
+        - Impacts criteria : Explanations/impacts.md
+        - Embedded impacts: Explanations/embedded_methodology.md
+        - Usage impacts :
+              - Methodology: Explanations/usage/usage.md
+              - Duration : Explanations/usage/duration.md
+              - Electrical impacts factors : Explanations/usage/elec_factors.md
+              - Power: Explanations/usage/power.md
+              - Countries: Explanations/usage/countries.md
+        - Consumption profiles : Explanations/consumption_profile.md
+        - Auto-complete: Explanations/auto_complete.md
+        - Archetypes: Explanations/archetypes.md
+        - Verbose: Explanations/verbose.md
+        - Error margin: Explanations/error_margin.md
+        - Components:
+              - Components: Explanations/components/component.md
+              - CPU: Explanations/components/cpu.md
+              - RAM: Explanations/components/ram.md
+              - SSD: Explanations/components/ssd.md
+              - HDD: Explanations/components/hdd.md
+              - Motherboard: Explanations/components/motherboard.md
+              - Power supply: Explanations/components/power_supply.md
+              - Assembly: Explanations/components/assembly.md
+              - Case: Explanations/components/case.md
+              - Functional block (IoT): Explanations/components/functional_blocks.md
+        - Devices:
+              - Devices: Explanations/devices/devices.md
+              - Server: Explanations/devices/server.md
+              - End user devices : Explanations/devices/terminals_&_peripherals.md
+              - IoT device : Explanations/devices/iot_devices.md
+        - Services:
+            - Services: Explanations/services/services.md
+            - Cloud instances: Explanations/services/cloud.md
+
+        - Useful resources: Explanations/useful_resources.md
+    - Reference:
+        - Routes: Reference/routes.md
+        - Format:
+          - Return format: Reference/format/return_format.md
+          - Usage: Reference/format/usage.md
+          - Server: Reference/format/server_route.md
+          - Cloud: Reference/format/cloud_route.md
+          - Components: Reference/format/component_route.md
+          - End user devices: Reference/format/end_user_devices_route.md
+          - IoT devices: Reference/format/iot_device_route.md
+    - Deploy: deploy.md
+    - Configuration: config.md
+    - Release notes: https://github.com/Boavizta/boaviztapi/releases" target="_blank
+    - Contributing:
+        - 'Add a cloud provider': contributing/cloud_provider.md
+        - 'Add a cloud instance': contributing/cloud_instance.md
+        - 'Add a server': contributing/server.md
+        - 'Add a CPU' : contributing/cpu.md
+
+theme: material
+
+extra_javascript:
+    - javascripts/mathjax.js
+    - https://polyfill.io/v3/polyfill.min.js?features=es6
+    - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra:
+  endpoint: !ENV [API_URL, https://api.boavizta.org]

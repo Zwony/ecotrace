@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecotrace"
+version = "0.2.2"
+description = " A lightweight Python library to measure the carbon footprint of your code"
+readme = "README.md"
+requires-python = ">=3.7"
+# İsim ve e-posta kısmını buraya böyle ekleyebilirsin:
+authors = [
+  { name="Emre Ozkal", email="emreozkal03@gmail.com" }
+]
+dependencies = [
+    "psutil",
+    "py-cpuinfo",
+    "fpdf2",
+    "nvidia-ml-py",
+    "wmi; sys_platform == 'win32'"
+]
+
+[tool.setuptools]
+packages = ["ecotrace"]
+
+[tool.setuptools.package-data]
+ecotrace = ["*.json"]

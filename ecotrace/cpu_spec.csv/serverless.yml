@@ -1,0 +1,31 @@
+service: boavizta-api
+
+provider:
+  name: aws
+  region: eu-west-1
+  stage: ${opt:stage, "dev"}
+  ecr:
+    images:
+      boavizta-api:
+        path: ./
+        file: Dockerfile
+        buildOptions:
+          - "--provenance=false"
+          - "--target=lambda-env"
+          - "--platform=linux/amd64"
+
+functions:
+  app:
+    image:
+      name: boavizta-api
+    environment:
+      STAGE: ${self:provider.stage}
+    timeout: 30
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /
+      - httpApi:
+          method: "*"
+          path: /{proxy+}

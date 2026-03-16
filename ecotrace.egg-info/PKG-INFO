@@ -1,0 +1,200 @@
+Metadata-Version: 2.4
+Name: ecotrace
+Version: 0.2.2
+Summary:  A lightweight Python library to measure the carbon footprint of your code
+Author-email: Emre Ozkal <emreozkal03@gmail.com>
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+Requires-Dist: psutil
+Requires-Dist: py-cpuinfo
+Requires-Dist: fpdf2
+Requires-Dist: nvidia-ml-py
+Requires-Dist: wmi; sys_platform == "win32"
+
+# 🌱 EcoTrace
+
+> **Measure your code's carbon footprint. Write cleaner code. Protect the planet.**
+
+EcoTrace is a lightweight yet powerful Python library that analyzes the CPU and GPU load of your functions and calculates how much CO₂ they emit.
+
+[![PyPI version](https://badge.fury.io/py/ecotrace.svg)](https://badge.fury.io/py/ecotrace)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## 🚀 Installation
+
+```bash
+pip install ecotrace
+```
+
+---
+
+## ⚡ Quick Start
+
+```python
+from ecotrace import EcoTrace
+
+eco = EcoTrace(region_code="US")
+
+@eco.track
+def process_data():
+    return sum(i * i for i in range(10**6))
+
+process_data()
+# [EcoTrace] Function   : process_data
+# [EcoTrace] Duration   : 0.0452 sec
+# [EcoTrace] Avg CPU    : 23.4%
+# [EcoTrace] CO2 Emitted: 0.00001823 gCO2
+```
+
+---
+
+## 🧩 Features
+
+### ✅ CPU Tracking — `@eco.track`
+
+Track any function with a single decorator:
+
+```python
+@eco.track
+def train_model():
+    # model training...
+    pass
+```
+
+Async functions are supported out of the box:
+
+```python
+@eco.track
+async def fetch_data():
+    await asyncio.sleep(1)
+    # API call...
+```
+
+### ✅ GPU Tracking — `@eco.track_gpu`
+
+Supports NVIDIA, AMD, and Intel GPUs. Select a specific GPU with `gpu_index`:
+
+```python
+# Default — first GPU
+eco = EcoTrace(region_code="US")
+
+# Select a specific GPU
+eco = EcoTrace(region_code="US", gpu_index=1)
+
+@eco.track_gpu
+def gpu_compute():
+    # GPU-intensive work...
+    pass
+```
+
+### ✅ Comparison Analysis — `eco.compare()`
+
+Compare two implementations and find out which one emits less carbon:
+
+```python
+def version_v1():
+    return sorted(data)
+
+def version_v2():
+    data.sort()
+
+result = eco.compare(version_v1, version_v2)
+```
+
+### ✅ PDF Report — `eco.generate_pdf_report()`
+
+Export all measurements as a detailed PDF report:
+
+```python
+eco.generate_pdf_report("report.pdf", comparison=result)
+```
+
+Report includes:
+- System info (CPU, GPU, TDP, region)
+- Full function measurement history
+- Comparison analysis table
+- Total cumulative CO₂ emissions
+
+### ✅ Carbon Limit Warning
+
+Get a warning when you exceed a defined threshold:
+
+```python
+eco = EcoTrace(region_code="US", carbon_limit=0.001)
+# ⚠️ WARNING: Carbon limit exceeded! (0.00124 > 0.001 gCO2)
+```
+
+---
+
+## 🌍 Supported Regions
+
+| Code | Country        | Carbon Intensity |
+|------|----------------|-----------------|
+| TR   | Turkey         | 475 gCO₂/kWh    |
+| DE   | Germany        | 385 gCO₂/kWh    |
+| FR   | France         | 55 gCO₂/kWh     |
+| US   | United States  | 367 gCO₂/kWh    |
+| GB   | United Kingdom | 253 gCO₂/kWh    |
+
+---
+
+## 🖥️ Supported CPUs
+
+EcoTrace automatically detects TDP values using the [Boavizta](https://github.com/Boavizta/cpu-spec) database with 1800+ CPUs:
+
+- Intel Core i3 / i5 / i7 / i9 (all generations)
+- AMD Ryzen 3 / 5 / 7 / 9
+- Apple M1 / M2 / M3
+- AMD Threadripper, EPYC
+- Intel Xeon
+
+---
+
+## 📦 Dependencies
+
+```
+psutil
+py-cpuinfo
+fpdf2
+nvidia-ml-py         (optional, for NVIDIA GPUs)
+wmi                  (optional, Windows only — for AMD/Intel GPUs)
+```
+
+---
+
+## 📊 Sample PDF Output
+
+```
+EcoTrace Analysis Report
+─────────────────────────────────────
+CPU      : Intel Core i7-13700H
+TDP      : 45.0W
+Region   : US (367 gCO₂/kWh)
+─────────────────────────────────────
+Function       Duration(s)  CPU%   Carbon(gCO2)
+process_data   0.0452       23.4   0.00001823
+fetch_data     1.0021       2.1    0.00037486
+─────────────────────────────────────
+TOTAL CUMULATIVE EMISSIONS: 0.00039309 gCO2
+```
+
+---
+
+## 🤝 Contributing
+
+Pull requests and issues are welcome!
+
+---
+
+## 👤 Author
+
+**Emre Özkal** — [emreozkal03@gmail.com](mailto:emreozkal03@gmail.com)
+
+---
+
+## 📄 License
+
+MIT License — use it however you like.
