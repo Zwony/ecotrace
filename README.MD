@@ -77,31 +77,46 @@ def gpu_compute():
     pass
 ```
 
-### ✅ Comparison Analysis — `eco.compare()`
+### ✅ Async Measurement — `eco.measure_async()`
 
-Compare two implementations and find out which one emits less carbon:
+For more accurate, continuous sampling of async functions:
 
 ```python
-def version_v1():
-    return sorted(data)
+async def my_async_task():
+    await asyncio.sleep(1)
+    return "Done"
 
-def version_v2():
-    data.sort()
-
-result = eco.compare(version_v1, version_v2)
+result = await eco.measure_async(my_async_task)
+print(f"CO2: {result['carbon']}g, Result: {result['result']}")
 ```
 
-### ✅ PDF Report — `eco.generate_pdf_report()`
+### ✅ Comparison Analysis — `eco.compare()`
 
-Export all measurements as a detailed PDF report:
+Compare two implementations side-by-side:
 
 ```python
-eco.generate_pdf_report("report.pdf", comparison=result)
+def fast_version():
+    return sum(i for i in range(10**5))
+
+def slow_version():
+    return sum(i for i in range(10**6))
+
+result = eco.compare(fast_version, slow_version)
+```
+
+### ✅ PDF Report with Charts — `eco.generate_pdf_report()`
+
+Export all measurements as a detailed PDF report including CPU usage charts:
+
+```python
+# Pass cpu_samples from measure_async to include the chart
+eco.generate_pdf_report("report.pdf", comparison=result, cpu_samples=result.get('cpu_samples'))
 ```
 
 Report includes:
 - System info (CPU, GPU, TDP, region)
 - Full function measurement history
+- **NEW: CPU Usage Over Time charts**
 - Comparison analysis table
 - Total cumulative CO₂ emissions
 
@@ -145,9 +160,10 @@ EcoTrace automatically detects TDP values using the [Boavizta](https://github.co
 ```
 psutil
 py-cpuinfo
-fpdf2
-nvidia-ml-py         (optional, for NVIDIA GPUs)
-wmi                  (optional, Windows only — for AMD/Intel GPUs)
+fpdf
+matplotlib
+nvidia-ml-py
+wmi; sys_platform == 'win32'
 ```
 
 ---

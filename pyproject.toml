@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "0.2.3"
+version = "0.3.0"
 description = " A lightweight Python library to measure the carbon footprint of your code"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -15,7 +15,8 @@ authors = [
 dependencies = [
     "psutil",
     "py-cpuinfo",
-    "fpdf2",
+    "fpdf",
+    "matplotlib",
     "nvidia-ml-py",
     "wmi; sys_platform == 'win32'"
 ]
