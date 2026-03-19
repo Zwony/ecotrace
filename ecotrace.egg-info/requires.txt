@@ -1,6 +1,7 @@
 psutil
 py-cpuinfo
-fpdf2
+fpdf
+matplotlib
 nvidia-ml-py
 
 [:sys_platform == "win32"]

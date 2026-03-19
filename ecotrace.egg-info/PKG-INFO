@@ -1,16 +1,29 @@
 Metadata-Version: 2.4
 Name: ecotrace
-Version: 0.2.3
-Summary:  A lightweight Python library to measure the carbon footprint of your code
+Version: 0.3.1
+Summary: EcoTrace: A powerful Python library to measure CPU/GPU energy consumption and estimate carbon emissions with detailed PDF reporting and continuous sampling.
 Author-email: Emre Ozkal <emreozkal03@gmail.com>
 Project-URL: Homepage, https://github.com/Zwony/ecotrace
 Project-URL: Repository, https://github.com/Zwony/ecotrace
+Keywords: carbon-footprint,energy-efficiency,green-computing,sustainability,metrics,cpu-monitoring,gpu-monitoring
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: psutil
 Requires-Dist: py-cpuinfo
-Requires-Dist: fpdf2
+Requires-Dist: fpdf
+Requires-Dist: matplotlib
 Requires-Dist: nvidia-ml-py
 Requires-Dist: wmi; sys_platform == "win32"
 Dynamic: license-file
@@ -94,31 +107,46 @@ def gpu_compute():
     pass
 ```
 
-### ✅ Comparison Analysis — `eco.compare()`
+### ✅ Async Measurement — `eco.measure_async()`
 
-Compare two implementations and find out which one emits less carbon:
+For more accurate, continuous sampling of async functions:
 
 ```python
-def version_v1():
-    return sorted(data)
+async def my_async_task():
+    await asyncio.sleep(1)
+    return "Done"
 
-def version_v2():
-    data.sort()
-
-result = eco.compare(version_v1, version_v2)
+result = await eco.measure_async(my_async_task)
+print(f"CO2: {result['carbon']}g, Result: {result['result']}")
 ```
 
-### ✅ PDF Report — `eco.generate_pdf_report()`
+### ✅ Comparison Analysis — `eco.compare()`
 
-Export all measurements as a detailed PDF report:
+Compare two implementations side-by-side:
 
 ```python
-eco.generate_pdf_report("report.pdf", comparison=result)
+def fast_version():
+    return sum(i for i in range(10**5))
+
+def slow_version():
+    return sum(i for i in range(10**6))
+
+result = eco.compare(fast_version, slow_version)
+```
+
+### ✅ PDF Report with Charts — `eco.generate_pdf_report()`
+
+Export all measurements as a detailed PDF report including CPU usage charts:
+
+```python
+# Pass cpu_samples from measure_async to include the chart
+eco.generate_pdf_report("report.pdf", comparison=result, cpu_samples=result.get('cpu_samples'))
 ```
 
 Report includes:
 - System info (CPU, GPU, TDP, region)
 - Full function measurement history
+- **NEW: CPU Usage Over Time charts**
 - Comparison analysis table
 - Total cumulative CO₂ emissions
 
@@ -162,9 +190,10 @@ EcoTrace automatically detects TDP values using the [Boavizta](https://github.co
 ```
 psutil
 py-cpuinfo
-fpdf2
-nvidia-ml-py         (optional, for NVIDIA GPUs)
-wmi                  (optional, Windows only — for AMD/Intel GPUs)
+fpdf
+matplotlib
+nvidia-ml-py
+wmi; sys_platform == 'win32'
 ```
 
 ---
@@ -192,6 +221,17 @@ TOTAL CUMULATIVE EMISSIONS: 0.00039309 gCO2
 Pull requests and issues are welcome!
 
 ---
+
+## 💬 Community & Support
+
+Join the EcoTrace community to contribute, ask questions, and connect with other developers.
+
+[![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Discord&logo=discord&style=for-the-badge)](https://discord.gg/hs58XXb3Uq)
+
+- 🐛 Report bugs
+- 💡 Suggest new features
+- 💻 Share your hardware TDP data to grow the database
+- 🛠️ Get installation and usage support
 
 ## 👤 Author
 
