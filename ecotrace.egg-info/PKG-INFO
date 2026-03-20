@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ecotrace
-Version: 0.3.3
+Version: 0.3.4
 Summary: EcoTrace: A powerful Python library to measure CPU/GPU energy consumption and estimate carbon emissions with detailed PDF reporting and continuous sampling.
 Author-email: Emre Ozkal <emreozkal03@gmail.com>
 Project-URL: Homepage, https://github.com/Zwony/ecotrace

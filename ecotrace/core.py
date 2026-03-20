@@ -42,7 +42,11 @@ class EcoTrace:
         self.carbon_intensity = self._get_carbon_intensity()
         self.cpu_info = self._get_cpu_info()
         self.gpu_info = self._get_gpu_info()
-
+        self._gpu_monitor_active = False
+        self._gpu_monitor_thread = None
+        self._gpu_samples = deque(maxlen=1000)
+        self._gpu_sample_lock = threading.Lock()
+        self._gpu_monitor_samples = []
         self._cpu_monitor_active = False
         self._cpu_monitor_thread = None
         self._cpu_samples = deque(maxlen=1000)
@@ -355,9 +359,22 @@ class EcoTrace:
                 time.sleep(self._monitor_interval)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 break
-            except Exception:
-                break
-
+            
+    def _gpu_monitor_worker(self):
+        """Background thread: samples GPU usage every 50ms and stores (timestamp, gpu%) tuples."""
+        if self.gpu_info:
+            import nvidia_ml_py as pynvml
+            handle = self.gpu_info["handle"]
+            while self._gpu_monitor_active:
+                try:
+                    util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+                    gpu_usage = util.gpu
+                    timestamp = time.perf_counter()
+                    with self._gpu_sample_lock:
+                        self._gpu_samples.append((timestamp, gpu_usage))
+                    time.sleep(0.05)
+                except:
+                    break
     def _start_cpu_monitor(self):
         """Spawns the background CPU sampling thread."""
         if not self._cpu_monitor_active:
@@ -372,6 +389,21 @@ class EcoTrace:
         if self._cpu_monitor_thread:
             self._cpu_monitor_thread.join(timeout=1.0)
             self._cpu_monitor_thread = None
+            
+    def _start_gpu_monitor(self):
+        """Spawns the background GPU sampling thread."""
+        if not self._gpu_monitor_active:
+            self._gpu_monitor_active = True
+            self._gpu_samples.clear()
+            self._gpu_monitor_thread = threading.Thread(target=self._gpu_monitor_worker, daemon=True)
+            self._gpu_monitor_thread.start()
+            
+    def _stop_gpu_monitor(self):
+        """Signals the sampling thread to stop and waits for it to exit."""
+        self._gpu_monitor_active = False
+        if self._gpu_monitor_thread:
+            self._gpu_monitor_thread.join(timeout=1.0)
+            self._gpu_monitor_thread = None
 
     def _get_avg_cpu_in_range(self, start_time, end_time):
         """Returns the mean CPU% from samples collected between two perf_counter timestamps."""
@@ -381,8 +413,20 @@ class EcoTrace:
                 if start_time <= ts <= end_time
             ]
             if not relevant_samples:
-                return self._current_process.cpu_percent(interval=0.01)  # Fallback
+                return 100.0 # Fallback to full utilization
             return sum(relevant_samples) / len(relevant_samples)
+    
+    def _get_avg_gpu_in_range(self, start_time, end_time):
+        """Returns the mean GPU% from samples collected between two perf_counter timestamps."""
+        with self._gpu_sample_lock:
+            relevant_samples = [
+                gpu for ts, gpu in self._gpu_samples
+                if start_time <= ts <= end_time
+        ]        
+        if not relevant_samples:
+            return 100.0  # Fallback to full utilization
+        return sum(relevant_samples) / len(relevant_samples)        
+            
 
     @contextmanager
     def cpu_monitor(self):
@@ -392,6 +436,15 @@ class EcoTrace:
             yield self
         finally:
             self._stop_cpu_monitor()
+            
+    @contextmanager
+    def gpu_monitor(self):
+        """Context manager that starts GPU monitoring on enter and stops it on exit."""
+        self._start_gpu_monitor()
+        try:
+            yield self
+        finally:
+            self._stop_gpu_monitor()
 
     async def measure_async(self, func, *args, **kwargs):
         """Runs an async function and measures its carbon emissions using continuous CPU sampling.
@@ -469,26 +522,35 @@ class EcoTrace:
     def __del__(self):
         """Ensures the background monitoring thread is stopped on garbage collection."""
         self._stop_cpu_monitor()
+        self._stop_gpu_monitor()
 
     def track_gpu(self, func):
-        """Decorator for estimating GPU carbon emissions. Assumes full TDP for the entire duration
-        since GPU workloads typically run at or near maximum power draw."""
+        """Decorator for measuring GPU carbon emissions with real utilization monitoring."""
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if self.gpu_info is None:
                 print(f"\n[EcoTrace] No GPU found, skipping measurement.")
                 return func(*args, **kwargs)
+            
             start_time = time.perf_counter()
-            result = func(*args, **kwargs)
+            with self.gpu_monitor():
+                result = func(*args, **kwargs)
             end_time = time.perf_counter()
-            duration = end_time - start_time
-            power_usage = (self.gpu_info['tdp'] * duration) / 3600  # Wh (full TDP assumed)
+            
+            avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time) 
+            power_usage = (self.gpu_info['tdp'] * (avg_gpu_util / 100) * (end_time - start_time)) / 3600
             carbon_emitted = (power_usage / 1000) * self.carbon_intensity
+            
             self.total_carbon += carbon_emitted
-            self._log_to_csv(func.__name__, duration, carbon_emitted)
-            print(f"\n[EcoTrace] GPU Function : {func.__name__}")
-            print(f"[EcoTrace] Duration     : {duration:.4f} sec")
+            self._log_to_csv(func.__name__, end_time - start_time, carbon_emitted)
+            print(f"\n[EcoTrace] GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
+            print(f"[EcoTrace] Duration     : {end_time - start_time:.4f} sec")
+            print(f"[EcoTrace] GPU Usage    : {avg_gpu_util:.1f}%")
             print(f"[EcoTrace] CO2          : {carbon_emitted:.8f} gCO2")
             return result
         return wrapper
+            
+        
+
+                
