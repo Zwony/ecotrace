@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ecotrace
-Version: 0.3.2
+Version: 0.3.3
 Summary: EcoTrace: A powerful Python library to measure CPU/GPU energy consumption and estimate carbon emissions with detailed PDF reporting and continuous sampling.
 Author-email: Emre Ozkal <emreozkal03@gmail.com>
 Project-URL: Homepage, https://github.com/Zwony/ecotrace
@@ -168,6 +168,8 @@ eco = EcoTrace(region_code="US", carbon_limit=0.001)
 
 ## 🌍 Supported Regions
 
+EcoTrace supports **36 regions** with real-world carbon intensity data.
+
 | Code | Country        | Carbon Intensity |
 |------|----------------|-----------------|
 | TR   | Turkey         | 475 gCO₂/kWh    |
@@ -175,6 +177,41 @@ eco = EcoTrace(region_code="US", carbon_limit=0.001)
 | FR   | France         | 55 gCO₂/kWh     |
 | US   | United States  | 367 gCO₂/kWh    |
 | GB   | United Kingdom | 253 gCO₂/kWh    |
+| IN   | India          | 708 gCO₂/kWh    |
+| CN   | China          | 555 gCO₂/kWh    |
+| AU   | Australia      | 490 gCO₂/kWh    |
+| CA   | Canada         | 130 gCO₂/kWh    |
+| BR   | Brazil         | 74 gCO₂/kWh     |
+| JP   | Japan          | 463 gCO₂/kWh    |
+| KR   | South Korea    | 415 gCO₂/kWh    |
+| NL   | Netherlands    | 290 gCO₂/kWh    |
+| SE   | Sweden         | 13 gCO₂/kWh     |
+| NO   | Norway         | 26 gCO₂/kWh     |
+| PL   | Poland         | 635 gCO₂/kWh    |
+| IT   | Italy          | 233 gCO₂/kWh    |
+| ES   | Spain          | 187 gCO₂/kWh    |
+| PT   | Portugal       | 176 gCO₂/kWh    |
+| BE   | Belgium        | 167 gCO₂/kWh    |
+| CH   | Switzerland    | 25 gCO₂/kWh     |
+| AT   | Austria        | 158 gCO₂/kWh    |
+| FI   | Finland        | 65 gCO₂/kWh     |
+| DK   | Denmark        | 166 gCO₂/kWh    |
+| CZ   | Czech Republic | 412 gCO₂/kWh    |
+| HU   | Hungary        | 223 gCO₂/kWh    |
+| RO   | Romania        | 293 gCO₂/kWh    |
+| ZA   | South Africa   | 928 gCO₂/kWh    |
+| MX   | Mexico         | 527 gCO₂/kWh    |
+| AR   | Argentina      | 314 gCO₂/kWh    |
+| ID   | Indonesia      | 761 gCO₂/kWh    |
+| MY   | Malaysia       | 585 gCO₂/kWh    |
+| TH   | Thailand       | 513 gCO₂/kWh    |
+| PH   | Philippines    | 558 gCO₂/kWh    |
+| SG   | Singapore      | 408 gCO₂/kWh    |
+| NZ   | New Zealand    | 120 gCO₂/kWh    |
+| EG   | Egypt          | 448 gCO₂/kWh    |
+| NG   | Nigeria        | 385 gCO₂/kWh    |
+
+> Don't see your region? [Open a feature request](https://github.com/Zwony/ecotrace/issues/new?template=feature_request.md) and we'll add it!
 
 ---
 
