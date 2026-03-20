@@ -4,6 +4,8 @@
 
 EcoTrace is a lightweight yet powerful Python library that analyzes the CPU and GPU load of your functions and calculates how much CO₂ they emit.
 
+![EcoTrace Demo](demo.gif)
+
 [![PyPI version](https://badge.fury.io/py/ecotrace.svg)](https://badge.fury.io/py/ecotrace)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
