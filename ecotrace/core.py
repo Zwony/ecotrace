@@ -363,8 +363,8 @@ class EcoTrace:
     def _gpu_monitor_worker(self):
         """Background thread: samples GPU usage every 50ms and stores (timestamp, gpu%) tuples."""
         if self.gpu_info:
-            import nvidia_ml_py as pynvml
-            handle = self.gpu_info["handle"]
+            import nvidia_ml_py as pynvml  # NVIDIA GPU monitoring library
+            handle = self.gpu_info["handle"]  # Reuse handle from initialization
             while self._gpu_monitor_active:
                 try:
                     util = pynvml.nvmlDeviceGetUtilizationRates(handle)
@@ -372,7 +372,7 @@ class EcoTrace:
                     timestamp = time.perf_counter()
                     with self._gpu_sample_lock:
                         self._gpu_samples.append((timestamp, gpu_usage))
-                    time.sleep(0.05)
+                    time.sleep(0.05)  # 50ms sampling interval — matches CPU monitor
                 except:
                     break
     def _start_cpu_monitor(self):
@@ -538,7 +538,7 @@ class EcoTrace:
                 result = func(*args, **kwargs)
             end_time = time.perf_counter()
             
-            avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time) 
+            avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time)  # Real utilization — not assumed full TDP 
             power_usage = (self.gpu_info['tdp'] * (avg_gpu_util / 100) * (end_time - start_time)) / 3600
             carbon_emitted = (power_usage / 1000) * self.carbon_intensity
             
