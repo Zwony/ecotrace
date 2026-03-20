@@ -320,43 +320,17 @@ class EcoTrace:
 
     def track(self, func):
         """Decorator for measuring carbon emissions. Handles both sync and async functions automatically.
-        Uses a before/after CPU snapshot — for continuous sampling use measure_async() instead."""
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            start_time = time.perf_counter()
-            cpu_before = psutil.cpu_percent(interval=None)
-            result = func(*args, **kwargs)
-            cpu_after = psutil.cpu_percent(interval=None)
-            end_time = time.perf_counter()
-            duration = end_time - start_time
-            avg_cpu_usage = (cpu_before + cpu_after) / 2
-            power_usage = (self.cpu_info['tdp'] * (avg_cpu_usage / 100) * duration) / 3600  # Wh
-            carbon_emitted = (power_usage / 1000) * self.carbon_intensity
-            self.total_carbon += carbon_emitted
-            self._log_to_csv(func.__name__, duration, carbon_emitted)
-            print(f"\n[EcoTrace] Function : {func.__name__}\n[EcoTrace] Duration : {duration:.4f} sec\n[EcoTrace] CO2      : {carbon_emitted:.8f} gCO2")
-            return result
+        Uses continuous CPU sampling via measure() and measure_async() for accurate results."""
 
         if inspect.iscoroutinefunction(func):
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs):
-                psutil.cpu_percent(interval=None)
-                start_time = time.perf_counter()
-                result = await func(*args, **kwargs)
-                end_time = time.perf_counter()
-                duration = end_time - start_time
-                avg_cpu = psutil.cpu_percent(interval=0.1)
-                power_usage = (self.cpu_info['tdp'] * (avg_cpu / 100) * duration) / 3600  # Wh
-                carbon_emitted = (power_usage / 1000) * self.carbon_intensity
-                self.total_carbon += carbon_emitted
-                self._log_to_csv(func.__name__, duration, carbon_emitted)
-                print(f"\n[EcoTrace] Function : {func.__name__}")
-                print(f"[EcoTrace] Duration : {duration:.4f} sec")
-                print(f"[EcoTrace] CO2      : {carbon_emitted:.8f} gCO2")
-                return result
-
+                return (await self.measure_async(func, *args, **kwargs))["result"]
             return async_wrapper
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return self.measure(func, *args, **kwargs)["result"]
 
         return wrapper
 
