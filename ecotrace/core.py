@@ -258,10 +258,14 @@ class EcoTrace:
             return 475
         except Exception:
             return 475
-
+    @classmethod
+    @functools.lru_cache(maxsize=1)
+    def fetch_raw_cpu_info(cls):
+        return cpuinfo.get_cpu_info()
+    
     def _get_cpu_info(self):
         """Detects the current CPU and looks up its TDP. Falls back to 65W if not found in the database."""
-        info = cpuinfo.get_cpu_info()
+        info = self.fetch_raw_cpu_info()
         brand = info.get("brand_raw", "Unknown CPU")
         
         # Clean brand string for matching, but keep a display version
