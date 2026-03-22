@@ -18,18 +18,57 @@ import tempfile
 
 
 class EcoTrace:
-    """Tracks CPU/GPU energy consumption and estimates carbon emissions per function call.
+    """High-precision carbon tracking engine for production Python.
 
-    Carbon formula: energy (Wh) = TDP * cpu% * duration / 3600  →  gCO2 = (Wh/1000) * carbon_intensity
+    Monitors CPU and GPU energy consumption at function-level granularity using
+    continuous 50 ms sampling, TDP-based energy estimation, and region-specific
+    carbon intensity factors.
+
+    Energy formula:
+        energy (Wh) = TDP × (utilization% / 100) × duration / 3600
+        gCO₂ = (Wh / 1000) × carbon_intensity
 
     Args:
-        region_code: ISO country code for grid carbon intensity lookup (default: "TR").
-        carbon_limit: Reserved for future budget alerts. Not enforced yet.
-        gpu_index: Which GPU to monitor when multiple are present.
+        region_code: ISO 3166-1 alpha-2 country code for grid carbon intensity
+            lookup. Falls back to DEFAULT_REGION if the code is not recognized.
+        carbon_limit: Optional carbon budget threshold in gCO₂. Reserved for
+            future budget alert functionality.
+        gpu_index: Zero-based index selecting which GPU to monitor when multiple
+            devices are present. Validated to be a non-negative integer.
+
+    Raises:
+        TypeError: If gpu_index is not an integer or carbon_limit is not numeric.
     """
 
+    # --- Estimation defaults ------------------------------------------------
+    DEFAULT_CPU_TDP_W = 65.0
+    DEFAULT_GPU_TDP_INTEL_W = 15.0
+    DEFAULT_GPU_TDP_AMD_W = 75.0
+    DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
+    DEFAULT_CARBON_INTENSITY = 475  # IEA 2022 global average (gCO₂/kWh)
+    DEFAULT_REGION = "TR"
+
+    # --- Sampling configuration ---------------------------------------------
+    FULL_UTILIZATION_PERCENT = 100.0
+    MONITOR_INTERVAL_S = 0.05  # 50 ms
+    SAMPLE_BUFFER_SIZE = 1000
+    MONITOR_JOIN_TIMEOUT_S = 1.0
+
+    # --- Unit conversion constants ------------------------------------------
+    SECONDS_PER_HOUR = 3600
+    WATTS_PER_KILOWATT = 1000
+
     def __init__(self, region_code="TR", carbon_limit=None, gpu_index=0):
-        self.region_code = region_code
+        # --- Input validation -----------------------------------------------
+        if not isinstance(gpu_index, int) or gpu_index < 0:
+            print(f"[EcoTrace] WARNING: Invalid gpu_index={gpu_index!r}, defaulting to 0.")
+            gpu_index = 0
+
+        if carbon_limit is not None:
+            if not isinstance(carbon_limit, (int, float)) or carbon_limit <= 0:
+                print(f"[EcoTrace] WARNING: Invalid carbon_limit={carbon_limit!r}, disabling limit.")
+                carbon_limit = None
+
         self.carbon_limit = carbon_limit
         self.total_carbon = 0.0
         self.gpu_index = gpu_index
@@ -38,20 +77,27 @@ class EcoTrace:
         self.json_path = os.path.join(self.base_dir, "constants.json")
         self.csv_path = os.path.join(self.base_dir, "cpu_spec.csv", "boaviztapi", "data", "crowdsourcing", "cpu_specs.csv")
 
+        # Load data sources before validating region_code
         self.tdp_db = self._load_tdp_database()
-        self.carbon_intensity = self._get_carbon_intensity()
+        self._constants_data = self._load_constants()
+        self.region_code = self._validate_region_code(region_code)
+        self.carbon_intensity = self._resolve_carbon_intensity()
+        self.gpu_tdp_defaults = self._load_gpu_tdp_defaults()
         self.cpu_info = self._get_cpu_info()
         self.gpu_info = self._get_gpu_info()
+
+        # --- Monitoring state -----------------------------------------------
+        self._carbon_lock = threading.Lock()
         self._gpu_monitor_active = False
         self._gpu_monitor_thread = None
-        self._gpu_samples = deque(maxlen=1000)
+        self._gpu_samples = deque(maxlen=self.SAMPLE_BUFFER_SIZE)
         self._gpu_sample_lock = threading.Lock()
         self._gpu_monitor_samples = []
         self._cpu_monitor_active = False
         self._cpu_monitor_thread = None
-        self._cpu_samples = deque(maxlen=1000)
+        self._cpu_samples = deque(maxlen=self.SAMPLE_BUFFER_SIZE)
         self._cpu_sample_lock = threading.Lock()
-        self._monitor_interval = 0.05  # 50ms sampling interval
+        self._monitor_interval = self.MONITOR_INTERVAL_S
         self._current_process = psutil.Process()
 
         print("\n--- EcoTrace Initialized ---")
@@ -64,8 +110,603 @@ class EcoTrace:
             print(f"GPU TDP : {self.gpu_info['tdp']}W")
         print("----------------------------\n")
 
+    # ========================================================================
+    # Input validation helpers
+    # ========================================================================
+
+    def _load_constants(self):
+        """Loads the full constants.json file into memory.
+
+        Returns:
+            dict: Parsed JSON contents, or empty dict on failure.
+        """
+        try:
+            if os.path.exists(self.json_path):
+                with open(self.json_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception:
+            pass
+        return {}
+
+    def _validate_region_code(self, region_code):
+        """Validates the region code against known carbon intensity entries.
+
+        Args:
+            region_code: User-provided ISO country code string.
+
+        Returns:
+            str: The validated region code, or DEFAULT_REGION if invalid.
+        """
+        if not isinstance(region_code, str) or not region_code.strip():
+            print(f"[EcoTrace] WARNING: Invalid region_code={region_code!r}, defaulting to '{self.DEFAULT_REGION}'.")
+            return self.DEFAULT_REGION
+
+        code = region_code.strip().upper()
+        intensity_map = self._constants_data.get("CARBON_INTENSITY_MAP", {})
+
+        if code not in intensity_map:
+            print(f"[EcoTrace] WARNING: Unknown region '{code}', defaulting to '{self.DEFAULT_REGION}'.")
+            return self.DEFAULT_REGION
+        return code
+
+    def _resolve_carbon_intensity(self):
+        """Resolves the gCO₂/kWh value for the validated region code.
+
+        Returns:
+            float: Carbon intensity factor for the configured region.
+        """
+        return (
+            self._constants_data
+            .get("CARBON_INTENSITY_MAP", {})
+            .get(self.region_code, self.DEFAULT_CARBON_INTENSITY)
+        )
+
+    def _load_gpu_tdp_defaults(self):
+        """Loads GPU TDP default estimates from constants.json.
+
+        Returns:
+            dict: Mapping of vendor key to estimated TDP in watts.
+        """
+        return self._constants_data.get("GPU_TDP_DEFAULTS", {
+            "intel": self.DEFAULT_GPU_TDP_INTEL_W,
+            "amd": self.DEFAULT_GPU_TDP_AMD_W,
+            "unknown": self.DEFAULT_GPU_TDP_UNKNOWN_W,
+        })
+
+    # ========================================================================
+    # Hardware detection
+    # ========================================================================
+
+    @classmethod
+    @functools.lru_cache(maxsize=1)
+    def fetch_raw_cpu_info(cls):
+        """Retrieves raw CPU information via py-cpuinfo.
+
+        Results are cached globally since hardware doesn't change at runtime.
+
+        Returns:
+            dict: Raw CPU info dictionary from ``cpuinfo.get_cpu_info()``.
+        """
+        return cpuinfo.get_cpu_info()
+
+    def _load_tdp_database(self):
+        """Parses the Boavizta CPU spec CSV into a TDP lookup dictionary.
+
+        Returns:
+            dict: Mapping of ``{lowercase_model_name: tdp_watts}``.
+        """
+        tdp_dict = {}
+        if not os.path.exists(self.csv_path):
+            return tdp_dict
+        try:
+            with open(self.csv_path, mode='r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    m_name = row.get('name', '').lower().strip()
+                    tdp_val = row.get('tdp')
+                    if m_name and tdp_val:
+                        try:
+                            tdp_dict[m_name] = float(tdp_val)
+                        except ValueError:
+                            continue
+        except Exception:
+            pass
+        return tdp_dict
+
+    def _get_cpu_info(self):
+        """Detects the current CPU and resolves its TDP from the Boavizta database.
+
+        Performs fuzzy matching against the TDP database using cleaned brand
+        strings. Falls back to DEFAULT_CPU_TDP_W if no match is found.
+
+        Returns:
+            dict: Keys ``brand`` (str), ``cores`` (int), ``tdp`` (float).
+        """
+        info = self.fetch_raw_cpu_info()
+        brand = info.get("brand_raw", "Unknown CPU")
+
+        display_brand = "".join(c for c in brand if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
+
+        clean_brand = brand.lower()
+        clean_brand = clean_brand.replace("(r)", "").replace("(tm)", "")
+        clean_brand = re.sub(r'\d+th\s+gen', '', clean_brand)
+        clean_brand = " ".join(clean_brand.split())
+
+        found_tdp = self.DEFAULT_CPU_TDP_W
+
+        if clean_brand in self.tdp_db:
+            found_tdp = self.tdp_db[clean_brand]
+        else:
+            for model_name, tdp in self.tdp_db.items():
+                if model_name == clean_brand:
+                    found_tdp = tdp
+                    break
+                if clean_brand in model_name and len(clean_brand) > 10:
+                    found_tdp = tdp
+                    break
+
+        return {"brand": display_brand, "cores": psutil.cpu_count(logical=False), "tdp": found_tdp}
+
+    def _get_gpu_info(self):
+        """Detects GPU hardware and resolves TDP using a tri-vendor fallback chain.
+
+        Detection order:
+            1. NVIDIA via ``pynvml`` — driver-reported power management limit
+            2. AMD/Intel via WMI (Windows only) — vendor-class TDP estimates
+            3. Returns ``None`` if no GPU is detected (graceful degradation)
+
+        Returns:
+            dict or None: Keys ``brand``, ``tdp``, ``type``, ``handle`` if
+            a GPU is found; ``None`` otherwise.
+        """
+        try:
+            import nvidia_ml_py as pynvml
+            pynvml.nvmlInit()
+            handle = pynvml.nvmlDeviceGetHandleByIndex(self.gpu_index)
+            name = pynvml.nvmlDeviceGetName(handle)
+            display_name = "".join(c for c in name if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
+            tdp = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / self.WATTS_PER_KILOWATT
+            return {"brand": display_name, "tdp": tdp, "type": "nvidia", "handle": handle}
+        except Exception:
+            pass
+
+        try:
+            import wmi
+            w = wmi.WMI()
+            for i, gpu in enumerate(w.Win32_VideoController()):
+                if i == self.gpu_index:
+                    name = gpu.Name
+                    display_name = "".join(c for c in name if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
+                    if "intel" in name.lower():
+                        return {"brand": display_name, "tdp": self.gpu_tdp_defaults.get("intel", self.DEFAULT_GPU_TDP_INTEL_W), "type": "intel", "handle": None}
+                    elif "amd" in name.lower() or "radeon" in name.lower():
+                        return {"brand": display_name, "tdp": self.gpu_tdp_defaults.get("amd", self.DEFAULT_GPU_TDP_AMD_W), "type": "amd", "handle": None}
+                    else:
+                        return {"brand": display_name, "tdp": self.gpu_tdp_defaults.get("unknown", self.DEFAULT_GPU_TDP_UNKNOWN_W), "type": "unknown", "handle": None}
+        except Exception:
+            pass
+
+        return None
+
+    # ========================================================================
+    # Carbon calculation helpers
+    # ========================================================================
+
+    @staticmethod
+    def _sanitize_for_pdf(text):
+        """Strips non-ASCII characters for safe PDF rendering.
+
+        Args:
+            text: Input string potentially containing non-ASCII characters.
+
+        Returns:
+            str: ASCII-safe string.
+        """
+        return "".join(c for c in str(text) if ord(c) < 128)
+
+    def _compute_carbon(self, tdp, utilization_pct, duration_s):
+        """Computes carbon emissions from power parameters.
+
+        Args:
+            tdp: Thermal Design Power in watts.
+            utilization_pct: Average utilization as a percentage (0–100).
+            duration_s: Measurement duration in seconds.
+
+        Returns:
+            float: Estimated carbon emissions in gCO₂.
+        """
+        power_wh = (tdp * (utilization_pct / 100) * duration_s) / self.SECONDS_PER_HOUR
+        return (power_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
+
+    def _accumulate_carbon(self, carbon_emitted, func_name, duration):
+        """Thread-safe accumulation of carbon emissions with CSV logging.
+
+        Args:
+            carbon_emitted: Carbon value in gCO₂ to add to the running total.
+            func_name: Name of the measured function for the audit log.
+            duration: Execution duration in seconds.
+        """
+        with self._carbon_lock:
+            self.total_carbon += carbon_emitted
+            self._log_to_csv(func_name, duration, carbon_emitted)
+
+    # ========================================================================
+    # Monitoring infrastructure
+    # ========================================================================
+
+    def _cpu_monitor_worker(self):
+        """Background thread that continuously samples process-scoped CPU usage.
+
+        Samples at MONITOR_INTERVAL_S intervals using ``psutil.Process``,
+        storing ``(timestamp, cpu_percent)`` tuples in a thread-safe deque.
+        Exits gracefully if the process is no longer accessible.
+        """
+        self._current_process.cpu_percent()  # Discard first call — psutil always returns 0.0 initially
+        while self._cpu_monitor_active:
+            try:
+                cpu_usage = self._current_process.cpu_percent()
+                timestamp = time.perf_counter()
+                with self._cpu_sample_lock:
+                    self._cpu_samples.append((timestamp, cpu_usage))
+                time.sleep(self._monitor_interval)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                break
+
+    def _gpu_monitor_worker(self):
+        """Background thread that continuously samples GPU utilization.
+
+        Only active for NVIDIA GPUs with a valid device handle. Samples at
+        MONITOR_INTERVAL_S intervals, storing ``(timestamp, gpu_percent)``
+        tuples in a thread-safe deque.
+        """
+        if not self.gpu_info or self.gpu_info.get("handle") is None:
+            return
+
+        try:
+            import nvidia_ml_py as pynvml
+        except ImportError:
+            return
+
+        handle = self.gpu_info["handle"]
+        while self._gpu_monitor_active:
+            try:
+                util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+                gpu_usage = util.gpu
+                timestamp = time.perf_counter()
+                with self._gpu_sample_lock:
+                    self._gpu_samples.append((timestamp, gpu_usage))
+                time.sleep(self._monitor_interval)
+            except Exception:
+                break
+
+    def _start_cpu_monitor(self):
+        """Spawns the background CPU sampling thread if not already running."""
+        if not self._cpu_monitor_active:
+            self._cpu_monitor_active = True
+            self._cpu_samples.clear()
+            self._cpu_monitor_thread = threading.Thread(target=self._cpu_monitor_worker, daemon=True)
+            self._cpu_monitor_thread.start()
+
+    def _stop_cpu_monitor(self):
+        """Signals the CPU sampling thread to stop and waits for it to exit."""
+        self._cpu_monitor_active = False
+        if self._cpu_monitor_thread:
+            self._cpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
+            self._cpu_monitor_thread = None
+
+    def _start_gpu_monitor(self):
+        """Spawns the background GPU sampling thread if not already running."""
+        if not self._gpu_monitor_active:
+            self._gpu_monitor_active = True
+            self._gpu_samples.clear()
+            self._gpu_monitor_thread = threading.Thread(target=self._gpu_monitor_worker, daemon=True)
+            self._gpu_monitor_thread.start()
+
+    def _stop_gpu_monitor(self):
+        """Signals the GPU sampling thread to stop and waits for it to exit."""
+        self._gpu_monitor_active = False
+        if self._gpu_monitor_thread:
+            self._gpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
+            self._gpu_monitor_thread = None
+
+    def _get_avg_cpu_in_range(self, start_time, end_time):
+        """Computes mean CPU utilization from samples within a time window.
+
+        Args:
+            start_time: Window start as a ``time.perf_counter()`` value.
+            end_time: Window end as a ``time.perf_counter()`` value.
+
+        Returns:
+            float: Average CPU percentage, or FULL_UTILIZATION_PERCENT if no
+            samples were captured (conservative fallback).
+        """
+        with self._cpu_sample_lock:
+            relevant_samples = [
+                cpu for ts, cpu in self._cpu_samples
+                if start_time <= ts <= end_time
+            ]
+            if not relevant_samples:
+                return self.FULL_UTILIZATION_PERCENT
+            return sum(relevant_samples) / len(relevant_samples)
+
+    def _get_avg_gpu_in_range(self, start_time, end_time):
+        """Computes mean GPU utilization from samples within a time window.
+
+        Args:
+            start_time: Window start as a ``time.perf_counter()`` value.
+            end_time: Window end as a ``time.perf_counter()`` value.
+
+        Returns:
+            float: Average GPU percentage, or FULL_UTILIZATION_PERCENT if no
+            samples were captured (conservative fallback).
+        """
+        with self._gpu_sample_lock:
+            relevant_samples = [
+                gpu for ts, gpu in self._gpu_samples
+                if start_time <= ts <= end_time
+            ]
+        if not relevant_samples:
+            return self.FULL_UTILIZATION_PERCENT
+        return sum(relevant_samples) / len(relevant_samples)
+
+    @contextmanager
+    def cpu_monitor(self):
+        """Context manager that brackets a code block with CPU monitoring.
+
+        Yields:
+            EcoTrace: The current instance for optional chaining.
+        """
+        self._start_cpu_monitor()
+        try:
+            yield self
+        finally:
+            self._stop_cpu_monitor()
+
+    @contextmanager
+    def gpu_monitor(self):
+        """Context manager that brackets a code block with GPU monitoring.
+
+        Yields:
+            EcoTrace: The current instance for optional chaining.
+        """
+        self._start_gpu_monitor()
+        try:
+            yield self
+        finally:
+            self._stop_gpu_monitor()
+
+    # ========================================================================
+    # Logging
+    # ========================================================================
+
+    def _log_to_csv(self, func_name, duration, carbon):
+        """Appends a single measurement row to the CSV audit log.
+
+        Creates ``ecotrace_log.csv`` with headers if it doesn't exist.
+
+        Args:
+            func_name: Name of the tracked function.
+            duration: Execution time in seconds.
+            carbon: Estimated carbon emissions in gCO₂.
+        """
+        try:
+            file_exists = os.path.isfile("ecotrace_log.csv")
+            with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region"])
+                writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), func_name, f"{duration:.4f}", f"{carbon:.8f}", self.region_code])
+        except Exception as e:
+            print(f"[EcoTrace] WARNING: CSV logging failed: {e}")
+
+    # ========================================================================
+    # Public measurement API
+    # ========================================================================
+
+    def track(self, func):
+        """Decorator that measures carbon emissions for any function call.
+
+        Automatically detects whether the target is synchronous or asynchronous
+        and selects the appropriate measurement strategy.
+
+        Args:
+            func: The function to decorate. Can be sync or async.
+
+        Returns:
+            Callable: Wrapped function that measures emissions transparently.
+        """
+        if inspect.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                return (await self.measure_async(func, *args, **kwargs))["result"]
+            return async_wrapper
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return self.measure(func, *args, **kwargs)["result"]
+
+        return wrapper
+
+    def track_gpu(self, func):
+        """Decorator that measures GPU carbon emissions with real utilization monitoring.
+
+        If no GPU is detected, the wrapped function executes normally without
+        measurement. If the GPU becomes unavailable mid-calculation, the function
+        result is preserved and a warning is logged.
+
+        Args:
+            func: The function to decorate.
+
+        Returns:
+            Callable: Wrapped function with GPU carbon measurement.
+        """
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if self.gpu_info is None:
+                print(f"\n[EcoTrace] WARNING: No GPU detected, executing '{func.__name__}' without measurement.")
+                return func(*args, **kwargs)
+
+            start_time = time.perf_counter()
+            with self.gpu_monitor():
+                result = func(*args, **kwargs)
+            end_time = time.perf_counter()
+
+            try:
+                duration = end_time - start_time
+                avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time)
+                carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration)
+
+                self._accumulate_carbon(carbon_emitted, func.__name__, duration)
+                print(f"\n[EcoTrace] GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
+                print(f"[EcoTrace] Duration     : {duration:.4f} sec")
+                print(f"[EcoTrace] GPU Usage    : {avg_gpu_util:.1f}%")
+                print(f"[EcoTrace] CO2          : {carbon_emitted:.8f} gCO2")
+            except Exception as e:
+                print(f"[EcoTrace] WARNING: GPU measurement failed for '{func.__name__}': {e}")
+
+            return result
+        return wrapper
+
+    def measure(self, func, *args, **kwargs):
+        """Executes a synchronous function and measures its CPU carbon emissions.
+
+        Uses continuous background sampling for accurate utilization measurement.
+        If the measurement calculation fails, the function result is still returned.
+
+        Args:
+            func: Synchronous callable to measure.
+            *args: Positional arguments forwarded to ``func``.
+            **kwargs: Keyword arguments forwarded to ``func``.
+
+        Returns:
+            dict: Keys ``func_name``, ``duration``, ``avg_cpu``, ``carbon``,
+            ``cpu_samples``, and ``result``.
+        """
+        start_time = time.perf_counter()
+        with self.cpu_monitor():
+            result_data = func(*args, **kwargs)
+            end_time = time.perf_counter()
+            duration = end_time - start_time
+
+        try:
+            avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+
+            with self._cpu_sample_lock:
+                measurement_samples = list(self._cpu_samples)
+
+            carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+            self._accumulate_carbon(carbon_emitted, func.__name__, duration)
+
+            return {
+                "func_name": func.__name__,
+                "duration": duration,
+                "avg_cpu": avg_cpu,
+                "carbon": carbon_emitted,
+                "cpu_samples": measurement_samples,
+                "result": result_data
+            }
+        except Exception as e:
+            print(f"[EcoTrace] WARNING: Measurement failed for '{func.__name__}': {e}")
+            return {
+                "func_name": func.__name__,
+                "duration": duration,
+                "avg_cpu": 0.0,
+                "carbon": 0.0,
+                "cpu_samples": [],
+                "result": result_data
+            }
+
+    async def measure_async(self, func, *args, **kwargs):
+        """Executes an async function and measures its CPU carbon emissions.
+
+        Uses continuous background sampling, which is particularly important
+        for bursty or I/O-bound async workloads where point-in-time readings
+        misrepresent actual utilization.
+
+        Args:
+            func: Async callable to measure.
+            *args: Positional arguments forwarded to ``func``.
+            **kwargs: Keyword arguments forwarded to ``func``.
+
+        Returns:
+            dict: Keys ``func_name``, ``duration``, ``avg_cpu``, ``carbon``,
+            ``cpu_samples``, and ``result``.
+
+        Raises:
+            Exception: Re-raises any exception from the wrapped function after
+            completing the measurement teardown.
+        """
+        start_time = time.perf_counter()
+        with self.cpu_monitor():
+            try:
+                result_data = await func(*args, **kwargs)
+            except Exception as e:
+                raise e
+            finally:
+                await asyncio.sleep(self.MONITOR_INTERVAL_S)  # Allow trailing samples to be captured
+                end_time = time.perf_counter()
+                duration = end_time - start_time
+
+        try:
+            avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+
+            with self._cpu_sample_lock:
+                measurement_samples = list(self._cpu_samples)
+
+            carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+            self._accumulate_carbon(carbon_emitted, func.__name__, duration)
+
+            return {
+                "func_name": func.__name__,
+                "duration": duration,
+                "avg_cpu": avg_cpu,
+                "carbon": carbon_emitted,
+                "cpu_samples": measurement_samples,
+                "result": result_data
+            }
+        except Exception as e:
+            print(f"[EcoTrace] WARNING: Async measurement failed for '{func.__name__}': {e}")
+            return {
+                "func_name": func.__name__,
+                "duration": duration,
+                "avg_cpu": 0.0,
+                "carbon": 0.0,
+                "cpu_samples": [],
+                "result": result_data
+            }
+
+    def compare(self, func1, func2):
+        """Runs two functions sequentially and compares their carbon footprints.
+
+        Args:
+            func1: First callable to measure.
+            func2: Second callable to measure.
+
+        Returns:
+            dict: Keys ``func1`` and ``func2``, each containing the full
+            measurement dict from ``measure()``.
+        """
+        result1 = self.measure(func1)
+        result2 = self.measure(func2)
+        print(f"\n[EcoTrace] Comparison Results:")
+        print(f"Function 1: {result1['func_name']} - Duration: {result1['duration']:.4f} sec - CO2: {result1['carbon']:.8f} gCO2")
+        print(f"Function 2: {result2['func_name']} - Duration: {result2['duration']:.4f} sec - CO2: {result2['carbon']:.8f} gCO2")
+        return {"func1": result1, "func2": result2}
+
+    # ========================================================================
+    # Reporting
+    # ========================================================================
+
     def _create_cpu_usage_chart(self, samples_data):
-        """Renders a CPU usage line chart from sample data and saves it to a temp PNG file."""
+        """Renders a CPU usage line chart and saves it to a temporary PNG file.
+
+        Args:
+            samples_data: List of ``(timestamp, cpu_percent)`` tuples.
+
+        Returns:
+            str or None: Path to the generated PNG, or None on failure.
+        """
         if not samples_data:
             return None
 
@@ -94,9 +735,19 @@ class EcoTrace:
             return None
 
     def generate_pdf_report(self, filename="ecotrace_full_report.pdf", comparison=None, cpu_samples=None):
-        """Generates a PDF report with system info, function history, CPU chart, and total emissions."""
+        """Generates a comprehensive PDF audit report.
+
+        Includes system hardware profile, timestamped function history,
+        optional CPU usage charts, comparison analysis, and cumulative
+        emission totals.
+
+        Args:
+            filename: Output PDF file path.
+            comparison: Optional comparison dict from ``compare()``.
+            cpu_samples: Optional list of ``(timestamp, cpu_percent)`` tuples
+                for the CPU usage chart page.
+        """
         try:
-            # Load logged history from CSV
             history = []
             log_file = "ecotrace_log.csv"
             if os.path.exists(log_file):
@@ -120,13 +771,13 @@ class EcoTrace:
             pdf.set_text_color(0, 0, 0)
             pdf.cell(0, 10, txt=" System Information", ln=True, fill=True)
             pdf.set_font("helvetica", size=10)
-            cpu_display = "".join(c for c in str(self.cpu_info['brand']) if ord(c) < 128)
+            cpu_display = self._sanitize_for_pdf(self.cpu_info['brand'])
             pdf.cell(100, 8, txt=f"CPU: {cpu_display}", ln=False)
             pdf.cell(100, 8, txt=f"Cores: {self.cpu_info['cores']}", ln=True)
             pdf.cell(100, 8, txt=f"TDP: {self.cpu_info['tdp']}W", ln=False)
             pdf.cell(100, 8, txt=f"Region: {self.region_code}", ln=True)
             if self.gpu_info:
-                gpu_display = "".join(c for c in str(self.gpu_info['brand']) if ord(c) < 128)
+                gpu_display = self._sanitize_for_pdf(self.gpu_info['brand'])
                 pdf.cell(100, 8, txt=f"GPU: {gpu_display}", ln=False)
                 pdf.cell(100, 8, txt=f"GPU TDP: {self.gpu_info['tdp']}W", ln=True)
             pdf.ln(10)
@@ -145,8 +796,7 @@ class EcoTrace:
             pdf.set_font("helvetica", size=8)
             total_sum = 0.0
             for row in history:
-                # Clean function name for PDF
-                safe_func_name = "".join(c for c in str(row[1]) if ord(c) < 128)
+                safe_func_name = self._sanitize_for_pdf(row[1])
                 pdf.cell(40, 8, str(row[0]), border=1)
                 pdf.cell(50, 8, safe_func_name, border=1)
                 pdf.cell(25, 8, str(row[2]), border=1)
@@ -154,10 +804,9 @@ class EcoTrace:
                 pdf.cell(30, 8, str(row[4]), border=1, ln=True)
                 try:
                     total_sum += float(row[3])
-                except:
+                except ValueError:
                     pass
 
-            # Optional CPU usage chart page
             chart_image_path = None
             try:
                 if cpu_samples:
@@ -191,7 +840,6 @@ class EcoTrace:
             pdf.set_text_color(255, 255, 255)
             pdf.cell(0, 15, txt=f"TOTAL CUMULATIVE EMISSIONS: {total_sum:.8f} gCO2", border=1, fill=True, align='C', ln=True)
 
-            # Optional side-by-side comparison table
             if comparison is not None:
                 r1 = comparison.get("func1", {})
                 r2 = comparison.get("func2", {})
@@ -218,7 +866,6 @@ class EcoTrace:
             pdf.output(filename)
             print(f"\n[EcoTrace] Report saved: {filename}")
 
-            # Clean up the temporary chart image
             if chart_image_path and os.path.exists(chart_image_path):
                 try:
                     os.unlink(chart_image_path)
@@ -228,333 +875,11 @@ class EcoTrace:
         except Exception as e:
             print(f"\n[EcoTrace] PDF Error: {e}")
 
-    def _load_tdp_database(self):
-        """Parses the CPU spec CSV into a {model_name: tdp} dict."""
-        tdp_dict = {}
-        if not os.path.exists(self.csv_path):
-            return tdp_dict
-        try:
-            with open(self.csv_path, mode='r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    m_name = row.get('name', '').lower().strip()
-                    tdp_val = row.get('tdp')
-                    if m_name and tdp_val:
-                        try:
-                            tdp_dict[m_name] = float(tdp_val)
-                        except:
-                            continue
-        except Exception:
-            pass
-        return tdp_dict
-
-    def _get_carbon_intensity(self):
-        """Looks up gCO2/kWh for the configured region. Falls back to 475 (IEA 2022 global avg)."""
-        try:
-            if os.path.exists(self.json_path):
-                with open(self.json_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    return data.get("CARBON_INTENSITY_MAP", {}).get(self.region_code, 475)
-            return 475
-        except Exception:
-            return 475
-    @classmethod
-    @functools.lru_cache(maxsize=1)
-    def fetch_raw_cpu_info(cls):
-        return cpuinfo.get_cpu_info()
-    
-    def _get_cpu_info(self):
-        """Detects the current CPU and looks up its TDP. Falls back to 65W if not found in the database."""
-        info = self.fetch_raw_cpu_info()
-        brand = info.get("brand_raw", "Unknown CPU")
-        
-        # Clean brand string for matching, but keep a display version
-        display_brand = "".join(c for c in brand if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
-        
-        clean_brand = brand.lower()
-        clean_brand = clean_brand.replace("(r)", "").replace("(tm)", "")
-        clean_brand = re.sub(r'\d+th\s+gen', '', clean_brand)
-        clean_brand = " ".join(clean_brand.split())
-
-        found_tdp = 65.0  # Common mid-range desktop TDP fallback
-
-        if clean_brand in self.tdp_db:
-            found_tdp = self.tdp_db[clean_brand]
-        else:
-            for model_name, tdp in self.tdp_db.items():
-                if model_name == clean_brand:
-                    found_tdp = tdp
-                    break
-                if clean_brand in model_name and len(clean_brand) > 10:
-                    found_tdp = tdp
-                    break
-
-        return {"brand": display_brand, "cores": psutil.cpu_count(logical=False), "tdp": found_tdp}
-
-    def _get_gpu_info(self):
-        """Detects GPU and TDP. Tries NVIDIA (pynvml), then AMD/Intel via WMI (Windows only).
-        Uses estimated TDPs when the driver can't report exact values: Intel ~15W, AMD ~75W, unknown ~100W."""
-
-        try:
-            import nvidia_ml_py as pynvml
-            pynvml.nvmlInit()
-            handle = pynvml.nvmlDeviceGetHandleByIndex(self.gpu_index)
-            name = pynvml.nvmlDeviceGetName(handle)
-            # Clean name for PDF compatibility
-            display_name = "".join(c for c in name if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
-            tdp = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
-            return {"brand": display_name, "tdp": tdp, "type": "nvidia", "handle": handle}
-        except Exception:
-            pass
-
-        try:
-            import wmi
-            w = wmi.WMI()
-            for i, gpu in enumerate(w.Win32_VideoController()):
-                if i == self.gpu_index:
-                    name = gpu.Name
-                    # Clean name for PDF compatibility
-                    display_name = "".join(c for c in name if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
-                    if "intel" in name.lower():
-                        return {"brand": display_name, "tdp": 15.0, "type": "intel", "handle": None}
-                    elif "amd" in name.lower() or "radeon" in name.lower():
-                        return {"brand": display_name, "tdp": 75.0, "type": "amd", "handle": None}
-                    else:
-                        return {"brand": display_name, "tdp": 100.0, "type": "unknown", "handle": None}
-        except Exception:
-            pass
-
-        return None
-
-    def track(self, func):
-        """Decorator for measuring carbon emissions. Handles both sync and async functions automatically.
-        Uses continuous CPU sampling via measure() and measure_async() for accurate results."""
-
-        if inspect.iscoroutinefunction(func):
-            @functools.wraps(func)
-            async def async_wrapper(*args, **kwargs):
-                return (await self.measure_async(func, *args, **kwargs))["result"]
-            return async_wrapper
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            return self.measure(func, *args, **kwargs)["result"]
-
-        return wrapper
-
-    def _log_to_csv(self, func_name, duration, carbon):
-        """Appends one measurement row to ecotrace_log.csv, creating the file with headers if needed."""
-        file_exists = os.path.isfile("ecotrace_log.csv")
-        with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            if not file_exists:
-                writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region"])
-            writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), func_name, f"{duration:.4f}", f"{carbon:.8f}", self.region_code])
-
-    def _cpu_monitor_worker(self):
-        """Background thread: samples process CPU usage every 50ms and stores (timestamp, cpu%) tuples."""
-        self._current_process.cpu_percent()  # Discard first call — psutil always returns 0.0 initially
-        while self._cpu_monitor_active:
-            try:
-                cpu_usage = self._current_process.cpu_percent()
-                timestamp = time.perf_counter()
-                with self._cpu_sample_lock:
-                    self._cpu_samples.append((timestamp, cpu_usage))
-                time.sleep(self._monitor_interval)
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                break
-            
-    def _gpu_monitor_worker(self):
-        """Background thread: samples GPU usage every 50ms and stores (timestamp, gpu%) tuples."""
-        if self.gpu_info:
-            import nvidia_ml_py as pynvml  # NVIDIA GPU monitoring library
-            handle = self.gpu_info["handle"]  # Reuse handle from initialization
-            while self._gpu_monitor_active:
-                try:
-                    util = pynvml.nvmlDeviceGetUtilizationRates(handle)
-                    gpu_usage = util.gpu
-                    timestamp = time.perf_counter()
-                    with self._gpu_sample_lock:
-                        self._gpu_samples.append((timestamp, gpu_usage))
-                    time.sleep(0.05)  # 50ms sampling interval — matches CPU monitor
-                except:
-                    break
-    def _start_cpu_monitor(self):
-        """Spawns the background CPU sampling thread."""
-        if not self._cpu_monitor_active:
-            self._cpu_monitor_active = True
-            self._cpu_samples.clear()
-            self._cpu_monitor_thread = threading.Thread(target=self._cpu_monitor_worker, daemon=True)
-            self._cpu_monitor_thread.start()
-
-    def _stop_cpu_monitor(self):
-        """Signals the sampling thread to stop and waits for it to exit."""
-        self._cpu_monitor_active = False
-        if self._cpu_monitor_thread:
-            self._cpu_monitor_thread.join(timeout=1.0)
-            self._cpu_monitor_thread = None
-            
-    def _start_gpu_monitor(self):
-        """Spawns the background GPU sampling thread."""
-        if not self._gpu_monitor_active:
-            self._gpu_monitor_active = True
-            self._gpu_samples.clear()
-            self._gpu_monitor_thread = threading.Thread(target=self._gpu_monitor_worker, daemon=True)
-            self._gpu_monitor_thread.start()
-            
-    def _stop_gpu_monitor(self):
-        """Signals the sampling thread to stop and waits for it to exit."""
-        self._gpu_monitor_active = False
-        if self._gpu_monitor_thread:
-            self._gpu_monitor_thread.join(timeout=1.0)
-            self._gpu_monitor_thread = None
-
-    def _get_avg_cpu_in_range(self, start_time, end_time):
-        """Returns the mean CPU% from samples collected between two perf_counter timestamps."""
-        with self._cpu_sample_lock:
-            relevant_samples = [
-                cpu for ts, cpu in self._cpu_samples
-                if start_time <= ts <= end_time
-            ]
-            if not relevant_samples:
-                return 100.0 # Fallback to full utilization
-            return sum(relevant_samples) / len(relevant_samples)
-    
-    def _get_avg_gpu_in_range(self, start_time, end_time):
-        """Returns the mean GPU% from samples collected between two perf_counter timestamps."""
-        with self._gpu_sample_lock:
-            relevant_samples = [
-                gpu for ts, gpu in self._gpu_samples
-                if start_time <= ts <= end_time
-        ]        
-        if not relevant_samples:
-            return 100.0  # Fallback to full utilization
-        return sum(relevant_samples) / len(relevant_samples)        
-            
-
-    @contextmanager
-    def cpu_monitor(self):
-        """Context manager that starts CPU monitoring on enter and stops it on exit."""
-        self._start_cpu_monitor()
-        try:
-            yield self
-        finally:
-            self._stop_cpu_monitor()
-            
-    @contextmanager
-    def gpu_monitor(self):
-        """Context manager that starts GPU monitoring on enter and stops it on exit."""
-        self._start_gpu_monitor()
-        try:
-            yield self
-        finally:
-            self._stop_gpu_monitor()
-
-    async def measure_async(self, func, *args, **kwargs):
-        """Runs an async function and measures its carbon emissions using continuous CPU sampling.
-        More accurate than @track for bursty or long-running async workloads.
-        Returns a dict with func_name, duration, avg_cpu, carbon, cpu_samples, and the function result."""
-
-        start_time = time.perf_counter()
-        with self.cpu_monitor():
-            try:
-                result_data = await func(*args, **kwargs)
-            except Exception as e:
-                raise e
-            finally:
-                await asyncio.sleep(0.05)  # Allow trailing samples to be captured
-                end_time = time.perf_counter()
-                duration = end_time - start_time
-
-            avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
-
-            with self._cpu_sample_lock:
-                measurement_samples = list(self._cpu_samples)
-
-            power_usage_wh = (self.cpu_info['tdp'] * (avg_cpu / 100) * duration) / 3600  # Wh
-            carbon_emitted = (power_usage_wh / 1000) * self.carbon_intensity
-
-            self.total_carbon += carbon_emitted
-            self._log_to_csv(func.__name__, duration, carbon_emitted)
-
-            return {
-                "func_name": func.__name__,
-                "duration": duration,
-                "avg_cpu": avg_cpu,
-                "carbon": carbon_emitted,
-                "cpu_samples": measurement_samples,
-                "result": result_data
-            }
-
-    def measure(self, func, *args, **kwargs):
-        """Measures carbon emissions of a sync function call."""
-        start_time = time.perf_counter()
-        with self.cpu_monitor():
-            result_data = func(*args, **kwargs)
-            end_time = time.perf_counter()
-            duration = end_time - start_time
-            
-            avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
-            
-            with self._cpu_sample_lock:
-                measurement_samples = list(self._cpu_samples)
-            
-            power_usage_wh = (self.cpu_info['tdp'] * (avg_cpu / 100) * duration) / 3600
-            carbon_emitted = (power_usage_wh / 1000) * self.carbon_intensity
-            
-            self.total_carbon += carbon_emitted
-            self._log_to_csv(func.__name__, duration, carbon_emitted)
-            
-            return {
-                "func_name": func.__name__,
-                "duration": duration,
-                "avg_cpu": avg_cpu,
-                "carbon": carbon_emitted,
-                "cpu_samples": measurement_samples,
-                "result": result_data
-            }
-
-    def compare(self, func1, func2) -> dict:
-        """Runs two functions and prints a side-by-side comparison of their duration and emissions."""
-        result1 = self.measure(func1)
-        result2 = self.measure(func2)
-        print(f"\n[EcoTrace] Comparison Results:")
-        print(f"Function 1: {result1['func_name']} - Duration: {result1['duration']:.4f} sec - CO2: {result1['carbon']:.8f} gCO2")
-        print(f"Function 2: {result2['func_name']} - Duration: {result2['duration']:.4f} sec - CO2: {result2['carbon']:.8f} gCO2")
-        return {"func1": result1, "func2": result2}
+    # ========================================================================
+    # Lifecycle
+    # ========================================================================
 
     def __del__(self):
-        """Ensures the background monitoring thread is stopped on garbage collection."""
+        """Ensures all background monitoring threads are stopped on cleanup."""
         self._stop_cpu_monitor()
         self._stop_gpu_monitor()
-
-    def track_gpu(self, func):
-        """Decorator for measuring GPU carbon emissions with real utilization monitoring."""
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            if self.gpu_info is None:
-                print(f"\n[EcoTrace] No GPU found, skipping measurement.")
-                return func(*args, **kwargs)
-            
-            start_time = time.perf_counter()
-            with self.gpu_monitor():
-                result = func(*args, **kwargs)
-            end_time = time.perf_counter()
-            
-            avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time)  # Real utilization — not assumed full TDP 
-            power_usage = (self.gpu_info['tdp'] * (avg_gpu_util / 100) * (end_time - start_time)) / 3600
-            carbon_emitted = (power_usage / 1000) * self.carbon_intensity
-            
-            self.total_carbon += carbon_emitted
-            self._log_to_csv(func.__name__, end_time - start_time, carbon_emitted)
-            print(f"\n[EcoTrace] GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
-            print(f"[EcoTrace] Duration     : {end_time - start_time:.4f} sec")
-            print(f"[EcoTrace] GPU Usage    : {avg_gpu_util:.1f}%")
-            print(f"[EcoTrace] CO2          : {carbon_emitted:.8f} gCO2")
-            return result
-        return wrapper
-            
-        
-
-                

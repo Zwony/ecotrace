@@ -1,1 +1,1 @@
-recursive-include ecotrace *.json
+recursive-include ecotrace *.json *.csv

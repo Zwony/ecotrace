@@ -47,5 +47,10 @@
     "EG": 448,
     "NG": 385,
     "DEFAULT": 475
+  },
+  "GPU_TDP_DEFAULTS": {
+    "intel": 15.0,
+    "amd": 75.0,
+    "unknown": 100.0
   }
 }

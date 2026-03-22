@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "0.3.5"
-description = "EcoTrace: A powerful Python library to measure CPU/GPU energy consumption and estimate carbon emissions with detailed PDF reporting and continuous sampling."
+version = "0.4.0"
+description = "EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting."
 keywords = ["carbon-footprint", "energy-efficiency", "green-computing", "sustainability", "metrics", "cpu-monitoring", "gpu-monitoring"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -42,4 +42,4 @@ Repository = "https://github.com/Zwony/ecotrace"
 packages = ["ecotrace"]
 
 [tool.setuptools.package-data]
-ecotrace = ["*.json"]
+ecotrace = ["*.json", "*.csv", "cpu_spec.csv/**/*.csv"]
