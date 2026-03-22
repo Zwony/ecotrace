@@ -6,7 +6,7 @@
 
 *Measure. Optimize. Report. — Function-level carbon intelligence with scientific rigor.*
 
-[![PyPI version](https://badge.fury.io/py/ecotrace.svg)](https://badge.fury.io/py/ecotrace)
+[![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=blue)](https://pypi.org/project/ecotrace/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](https://opensource.org/licenses/MIT)
 [![Carbon Aware](https://img.shields.io/badge/Carbon-Aware-2E8B57?logo=leaflet&logoColor=white)](https://github.com/Zwony/ecotrace)
