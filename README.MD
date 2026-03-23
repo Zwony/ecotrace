@@ -14,6 +14,16 @@
 [![Downloads/Month](https://pepy.tech/badge/ecotrace/month)](https://pepy.tech/project/ecotrace)
 [![GitHub stars](https://img.shields.io/github/stars/Zwony/ecotrace?style=social)](https://github.com/Zwony/ecotrace/stargazers)
 
+<br>
+<br>
+
+[![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Discord&logo=discord&style=for-the-badge)](https://discord.gg/hs58XXb3Uq)
+
+*🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
+
+<br>
+<br>
+
 ![EcoTrace Demo](demo.gif)
 
 </div>
@@ -313,17 +323,6 @@ wmi             — AMD/Intel GPU detection (Windows only)
 ```
 
 > **Compatibility:** EcoTrace is tested on Python 3.7+ and runs on Windows, macOS, and Linux. GPU features require appropriate vendor drivers.
-
----
-
-## Community & Support
-
-[![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Discord&logo=discord&style=for-the-badge)](https://discord.gg/hs58XXb3Uq)
-
-- 🐛 **Report bugs** — Help us improve reliability
-- 💡 **Suggest features** — Shape the EcoTrace Pro roadmap
-- 💻 **Contribute TDP data** — Expand hardware coverage
-- 🛠️ **Get support** — Installation and usage help
 
 ---
 
