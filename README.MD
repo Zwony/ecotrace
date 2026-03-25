@@ -30,6 +30,27 @@
 
 ---
 
+## 🆚 EcoTrace vs CodeCarbon
+
+| Feature | EcoTrace | CodeCarbon |
+|---|---|---|
+| CPU tracking | ✅ | ✅ |
+| NVIDIA GPU tracking | ✅ | ✅ |
+| **AMD + Intel GPU tracking** | ✅ | ❌ |
+| **Async function support** | ✅ | ❌ |
+| **Process-scoped CPU** (not system-wide) | ✅ | ❌ |
+| **50ms continuous sampling** | ✅ | ❌ |
+| **Side-by-side comparison** (`compare()`) | ✅ | ❌ |
+| **PDF report with CPU charts** | ✅ | ❌ |
+| **Thread-safe multi-decorator** | ✅ | ❌ |
+| **1800+ CPU TDP database** (Boavizta) | ✅ | ❌ |
+| **Crash-proof decorators** (result always returned) | ✅ | ❌ |
+| 40+ region support | ✅ | Limited |
+| CSV audit logging | ✅ | ✅ |
+| Zero-config decorator | ✅ | ✅ |
+
+---
+
 ## Why EcoTrace?
 
 Modern software teams face increasing pressure to quantify and reduce their computational carbon footprint — from EU CSRD mandates to internal ESG commitments. Most carbon tracking tools bolt on heavy instrumentation that distorts the very workloads they measure.
