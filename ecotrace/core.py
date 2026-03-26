@@ -1013,9 +1013,15 @@ class EcoTrace:
                 pdf.set_font("helvetica", size=8)
                 
                 for row in history[-5:]:  # Last 5 functions
-                    if len(row) >= 4:
+                    try:
+                        if len(row) < 6:  # Need at least 6 columns for v0.5.0 format
+                            continue
+                            
                         func_name = row[1][:15] + "..." if len(row[1]) > 15 else row[1]
-                        duration = float(row[2])
+                        duration = float(row[2])  # Duration column
+                        carbon = float(row[3])    # Carbon column  
+                        # row[4] is Region (string) - skip float conversion
+                        avg_cpu = float(row[5])   # AvgCPU column (v0.5.0)
                         
                         # Generate insights based on performance metrics
                         insights = []
@@ -1024,23 +1030,22 @@ class EcoTrace:
                         elif duration > 2.0:
                             insights.append("Consider async implementation")
                         
-                        # CPU-based insights (use stored avg_cpu from CSV if available)
-                        if len(row) > 4:  # If avg_cpu is stored in CSV
-                            estimated_cpu = min(float(row[4]), 100.0)
-                        else:  # Fallback estimation from carbon data
-                            estimated_cpu = min((float(row[3]) / 0.0005) * 100, 100.0)
-                        if estimated_cpu > 70:
+                        # CPU-based insights (use recorded avg_cpu directly)
+                        if avg_cpu > 70:
                             insights.append("High CPU: Optimize loops")
-                        elif estimated_cpu < 20:
+                        elif avg_cpu < 20:
                             insights.append("Low CPU: Consider batching")
                         
                         if not insights:
                             insights.append("Performance looks optimal")
                         
                         pdf.cell(60, 8, func_name, border=1)
-                        pdf.cell(40, 8, f"{estimated_cpu:.1f}%", border=1)
+                        pdf.cell(40, 8, f"{avg_cpu:.1f}%", border=1)
                         pdf.cell(40, 8, f"{duration:.2f}s", border=1)
                         pdf.cell(50, 8, insights[0][:20] + "..." if len(insights[0]) > 20 else insights[0], border=1, ln=True)
+                        
+                    except (IndexError, ValueError) as e:
+                        continue  # Skip malformed rows
 
             pdf.output(filename)
             print(f"\n[EcoTrace] Report saved: {filename}")
