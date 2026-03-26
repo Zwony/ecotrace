@@ -423,9 +423,8 @@ class EcoTrace:
         Returns:
             float: Estimated carbon emissions in gCO2.
         """
-        # Normalize utilization by core count for multi-threaded CPUs
-        core_count = self.cpu_info.get('cores', 1)  # Safe fallback to 1 core
-        normalized_utilization = min(max(utilization_pct / core_count, 0.0), 100.0)
+        # Use raw CPU utilization (psutil already provides normalized percentage)
+        normalized_utilization = min(max(utilization_pct, 0.0), 100.0)
         
         # CPU energy calculation
         cpu_power_wh = (tdp * normalized_utilization / 100) * duration_s / self.SECONDS_PER_HOUR
@@ -550,11 +549,9 @@ class EcoTrace:
             if not relevant_samples:
                 return self.FULL_UTILIZATION_PERCENT
             
-            # Normalize by core count for multi-threaded systems
-            core_count = self.cpu_info.get('cores', 1)  # Safe fallback to 1 core
+            # Use raw CPU percentage (psutil already provides 0-100% average)
             raw_avg = sum(relevant_samples) / len(relevant_samples)
-            normalized_avg = min(raw_avg / core_count, 100.0)
-            return normalized_avg
+            return raw_avg
 
     def _get_avg_gpu_in_range(self, start_time, end_time):
         """Computes mean GPU utilization from samples within a time window.
@@ -840,7 +837,7 @@ class EcoTrace:
         try:
             timestamps = [t for t, _ in samples_data]
             core_count = self.cpu_info.get('cores', 1)  # Safe fallback
-            cpu_values = [min(s / core_count, 100.0) for _, s in samples_data]  # Dynamic normalization
+            cpu_values = [min(s, 100.0) for _, s in samples_data]  # Raw values with 100% cap
             relative_times = [(t - timestamps[0]) for t in timestamps]
 
             fig, ax = plt.subplots(figsize=(10, 4))
@@ -942,10 +939,9 @@ class EcoTrace:
                         samples_list = list(cpu_samples)
 
                     if samples_list:
-                        # Normalize samples by core count before charting
-                        core_count = self.cpu_info.get('cores', 1)  # Safe fallback
+                        # Use raw CPU values with 100% cap
                         normalized_samples = [
-                            (t, min(s / core_count, 100.0)) 
+                            (t, min(s, 100.0)) 
                             for t, s in samples_list
                         ]
                         chart_image_path = self._create_cpu_usage_chart(normalized_samples)
@@ -1026,7 +1022,7 @@ class EcoTrace:
                             insights.append("Consider async implementation")
                         
                         # CPU-based insights (estimated from carbon/duration ratio)
-                        estimated_cpu = min(max((float(row[3]) / 0.0001) * 100, 0), 100)
+                        estimated_cpu = min((float(row[3]) / 0.0005) * 100, 100.0)
                         if estimated_cpu > 70:
                             insights.append("High CPU: Optimize loops")
                         elif estimated_cpu < 20:
