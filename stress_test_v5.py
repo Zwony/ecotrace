@@ -6,6 +6,13 @@ from ecotrace import EcoTrace
 # Initialize EcoTrace with hardware detection
 eco = EcoTrace(region_code="TR")
 
+def heavy_computation(duration):
+    """CPU-intensive mathematical operation."""
+    start = time.time()
+    while time.time() - start < duration:
+        # Heavy mathematical load that uses CPU heavily
+        _ = sum(math.sqrt(i) for i in range(10000))
+
 @eco.track
 def cpu_stress_benchmark():
     """Stress test that spawns process for every available CPU core.
@@ -14,13 +21,6 @@ def cpu_stress_benchmark():
     keeping graphs within 0-100% range under extreme multi-core load.
     """
     print(f"[Stress Test] Starting multi-core stress on {multiprocessing.cpu_count()} cores...")
-    
-    def heavy_computation(duration):
-        """CPU-intensive mathematical operation."""
-        start = time.time()
-        while time.time() - start < duration:
-            # Heavy mathematical load that uses CPU heavily
-            _ = sum(math.sqrt(i) for i in range(10000))
     
     # Spawn process for every available CPU core
     processes = []
