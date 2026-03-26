@@ -7,11 +7,22 @@ import cpuinfo
 
 @functools.lru_cache(maxsize=1)
 def fetch_raw_cpu_info():
-    """Retrieves raw CPU information via py-cpuinfo."""
+    """Retrieves raw CPU information bounding to py-cpuinfo caching.
+
+    Returns:
+        dict: Standardized CPU properties including architecture and physical identifiers.
+    """
     return cpuinfo.get_cpu_info()
 
 def load_tdp_database(csv_path):
-    """Parses the Boavizta CPU spec CSV into a TDP lookup dictionary."""
+    """Parses the Boavizta CPU specification dataset into a TDP lookup table.
+
+    Args:
+        csv_path (str): File system path targeting the Boavizta 'cpu_specs.csv'.
+
+    Returns:
+        dict: Hash map linking lowercase exact CPU model strings to their float TDP values.
+    """
     tdp_dict = {}
     if not os.path.exists(csv_path):
         return tdp_dict
@@ -31,11 +42,24 @@ def load_tdp_database(csv_path):
     return tdp_dict
 
 def get_cpu_info(tdp_db, constants_data):
-    """Detects CPU hardware and resolves TDP using a multi-source lookup chain."""
+    """Detects CPU hardware and resolves Thermal Design Power using a multi-source chain.
+
+    Matches available chip strings strictly against Apple Silicon static definitions
+    first, before fuzzy matching against the Boavizta hardware database for x86 chips.
+
+    Args:
+        tdp_db (dict): Generated dictionary matching CPU hardware to known TDPs.
+        constants_data (dict): Application-wide constant configurations containing 'TDP_MAP'.
+
+    Returns:
+        dict: CPU characteristics comprising:
+            - brand (str): ASCII-cleaned display name for the physical CPU.
+            - cores (int): Count of logical processing threads utilizing the OS scheduler.
+            - tdp (float): Assigned structural TDP boundary in watts.
+    """
     info = cpuinfo.get_cpu_info()
     brand = info.get("brand_raw", "Unknown CPU")
     
-    # Clean brand string for matching, but keep a display version
     display_brand = "".join(c for c in brand if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
     
     clean_brand = brand.lower()
@@ -43,18 +67,15 @@ def get_cpu_info(tdp_db, constants_data):
     clean_brand = re.sub(r'\d+th\s+gen', '', clean_brand)
     clean_brand = " ".join(clean_brand.split())
 
-    # Apple Silicon M-series detection
     if "apple" in clean_brand:
-        found_tdp = 25.0  # M-series laptop-class average TDP fallback
+        found_tdp = 25.0
         tdp_map = constants_data.get("TDP_MAP", {})
         for m_chip in ["m4", "m3", "m2", "m1"]:
             if m_chip in clean_brand:
                 found_tdp = tdp_map.get(m_chip.upper(), 25.0)
                 break
     else:
-        # Intel/AMD CSV database lookup
-        found_tdp = 65.0  # Common mid-range desktop TDP fallback
-
+        found_tdp = 65.0
         if clean_brand in tdp_db:
             found_tdp = tdp_db[clean_brand]
         else:

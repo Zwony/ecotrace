@@ -5,17 +5,35 @@ from fpdf import FPDF
 import matplotlib.pyplot as plt
 
 def sanitize_for_pdf(text):
-    """Strips non-ASCII characters for safe PDF rendering."""
+    """Strips non-ASCII characters for safe PDF rendering.
+
+    Args:
+        text (str): Input string potentially containing non-ASCII characters.
+
+    Returns:
+        str: ASCII-safe string formatted for FPDF encoding restrictions.
+    """
     return "".join(c for c in str(text) if ord(c) < 128)
 
 def create_cpu_usage_chart(samples_data, core_count=1):
-    """Renders a CPU usage line chart and saves it to a temporary PNG file."""
+    """Renders a CPU usage line chart and saves it to a temporary PNG file.
+
+    Generates a visual representation of CPU utilization normalized against the total
+    available logical cores to prevent inflation on heavily multi-threaded systems.
+
+    Args:
+        samples_data (list): List of ``(timestamp, cpu_percent)`` float tuples.
+        core_count (int): Number of logical processor cores for scaling reference.
+
+    Returns:
+        str or None: Absolute path to the generated PNG file, or None on failure.
+    """
     if not samples_data:
         return None
 
     try:
         timestamps = [t for t, _ in samples_data]
-        cpu_values = [min(s, 100.0) for _, s in samples_data]  # Raw values with 100% cap
+        cpu_values = [min(s, 100.0) for _, s in samples_data]
         relative_times = [(t - timestamps[0]) for t in timestamps]
 
         fig, ax = plt.subplots(figsize=(10, 4))
@@ -25,7 +43,7 @@ def create_cpu_usage_chart(samples_data, core_count=1):
         ax.set_ylabel('Normalized CPU Usage (%)', fontsize=10)
         ax.set_title('CPU Usage Over Time (Core-Normalized)', fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
-        ax.set_ylim(0, 110)  # Allow 10% headroom for spikes
+        ax.set_ylim(0, 110)
         plt.tight_layout()
 
         temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
@@ -45,7 +63,22 @@ def generate_pdf_report(
     comparison=None, 
     cpu_samples=None
 ):
-    """Generates a comprehensive PDF audit report."""
+    """Generates a comprehensive PDF audit report covering energy footprint data.
+
+    Aggregates hardware profile insights, execution CSV history, AI-assisted performance
+    diagnostics, CPU usage charts, and comparison statistics into a standalone PDF.
+
+    Args:
+        filename (str): Desired output trajectory path for the PDF document.
+        cpu_info (dict): Hardware definitions dictionary detailing cores, brand, and TDP.
+        gpu_info (dict): Hardware definitions dictionary detailing GPU statistics.
+        region_code (str): Carbon regional intensity modifier identifier.
+        comparison (dict): Context mappings when processing paired run analyses.
+        cpu_samples (list): Captured process thread state samples for visualization rendering.
+
+    Returns:
+        None: Operations output side-effects to the disk format system, with CLI feedbacks.
+    """
     if cpu_info is None:
         cpu_info = {"brand": "Unknown", "cores": 1, "tdp": 65.0}
         
@@ -112,7 +145,6 @@ def generate_pdf_report(
         chart_image_path = None
         try:
             if cpu_samples:
-                # Note: synchronization (locking) should be done by the caller before passing cpu_samples
                 samples_list = cpu_samples
 
                 if samples_list:
@@ -171,7 +203,6 @@ def generate_pdf_report(
             pdf.cell(35, 8, f"{r2.get('avg_cpu', 0):.1f}", border=1)
             pdf.cell(50, 8, f"{r2.get('carbon', 0):.8f}", border=1, ln=True)
 
-        # Performance Insights Section
         if history:
             pdf.ln(15)
             pdf.set_font("helvetica", 'B', 12)
@@ -185,7 +216,7 @@ def generate_pdf_report(
             pdf.cell(50, 10, "Recommendation", border=1, fill=True, ln=True)
             pdf.set_font("helvetica", size=8)
             
-            for row in history[-5:]:  # Last 5 functions
+            for row in history[-5:]:
                 try:
                     if len(row) < 6:
                         continue

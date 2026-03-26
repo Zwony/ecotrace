@@ -1,5 +1,22 @@
 def get_gpu_info(gpu_index, gpu_tdp_defaults):
-    """Detects GPU hardware and resolves TDP using a tri-vendor fallback chain."""
+    """Detects GPU hardware and resolves its power limit using a tri-vendor fallback chain.
+
+    Initializes NVIDIA NVML for precision TDP tracking. If an NVIDIA GPU is not found,
+    it falls back to WMI (Windows Management Instrumentation) to perform string-based
+    matching and assigns default architectural estimated TDPs.
+
+    Args:
+        gpu_index (int): Zero-based index of the target GPU device to monitor.
+        gpu_tdp_defaults (dict): Vendor mapping for missing hardware limits (Intel/AMD).
+
+    Returns:
+        dict or None: GPU metadata dictionary containing:
+            - brand (str): Human-readable device name.
+            - tdp (float): Power management limit in watts.
+            - type (str): Vendor classifier ('nvidia', 'intel', 'amd', 'unknown').
+            - handle (object): NVML hardware handle if available, otherwise None.
+        Returns None if no GPU is detected.
+    """
     WATTS_PER_KILOWATT = 1000
     try:
         import nvidia_ml_py as pynvml
