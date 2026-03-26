@@ -7,13 +7,12 @@ import cpuinfo
 import csv
 from contextlib import contextmanager
 from datetime import datetime
-from fpdf import FPDF
+from .config import load_constants, validate_region_code, resolve_carbon_intensity, load_gpu_tdp_defaults
 import functools
 import asyncio
 import inspect
 import threading
 from collections import deque
-import matplotlib.pyplot as plt
 import tempfile
 
 from .ram import get_ram_info, RAM_WATT_FACTORS
@@ -46,14 +45,6 @@ class EcoTrace:
         TypeError: If gpu_index is not an integer or carbon_limit is not numeric.
     """
 
-    # --- Estimation defaults ------------------------------------------------
-    DEFAULT_CPU_TDP_W = 65.0
-    DEFAULT_GPU_TDP_INTEL_W = 15.0
-    DEFAULT_GPU_TDP_AMD_W = 75.0
-    DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
-    DEFAULT_CARBON_INTENSITY = 475  # IEA 2022 global average (gCO2/kWh)
-    DEFAULT_REGION = "TR"
-
     # --- Sampling configuration ---------------------------------------------
     FULL_UTILIZATION_PERCENT = 100.0
     MONITOR_INTERVAL_S = 0.05  # 50 ms
@@ -85,11 +76,11 @@ class EcoTrace:
         self.csv_path = os.path.join(self.base_dir, "cpu_spec.csv", "boaviztapi", "data", "crowdsourcing", "cpu_specs.csv")
 
         # Load data sources before validating region_code
-        self._constants_data = self._load_constants()
+        self._constants_data = load_constants(self.json_path)
         self.tdp_db = load_tdp_database(self.csv_path)
-        self.region_code = self._validate_region_code(region_code)
-        self.carbon_intensity = self._resolve_carbon_intensity()
-        self.gpu_tdp_defaults = self._load_gpu_tdp_defaults()
+        self.region_code = validate_region_code(region_code, self._constants_data)
+        self.carbon_intensity = resolve_carbon_intensity(self.region_code, self._constants_data)
+        self.gpu_tdp_defaults = load_gpu_tdp_defaults(self._constants_data)
         self.cpu_info = get_cpu_info(self.tdp_db, self._constants_data)
         self.gpu_info = get_gpu_info(self.gpu_index, self.gpu_tdp_defaults)
         self.ram_info = get_ram_info()
@@ -120,83 +111,8 @@ class EcoTrace:
         print("----------------------------\n")
 
     # ========================================================================
-    # Input validation helpers
-    # ========================================================================
-
-    def _load_constants(self):
-        """Loads the full constants.json file into memory.
-
-        Returns:
-            dict: Parsed JSON contents, or empty dict on failure.
-        """
-        try:
-            if os.path.exists(self.json_path):
-                with open(self.json_path, "r", encoding="utf-8") as f:
-                    return json.load(f)
-        except Exception:
-            pass
-        return {}
-
-    def _validate_region_code(self, region_code):
-        """Validates the region code against known carbon intensity entries.
-
-        Args:
-            region_code: User-provided ISO country code string.
-
-        Returns:
-            str: The validated region code, or DEFAULT_REGION if invalid.
-        """
-        if not isinstance(region_code, str) or not region_code.strip():
-            print(f"[EcoTrace] WARNING: Invalid region_code={region_code!r}, defaulting to '{self.DEFAULT_REGION}'.")
-            return self.DEFAULT_REGION
-
-        code = region_code.strip().upper()
-        intensity_map = self._constants_data.get("CARBON_INTENSITY_MAP", {})
-
-        if code not in intensity_map:
-            print(f"[EcoTrace] WARNING: Unknown region '{code}', defaulting to '{self.DEFAULT_REGION}'.")
-            return self.DEFAULT_REGION
-        return code
-
-    def _resolve_carbon_intensity(self):
-        """Resolves the gCO2/kWh value for the validated region code.
-
-        Returns:
-            float: Carbon intensity factor for the configured region.
-        """
-        return (
-            self._constants_data
-            .get("CARBON_INTENSITY_MAP", {})
-            .get(self.region_code, self.DEFAULT_CARBON_INTENSITY)
-        )
-
-    def _load_gpu_tdp_defaults(self):
-        """Loads GPU TDP default estimates from constants.json.
-
-        Returns:
-            dict: Mapping of vendor key to estimated TDP in watts.
-        """
-        return self._constants_data.get("GPU_TDP_DEFAULTS", {
-            "intel": self.DEFAULT_GPU_TDP_INTEL_W,
-            "amd": self.DEFAULT_GPU_TDP_AMD_W,
-            "unknown": self.DEFAULT_GPU_TDP_UNKNOWN_W,
-        })
-
-    # ========================================================================
     # Carbon calculation helpers
     # ========================================================================
-
-    @staticmethod
-    def _sanitize_for_pdf(text):
-        """Strips non-ASCII characters for safe PDF rendering.
-
-        Args:
-            text: Input string potentially containing non-ASCII characters.
-
-        Returns:
-            str: ASCII-safe string.
-        """
-        return "".join(c for c in str(text) if ord(c) < 128)
 
     def _measure_idle_baseline(self):
         """Captures short baseline measurement for differential carbon tracking.
@@ -650,240 +566,22 @@ class EcoTrace:
     # Reporting
     # ========================================================================
 
-    def _create_cpu_usage_chart(self, samples_data):
-        """Renders a CPU usage line chart and saves it to a temporary PNG file.
-
-        Args:
-            samples_data: List of ``(timestamp, cpu_percent)`` tuples.
-
-        Returns:
-            str or None: Path to the generated PNG, or None on failure.
-        """
-        if not samples_data:
-            return None
-
-        try:
-            timestamps = [t for t, _ in samples_data]
-            core_count = self.cpu_info.get('cores', 1)  # Safe fallback
-            cpu_values = [min(s, 100.0) for _, s in samples_data]  # Raw values with 100% cap
-            relative_times = [(t - timestamps[0]) for t in timestamps]
-
-            fig, ax = plt.subplots(figsize=(10, 4))
-            ax.plot(relative_times, cpu_values, linewidth=2, color='#2E8B57')
-            ax.fill_between(relative_times, cpu_values, alpha=0.3, color='#2E8B57')
-            ax.set_xlabel('Time (seconds)', fontsize=10)
-            ax.set_ylabel('Normalized CPU Usage (%)', fontsize=10)
-            ax.set_title('CPU Usage Over Time (Core-Normalized)', fontsize=12, fontweight='bold')
-            ax.grid(True, alpha=0.3)
-            ax.set_ylim(0, 110)  # Allow 10% headroom for spikes
-            plt.tight_layout()
-
-            temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
-            plt.savefig(temp_file.name, dpi=150, bbox_inches='tight')
-            plt.close(fig)
-            return temp_file.name
-
-        except Exception as e:
-            print(f"[EcoTrace] Chart generation failed: {e}")
-            return None
-
     def generate_pdf_report(self, filename="ecotrace_full_report.pdf", comparison=None, cpu_samples=None):
-        """Generates a comprehensive PDF audit report.
+        """Generates a comprehensive PDF audit report dynamically."""
+        from .report import generate_pdf_report as generate_pdf
+        samples_list = None
+        if cpu_samples:
+            with self._cpu_sample_lock:
+                samples_list = list(cpu_samples)
 
-        Includes system hardware profile, timestamped function history,
-        optional CPU usage charts, comparison analysis, and cumulative
-        emission totals.
-
-        Args:
-            filename: Output PDF file path.
-            comparison: Optional comparison dict from ``compare()``.
-            cpu_samples: Optional list of ``(timestamp, cpu_percent)`` tuples
-                for the CPU usage chart page.
-        """
-        try:
-            history = []
-            log_file = "ecotrace_log.csv"
-            if os.path.exists(log_file):
-                with open(log_file, mode='r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
-                    next(reader)
-                    for row in reader:
-                        if len(row) >= 5:
-                            history.append(row)
-
-            pdf = FPDF()
-            pdf.add_page()
-
-            pdf.set_font("helvetica", 'B', 20)
-            pdf.set_text_color(46, 139, 87)
-            pdf.cell(200, 15, txt="EcoTrace Analysis Report", ln=True, align='C')
-            pdf.ln(5)
-
-            pdf.set_fill_color(245, 245, 245)
-            pdf.set_font("helvetica", 'B', 12)
-            pdf.set_text_color(0, 0, 0)
-            pdf.cell(0, 10, txt=" System Information", ln=True, fill=True)
-            pdf.set_font("helvetica", size=10)
-            cpu_display = self._sanitize_for_pdf(self.cpu_info['brand'])
-            pdf.cell(100, 8, txt=f"CPU: {cpu_display}", ln=False)
-            pdf.cell(100, 8, txt=f"Cores: {self.cpu_info['cores']}", ln=True)
-            pdf.cell(100, 8, txt=f"TDP: {self.cpu_info['tdp']}W", ln=False)
-            pdf.cell(100, 8, txt=f"Region: {self.region_code}", ln=True)
-            if self.gpu_info:
-                gpu_display = self._sanitize_for_pdf(self.gpu_info['brand'])
-                pdf.cell(100, 8, txt=f"GPU: {gpu_display}", ln=False)
-                pdf.cell(100, 8, txt=f"GPU TDP: {self.gpu_info['tdp']}W", ln=True)
-            pdf.ln(10)
-
-            pdf.set_font("helvetica", 'B', 12)
-            pdf.cell(0, 10, txt=" Function History", ln=True, fill=True)
-            pdf.ln(2)
-            pdf.set_font("helvetica", 'B', 9)
-            pdf.set_fill_color(200, 220, 200)
-            pdf.cell(40, 10, "Date", border=1, fill=True)
-            pdf.cell(50, 10, "Function", border=1, fill=True)
-            pdf.cell(25, 10, "Duration(s)", border=1, fill=True)
-            pdf.cell(45, 10, "Carbon(gCO2)", border=1, fill=True)
-            pdf.cell(30, 10, "Region", border=1, fill=True, ln=True)
-
-            pdf.set_font("helvetica", size=8)
-            total_sum = 0.0
-            for row in history:
-                safe_func_name = self._sanitize_for_pdf(row[1])
-                pdf.cell(40, 8, str(row[0]), border=1)
-                pdf.cell(50, 8, safe_func_name, border=1)
-                pdf.cell(25, 8, str(row[2]), border=1)
-                pdf.cell(45, 8, str(row[3]), border=1)
-                pdf.cell(30, 8, str(row[4]), border=1, ln=True)
-                try:
-                    total_sum += float(row[3])
-                except ValueError:
-                    pass
-
-            chart_image_path = None
-            try:
-                if cpu_samples:
-                    with self._cpu_sample_lock:
-                        samples_list = list(cpu_samples)
-
-                    if samples_list:
-                        core_count = self.cpu_info.get("cores", 1)
-                        # Normalize samples by dividing by core count
-                        normalized_samples = [
-                            (t, min(s / core_count, 100.0)) 
-                            for t, s in samples_list
-                        ]
-                        chart_image_path = self._create_cpu_usage_chart(normalized_samples)
-
-                        if chart_image_path:
-                            pdf.add_page()
-                            pdf.set_font("helvetica", 'B', 12)
-                            pdf.cell(0, 10, txt=" CPU Usage Over Time (Core-Normalized)", ln=True, fill=True)
-                            pdf.ln(5)
-                            pdf.image(chart_image_path, x=10, y=50, w=190)
-                            pdf.ln(120)
-
-                            # Calculate stats from normalized values
-                            normalized_values = [s for _, s in normalized_samples]
-                            avg_cpu = sum(normalized_values) / len(normalized_values)
-                            max_cpu = max(normalized_values)
-                            min_cpu = min(normalized_values)
-
-                            pdf.set_font("helvetica", size=9)
-                            pdf.cell(0, 8, txt=f"Average CPU: {avg_cpu:.1f}% | Peak: {max_cpu:.1f}% | Min: {min_cpu:.1f}%", ln=True)
-
-            except Exception as e:
-                print(f"[EcoTrace] Chart section error: {e}")
-
-            pdf.ln(10)
-            pdf.set_font("helvetica", 'B', 14)
-            pdf.set_fill_color(46, 139, 87)
-            pdf.set_text_color(255, 255, 255)
-            pdf.cell(0, 15, txt=f"TOTAL CUMULATIVE EMISSIONS: {total_sum:.8f} gCO2", border=1, fill=True, align='C', ln=True)
-
-            if comparison is not None:
-                r1 = comparison.get("func1", {})
-                r2 = comparison.get("func2", {})
-                pdf.ln(10)
-                pdf.set_font("helvetica", 'B', 12)
-                pdf.set_text_color(0, 0, 0)
-                pdf.cell(0, 10, txt="Comparison Analysis", ln=True, fill=True)
-                pdf.set_font("helvetica", 'B', 9)
-                pdf.set_fill_color(200, 220, 200)
-                pdf.cell(50, 10, "Function",     border=1, fill=True)
-                pdf.cell(35, 10, "Duration(s)",  border=1, fill=True)
-                pdf.cell(35, 10, "Avg CPU(%)",   border=1, fill=True)
-                pdf.cell(50, 10, "Carbon(gCO2)", border=1, fill=True, ln=True)
-                pdf.set_font("helvetica", size=9)
-                pdf.cell(50, 8, r1.get("func_name", ""), border=1)
-                pdf.cell(35, 8, f"{r1.get('duration', 0):.4f}", border=1)
-                pdf.cell(35, 8, f"{r1.get('avg_cpu', 0):.1f}", border=1)
-                pdf.cell(50, 8, f"{r1.get('carbon', 0):.8f}", border=1, ln=True)
-                pdf.cell(50, 8, r2.get("func_name", ""), border=1)
-                pdf.cell(35, 8, f"{r2.get('duration', 0):.4f}", border=1)
-                pdf.cell(35, 8, f"{r2.get('avg_cpu', 0):.1f}", border=1)
-                pdf.cell(50, 8, f"{r2.get('carbon', 0):.8f}", border=1, ln=True)
-
-            # Performance Insights Section
-            if history:
-                pdf.ln(15)
-                pdf.set_font("helvetica", 'B', 12)
-                pdf.set_text_color(0, 0, 0)
-                pdf.cell(0, 10, txt="Performance Insights", ln=True, fill=True)
-                pdf.set_font("helvetica", 'B', 9)
-                pdf.set_fill_color(240, 240, 200)
-                pdf.cell(60, 10, "Function", border=1, fill=True)
-                pdf.cell(40, 10, "Avg CPU", border=1, fill=True)
-                pdf.cell(40, 10, "Duration", border=1, fill=True)
-                pdf.cell(50, 10, "Recommendation", border=1, fill=True, ln=True)
-                pdf.set_font("helvetica", size=8)
-                
-                for row in history[-5:]:  # Last 5 functions
-                    try:
-                        if len(row) < 6:  # Need at least 6 columns for v0.5.0 format
-                            continue
-                            
-                        func_name = row[1][:15] + "..." if len(row[1]) > 15 else row[1]
-                        duration = float(row[2])  # Duration column
-                        carbon = float(row[3])    # Carbon column  
-                        # row[4] is Region (string) - skip float conversion
-                        avg_cpu = float(row[5])   # AvgCPU column (v0.5.0)
-                        
-                        # Generate insights based on performance metrics
-                        insights = []
-                        if duration > 5.0:
-                            insights.append("Long execution: Check I/O bottlenecks")
-                        elif duration > 2.0:
-                            insights.append("Consider async implementation")
-                        
-                        # CPU-based insights (use recorded avg_cpu directly)
-                        if avg_cpu > 70:
-                            insights.append("High CPU: Optimize loops")
-                        elif avg_cpu < 20:
-                            insights.append("Low CPU: Consider batching")
-                        
-                        if not insights:
-                            insights.append("Performance looks optimal")
-                        
-                        pdf.cell(60, 8, func_name, border=1)
-                        pdf.cell(40, 8, f"{avg_cpu:.1f}%", border=1)
-                        pdf.cell(40, 8, f"{duration:.2f}s", border=1)
-                        pdf.cell(50, 8, insights[0][:20] + "..." if len(insights[0]) > 20 else insights[0], border=1, ln=True)
-                        
-                    except (IndexError, ValueError) as e:
-                        continue  # Skip malformed rows
-
-            pdf.output(filename)
-            print(f"\n[EcoTrace] Report saved: {filename}")
-
-            if chart_image_path and os.path.exists(chart_image_path):
-                try:
-                    os.unlink(chart_image_path)
-                except Exception:
-                    pass
-
-        except Exception as e:
-            print(f"\n[EcoTrace] PDF Error: {e}")
+        generate_pdf(
+            filename=filename,
+            cpu_info=self.cpu_info,
+            gpu_info=self.gpu_info,
+            region_code=self.region_code,
+            comparison=comparison,
+            cpu_samples=samples_list
+        )
 
     # ========================================================================
     # Lifecycle
