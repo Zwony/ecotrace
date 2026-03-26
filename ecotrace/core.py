@@ -52,7 +52,7 @@ class EcoTrace:
     DEFAULT_GPU_TDP_INTEL_W = 15.0
     DEFAULT_GPU_TDP_AMD_W = 75.0
     DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
-    DEFAULT_CARBON_INTENSITY = 475  # IEA 2022 global average (gCO₂/kWh)
+    DEFAULT_CARBON_INTENSITY = 475  # IEA 2022 global average (gCO2/kWh)
     DEFAULT_REGION = "TR"
 
     # --- Sampling configuration ---------------------------------------------

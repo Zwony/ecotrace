@@ -6,7 +6,16 @@
 
 *Measure. Optimize. Report. — Function-level carbon intelligence with scientific rigor.*
 
-![EcoTrace v0.5.0 Hardware Intelligence](assets/readme_v5_diag.png)
+```mermaid
+graph LR
+    A[Hardware Detection] --> B[EcoTrace Engine]
+    B --> C[Normalization & RAM Logic]
+    C --> D[PDF Report & AI Insights]
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+```
 
 *Figure 1: v0.5.0 Hardware Analysis & Normalization Pipeline*
 
@@ -20,6 +29,27 @@ EcoTrace v0.5.0 represents the biggest leap in carbon tracking accuracy. We've e
 - **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
 - **🤖 AI Insights Engine:** Automated optimization suggestions in PDF reports
 - **📊 Universal Compatibility:** Works seamlessly across all processor architectures
+
+## 🚀 Quick Start
+
+```python
+from ecotrace import EcoTrace
+
+# Initialize with hardware detection
+eco = EcoTrace(region_code="TR")
+
+# Function-level tracking
+@eco.track
+def my_function():
+    return expensive_computation()
+
+# Block-level tracking (NEW v0.5.0)
+with eco.track_block("data_processing"):
+    result = process_large_dataset()
+
+# Generate comprehensive report
+eco.generate_pdf_report("my_report.pdf")
+```
 
 [![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=blue)](https://pypi.org/project/ecotrace/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)

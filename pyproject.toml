@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "0.4.0"
+version = "0.5.0"
 description = "EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting."
 keywords = ["carbon-footprint", "energy-efficiency", "green-computing", "sustainability", "metrics", "cpu-monitoring", "gpu-monitoring"]
 classifiers = [
