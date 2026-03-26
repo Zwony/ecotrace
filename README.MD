@@ -10,6 +10,12 @@
 
 *Figure 1: v0.5.0 Hardware Analysis & Normalization Pipeline*
 
+## 🖥️ v0.5.0 Live Demo - 20-Core Stress Test
+
+![v0.5.0 Multi-Core Normalization Test](assets/v5_stress_test_demo.png)
+
+*Figure 2: Real-world stress test on Intel i7-13700H (20 cores) - CPU graphs stay within 0-100% range despite extreme multi-core load*
+
 [![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=blue)](https://pypi.org/project/ecotrace/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](https://opensource.org/licenses/MIT)
