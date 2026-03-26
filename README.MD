@@ -6,21 +6,6 @@
 
 *Measure. Optimize. Report. — Function-level carbon intelligence with scientific rigor.*
 
-![EcoTrace v0.5.0 Hardware Intelligence](assets/readme_v5_diag.png)
-
-*Figure 1: v0.5.0 Hardware Analysis & Normalization Pipeline*
-
-## 🔥 v0.5.0 - The Hardware Intelligence Update
-
-EcoTrace v0.5.0 represents the biggest leap in carbon tracking accuracy. We've evolved from simple monitoring to deep hardware-aware analysis that scales from 1 to 128+ CPU cores with scientific precision.
-
-**Key Innovations:**
-- **🧬 Smart Core Normalization:** Eliminates utilization spikes on multi-core systems
-- **⚡ RAM Generation Awareness:** DDR4/DDR5 detection with MHz speed analysis  
-- **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
-- **🤖 AI Insights Engine:** Automated optimization suggestions in PDF reports
-- **📊 Universal Compatibility:** Works seamlessly across all processor architectures
-
 [![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=blue)](https://pypi.org/project/ecotrace/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](https://opensource.org/licenses/MIT)
