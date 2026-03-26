@@ -19,16 +19,19 @@ graph LR
 
 *Figure 1: v0.5.0 Hardware Analysis & Normalization Pipeline*
 
-## 🔥 v0.5.0 - The Hardware Intelligence Update
+## 🔥 v0.5.0 - The Hardware Intelligence Update (Coming Soon)
 
-EcoTrace v0.5.0 represents the biggest leap in carbon tracking accuracy. We've evolved from simple monitoring to deep hardware-aware analysis that scales from 1 to 128+ CPU cores with scientific precision.
+EcoTrace v0.5.0 will represent the biggest leap in carbon tracking accuracy. We're evolving from simple monitoring to deep hardware-aware analysis that will scale from 1 to 128+ CPU cores with scientific precision.
 
 **Key Innovations:**
-- **🧬 Smart Core Normalization:** Eliminates utilization spikes on multi-core systems
+- **🧬 Smart Core Normalization:** Will eliminate utilization spikes on multi-core systems
 - **⚡ RAM Generation Awareness:** DDR4/DDR5 detection with MHz speed analysis  
 - **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
 - **🤖 AI Insights Engine:** Automated optimization suggestions in PDF reports
 - **📊 Universal Compatibility:** Works seamlessly across all processor architectures
+
+> [!NOTE]
+> v0.5.0 is currently in final testing phase. Coming very soon to users!
 
 ## 🚀 Quick Start
 
@@ -42,10 +45,6 @@ eco = EcoTrace(region_code="TR")
 @eco.track
 def my_function():
     return expensive_computation()
-
-# Block-level tracking (NEW v0.5.0)
-with eco.track_block("data_processing"):
-    result = process_large_dataset()
 
 # Generate comprehensive report
 eco.generate_pdf_report("my_report.pdf")
