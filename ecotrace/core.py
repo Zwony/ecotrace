@@ -16,12 +16,11 @@ from collections import deque
 import matplotlib.pyplot as plt
 import tempfile
 
+from .ram import get_ram_info, RAM_WATT_FACTORS
+from .cpu import get_cpu_info, load_tdp_database
+from .gpu import get_gpu_info
+
 # --- Energy Constants ---
-# RAM power consumption factors by type (Watts per GB)
-RAM_WATT_FACTORS = {
-    'DDR4': 0.375,  # DDR4 average power consumption per GB
-    'DDR5': 0.285   # DDR5 is more efficient (lower power per GB)
-}
 
 
 class EcoTrace:
@@ -86,14 +85,14 @@ class EcoTrace:
         self.csv_path = os.path.join(self.base_dir, "cpu_spec.csv", "boaviztapi", "data", "crowdsourcing", "cpu_specs.csv")
 
         # Load data sources before validating region_code
-        self.tdp_db = self._load_tdp_database()
         self._constants_data = self._load_constants()
+        self.tdp_db = load_tdp_database(self.csv_path)
         self.region_code = self._validate_region_code(region_code)
         self.carbon_intensity = self._resolve_carbon_intensity()
         self.gpu_tdp_defaults = self._load_gpu_tdp_defaults()
-        self.cpu_info = self._get_cpu_info()
-        self.gpu_info = self._get_gpu_info()
-        self.ram_info = self._get_ram_info()
+        self.cpu_info = get_cpu_info(self.tdp_db, self._constants_data)
+        self.gpu_info = get_gpu_info(self.gpu_index, self.gpu_tdp_defaults)
+        self.ram_info = get_ram_info()
 
         # --- Monitoring state -----------------------------------------------
         self._carbon_lock = threading.Lock()
@@ -184,195 +183,6 @@ class EcoTrace:
         })
 
     # ========================================================================
-    # Hardware detection
-    # ========================================================================
-
-    @classmethod
-    @functools.lru_cache(maxsize=1)
-    def fetch_raw_cpu_info(cls):
-        """Retrieves raw CPU information via py-cpuinfo.
-
-        Results are cached globally since hardware doesn't change at runtime.
-
-        Returns:
-            dict: Raw CPU info dictionary from ``cpuinfo.get_cpu_info()``.
-        """
-        return cpuinfo.get_cpu_info()
-
-    def _load_tdp_database(self):
-        """Parses the Boavizta CPU spec CSV into a TDP lookup dictionary.
-
-        Returns:
-            dict: Mapping of ``{lowercase_model_name: tdp_watts}``.
-        """
-        tdp_dict = {}
-        if not os.path.exists(self.csv_path):
-            return tdp_dict
-        try:
-            with open(self.csv_path, mode='r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    m_name = row.get('name', '').lower().strip()
-                    tdp_val = row.get('tdp')
-                    if m_name and tdp_val:
-                        try:
-                            tdp_dict[m_name] = float(tdp_val)
-                        except ValueError:
-                            continue
-        except Exception:
-            pass
-        return tdp_dict
-
-    def _get_cpu_info(self):
-        """Detects CPU hardware and resolves TDP using a multi-source lookup chain.
-
-        Detection order:
-            1. Apple Silicon (M1/M2/M3) — fixed 25W TDP for laptop-class chips
-            2. Intel/AMD — CSV database lookup with fuzzy matching
-            3. Fallback to 65W (common mid-range desktop TDP)
-
-        Returns:
-            dict: CPU metadata containing brand, core count, and TDP in watts.
-        """
-        info = cpuinfo.get_cpu_info()
-        brand = info.get("brand_raw", "Unknown CPU")
-        
-        # Clean brand string for matching, but keep a display version
-        display_brand = "".join(c for c in brand if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
-        
-        clean_brand = brand.lower()
-        clean_brand = clean_brand.replace("(r)", "").replace("(tm)", "")
-        clean_brand = re.sub(r'\d+th\s+gen', '', clean_brand)
-        clean_brand = " ".join(clean_brand.split())
-
-        # Apple Silicon M-series detection
-        if "apple" in clean_brand:
-            found_tdp = 25.0  # M-series laptop-class average TDP
-        else:
-            # Intel/AMD CSV database lookup
-            found_tdp = 65.0  # Common mid-range desktop TDP fallback
-
-            if clean_brand in self.tdp_db:
-                found_tdp = self.tdp_db[clean_brand]
-            else:
-                for model_name, tdp in self.tdp_db.items():
-                    if model_name == clean_brand:
-                        found_tdp = tdp
-                        break
-                    if clean_brand in model_name and len(clean_brand) > 10:
-                        found_tdp = tdp
-                        break
-
-        return {"brand": display_brand, "cores": psutil.cpu_count(logical=True), "tdp": found_tdp}
-
-    def _get_ram_info(self):
-        """Detects RAM specifications including type, speed, and total capacity.
-
-        Detection order:
-            1. Windows: Uses WMIC to get RAM speed in MHz
-            2. Linux: Uses dmidecode to get RAM speed in MHz  
-            3. Fallback: Uses psutil for total capacity only
-
-        RAM type classification:
-            - DDR5: Speed >= 4800 MHz
-            - DDR4: Speed < 4800 MHz (default fallback)
-
-        Returns:
-            dict: RAM metadata containing total_gb, type, and speed_mhz.
-        """
-        import subprocess
-        
-        # Get total RAM from psutil (cross-platform)
-        total_ram_gb = psutil.virtual_memory().total / (1024**3)
-        
-        # Initialize with fallback values
-        ram_type = 'DDR4'  # Default fallback
-        ram_speed = 'Unknown'
-        
-        try:
-            if os.name == 'nt':  # Windows
-                # Use WMIC to get RAM speed
-                result = subprocess.run(
-                    ['wmic', 'memorychip', 'get', 'speed', '/value'],
-                    capture_output=True, text=True, timeout=5
-                )
-                if result.returncode == 0:
-                    for line in result.stdout.split('\n'):
-                        if 'Speed=' in line:
-                            speed_str = line.split('=')[1].strip()
-                            if speed_str and speed_str.isdigit():
-                                speed_mhz = int(speed_str)
-                                ram_speed = str(speed_mhz)
-                                # Classify RAM type based on speed
-                                ram_type = 'DDR5' if speed_mhz >= 4800 else 'DDR4'
-                                break
-            else:  # Linux
-                # Try dmidecode for detailed RAM info
-                result = subprocess.run(
-                    ['sudo', 'dmidecode', '-t', 'memory'],
-                    capture_output=True, text=True, timeout=5
-                )
-                if result.returncode == 0:
-                    for line in result.stdout.split('\n'):
-                        if 'Speed:' in line and 'MHz' in line:
-                            speed_str = line.split(':')[1].strip().replace('MHz', '').strip()
-                            if speed_str and speed_str.isdigit():
-                                speed_mhz = int(speed_str)
-                                ram_speed = str(speed_mhz)
-                                ram_type = 'DDR5' if speed_mhz >= 4800 else 'DDR4'
-                                break
-        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, PermissionError, FileNotFoundError):
-            # Fallback to default values if any error occurs
-            pass
-        
-        return {
-            'total_gb': total_ram_gb,
-            'type': ram_type,
-            'speed_mhz': ram_speed
-        }
-
-    def _get_gpu_info(self):
-        """Detects GPU hardware and resolves TDP using a tri-vendor fallback chain.
-
-        Detection order:
-            1. NVIDIA via ``pynvml`` — driver-reported power management limit
-            2. AMD/Intel via WMI (Windows only) — vendor-class TDP estimates
-            3. Returns ``None`` if no GPU is detected (graceful degradation)
-
-        Returns:
-            dict or None: Keys ``brand``, ``tdp``, ``type``, ``handle`` if
-            a GPU is found; ``None`` otherwise.
-        """
-        try:
-            import nvidia_ml_py as pynvml
-            pynvml.nvmlInit()
-            handle = pynvml.nvmlDeviceGetHandleByIndex(self.gpu_index)
-            name = pynvml.nvmlDeviceGetName(handle)
-            display_name = "".join(c for c in name if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
-            tdp = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / self.WATTS_PER_KILOWATT
-            return {"brand": display_name, "tdp": tdp, "type": "nvidia", "handle": handle}
-        except Exception:
-            pass
-
-        try:
-            import wmi
-            w = wmi.WMI()
-            for i, gpu in enumerate(w.Win32_VideoController()):
-                if i == self.gpu_index:
-                    name = gpu.Name
-                    display_name = "".join(c for c in name if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
-                    if "intel" in name.lower():
-                        return {"brand": display_name, "tdp": self.gpu_tdp_defaults.get("intel", self.DEFAULT_GPU_TDP_INTEL_W), "type": "intel", "handle": None}
-                    elif "amd" in name.lower() or "radeon" in name.lower():
-                        return {"brand": display_name, "tdp": self.gpu_tdp_defaults.get("amd", self.DEFAULT_GPU_TDP_AMD_W), "type": "amd", "handle": None}
-                    else:
-                        return {"brand": display_name, "tdp": self.gpu_tdp_defaults.get("unknown", self.DEFAULT_GPU_TDP_UNKNOWN_W), "type": "unknown", "handle": None}
-        except Exception:
-            pass
-
-        return None
-
-    # ========================================================================
     # Carbon calculation helpers
     # ========================================================================
 
@@ -423,7 +233,7 @@ class EcoTrace:
         Returns:
             float: Estimated carbon emissions in gCO2.
         """
-        # Use raw CPU utilization (psutil already provides normalized percentage)
+        # CPU utilization is already properly core-normalized by _get_avg_cpu_in_range
         normalized_utilization = min(max(utilization_pct, 0.0), 100.0)
         
         # CPU energy calculation
@@ -550,9 +360,10 @@ class EcoTrace:
             if not relevant_samples:
                 return self.FULL_UTILIZATION_PERCENT
             
-            # Use raw CPU percentage (psutil already provides 0-100% average)
+            # Smart Core Normalization: Divide by logical cores
             raw_avg = sum(relevant_samples) / len(relevant_samples)
-            return raw_avg
+            core_count = psutil.cpu_count(logical=True) or 1
+            return raw_avg / core_count
 
     def _get_avg_gpu_in_range(self, start_time, end_time):
         """Computes mean GPU utilization from samples within a time window.
@@ -675,24 +486,24 @@ class EcoTrace:
                 return func(*args, **kwargs)
 
             start_time = time.perf_counter()
-            with self.gpu_monitor():
-                result = func(*args, **kwargs)
-            end_time = time.perf_counter()
-
             try:
-                duration = end_time - start_time
-                avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time)
-                carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration)
+                with self.gpu_monitor():
+                    result = func(*args, **kwargs)
+                return result
+            finally:
+                end_time = time.perf_counter()
+                try:
+                    duration = end_time - start_time
+                    avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time)
+                    carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration)
 
-                self._accumulate_carbon(carbon_emitted, func.__name__, duration)
-                print(f"\n[EcoTrace] GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
-                print(f"[EcoTrace] Duration     : {duration:.4f} sec")
-                print(f"[EcoTrace] GPU Usage    : {avg_gpu_util:.1f}%")
-                print(f"[EcoTrace] CO2          : {carbon_emitted:.8f} gCO2")
-            except Exception as e:
-                print(f"[EcoTrace] WARNING: GPU measurement failed for '{func.__name__}': {e}")
-
-            return result
+                    self._accumulate_carbon(carbon_emitted, func.__name__, duration)
+                    print(f"\n[EcoTrace] GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
+                    print(f"[EcoTrace] Duration     : {duration:.4f} sec")
+                    print(f"[EcoTrace] GPU Usage    : {avg_gpu_util:.1f}%")
+                    print(f"[EcoTrace] CO2          : {carbon_emitted:.8f} gCO2")
+                except Exception as e:
+                    print(f"[EcoTrace] WARNING: GPU measurement failed for '{func.__name__}': {e}")
         return wrapper
 
     def measure(self, func, *args, **kwargs):
@@ -711,38 +522,46 @@ class EcoTrace:
             ``cpu_samples``, and ``result``.
         """
         start_time = time.perf_counter()
-        with self.cpu_monitor():
-            result_data = func(*args, **kwargs)
+        result_data = None
+        func_success = False
+
+        try:
+            with self.cpu_monitor():
+                result_data = func(*args, **kwargs)
+                func_success = True
+        finally:
             end_time = time.perf_counter()
             duration = end_time - start_time
 
-        try:
-            avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+            try:
+                avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
 
-            with self._cpu_sample_lock:
-                measurement_samples = list(self._cpu_samples)
+                with self._cpu_sample_lock:
+                    measurement_samples = list(self._cpu_samples)
 
-            carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-            self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
+                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+                self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
 
-            return {
-                "func_name": func.__name__,
-                "duration": duration,
-                "avg_cpu": avg_cpu,
-                "carbon": carbon_emitted,
-                "cpu_samples": measurement_samples,
-                "result": result_data
-            }
-        except Exception as e:
-            print(f"[EcoTrace] WARNING: Measurement failed for '{func.__name__}': {e}")
-            return {
-                "func_name": func.__name__,
-                "duration": duration,
-                "avg_cpu": 0.0,
-                "carbon": 0.0,
-                "cpu_samples": [],
-                "result": result_data
-            }
+                if func_success:
+                    return {
+                        "func_name": func.__name__,
+                        "duration": duration,
+                        "avg_cpu": avg_cpu,
+                        "carbon": carbon_emitted,
+                        "cpu_samples": measurement_samples,
+                        "result": result_data
+                    }
+            except Exception as e:
+                print(f"[EcoTrace] WARNING: Measurement failed for '{func.__name__}': {e}")
+                if func_success:
+                    return {
+                        "func_name": func.__name__,
+                        "duration": duration,
+                        "avg_cpu": 0.0,
+                        "carbon": 0.0,
+                        "cpu_samples": [],
+                        "result": result_data
+                    }
 
     async def measure_async(self, func, *args, **kwargs):
         """Executes an async function and measures its CPU carbon emissions.
@@ -765,43 +584,49 @@ class EcoTrace:
             completing the measurement teardown.
         """
         start_time = time.perf_counter()
-        with self.cpu_monitor():
-            try:
-                result_data = await func(*args, **kwargs)
-            except Exception as e:
-                raise e
-            finally:
-                await asyncio.sleep(self.MONITOR_INTERVAL_S)  # Allow trailing samples to be captured
-                end_time = time.perf_counter()
-                duration = end_time - start_time
+        result_data = None
+        func_success = False
 
         try:
-            avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+            with self.cpu_monitor():
+                try:
+                    result_data = await func(*args, **kwargs)
+                    func_success = True
+                finally:
+                    await asyncio.sleep(self.MONITOR_INTERVAL_S)  # Allow trailing samples to be captured
+        finally:
+            end_time = time.perf_counter()
+            duration = end_time - start_time
 
-            with self._cpu_sample_lock:
-                measurement_samples = list(self._cpu_samples)
+            try:
+                avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
 
-            carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-            self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
+                with self._cpu_sample_lock:
+                    measurement_samples = list(self._cpu_samples)
 
-            return {
-                "func_name": func.__name__,
-                "duration": duration,
-                "avg_cpu": avg_cpu,
-                "carbon": carbon_emitted,
-                "cpu_samples": measurement_samples,
-                "result": result_data
-            }
-        except Exception as e:
-            print(f"[EcoTrace] WARNING: Async measurement failed for '{func.__name__}': {e}")
-            return {
-                "func_name": func.__name__,
-                "duration": duration,
-                "avg_cpu": 0.0,
-                "carbon": 0.0,
-                "cpu_samples": [],
-                "result": result_data
-            }
+                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+                self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
+
+                if func_success:
+                    return {
+                        "func_name": func.__name__,
+                        "duration": duration,
+                        "avg_cpu": avg_cpu,
+                        "carbon": carbon_emitted,
+                        "cpu_samples": measurement_samples,
+                        "result": result_data
+                    }
+            except Exception as e:
+                print(f"[EcoTrace] WARNING: Async measurement failed for '{func.__name__}': {e}")
+                if func_success:
+                    return {
+                        "func_name": func.__name__,
+                        "duration": duration,
+                        "avg_cpu": 0.0,
+                        "carbon": 0.0,
+                        "cpu_samples": [],
+                        "result": result_data
+                    }
 
     def compare(self, func1, func2):
         """Runs two functions sequentially and compares their carbon footprints.
@@ -942,9 +767,10 @@ class EcoTrace:
                         samples_list = list(cpu_samples)
 
                     if samples_list:
-                        # Use raw CPU values with 100% cap
+                        core_count = self.cpu_info.get("cores", 1)
+                        # Normalize samples by dividing by core count
                         normalized_samples = [
-                            (t, min(s, 100.0)) 
+                            (t, min(s / core_count, 100.0)) 
                             for t, s in samples_list
                         ]
                         chart_image_path = self._create_cpu_usage_chart(normalized_samples)
@@ -1086,12 +912,15 @@ class EcoTrace:
                 end_time = time.perf_counter()
                 duration = end_time - start_time
                 
-                # Calculate metrics
-                avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
-                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-                self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
-                
-                print(f"[EcoTrace] Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
+                try:
+                    # Calculate metrics
+                    avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+                    carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+                    self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
+                    
+                    print(f"[EcoTrace] Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
+                except Exception as e:
+                    print(f"[EcoTrace] WARNING: Block measurement failed for '{block_name}': {e}")
 
     def __del__(self):
         """Ensures all background monitoring threads are stopped on cleanup."""

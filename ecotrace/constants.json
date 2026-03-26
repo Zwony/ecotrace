@@ -5,6 +5,8 @@
     "Ryzen5": 65,
     "M1": 20,
     "M2": 22,
+    "M3": 25,
+    "M4": 28,
     "i9": 150
   },
   "CARBON_INTENSITY_MAP": {
