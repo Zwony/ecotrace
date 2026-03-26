@@ -439,17 +439,18 @@ class EcoTrace:
         
         return (total_power_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
 
-    def _accumulate_carbon(self, carbon_emitted, func_name, duration):
+    def _accumulate_carbon(self, carbon_emitted, func_name, duration, avg_cpu=None):
         """Thread-safe accumulation of carbon emissions with CSV logging.
 
         Args:
             carbon_emitted: Carbon value in gCO2 to add to the running total.
             func_name: Name of the measured function for the audit log.
             duration: Execution duration in seconds.
+            avg_cpu: Average CPU usage percentage (optional).
         """
         with self._carbon_lock:
             self.total_carbon += carbon_emitted
-            self._log_to_csv(func_name, duration, carbon_emitted)
+            self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu)
 
     # ========================================================================
     # Monitoring infrastructure
@@ -603,7 +604,7 @@ class EcoTrace:
     # Logging
     # ========================================================================
 
-    def _log_to_csv(self, func_name, duration, carbon):
+    def _log_to_csv(self, func_name, duration, carbon, avg_cpu=None):
         """Appends a single measurement row to the CSV audit log.
 
         Creates ``ecotrace_log.csv`` with headers if it doesn't exist.
@@ -612,14 +613,16 @@ class EcoTrace:
             func_name: Name of the tracked function.
             duration: Execution time in seconds.
             carbon: Estimated carbon emissions in gCO2.
+            avg_cpu: Average CPU usage percentage (optional).
         """
         try:
             file_exists = os.path.isfile("ecotrace_log.csv")
             with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region"])
-                writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), func_name, f"{duration:.4f}", f"{carbon:.8f}", self.region_code])
+                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region", "AvgCPU(%)"])
+                avg_cpu_str = f"{avg_cpu:.2f}" if avg_cpu is not None else "N/A"
+                writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), func_name, f"{duration:.4f}", f"{carbon:.8f}", self.region_code, avg_cpu_str])
         except Exception as e:
             print(f"[EcoTrace] WARNING: CSV logging failed: {e}")
 
@@ -720,7 +723,7 @@ class EcoTrace:
                 measurement_samples = list(self._cpu_samples)
 
             carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-            self._accumulate_carbon(carbon_emitted, func.__name__, duration)
+            self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
 
             return {
                 "func_name": func.__name__,
@@ -779,7 +782,7 @@ class EcoTrace:
                 measurement_samples = list(self._cpu_samples)
 
             carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-            self._accumulate_carbon(carbon_emitted, func.__name__, duration)
+            self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
 
             return {
                 "func_name": func.__name__,
@@ -1021,8 +1024,11 @@ class EcoTrace:
                         elif duration > 2.0:
                             insights.append("Consider async implementation")
                         
-                        # CPU-based insights (estimated from carbon/duration ratio)
-                        estimated_cpu = min((float(row[3]) / 0.0005) * 100, 100.0)
+                        # CPU-based insights (use stored avg_cpu from CSV if available)
+                        if len(row) > 4:  # If avg_cpu is stored in CSV
+                            estimated_cpu = min(float(row[4]), 100.0)
+                        else:  # Fallback estimation from carbon data
+                            estimated_cpu = min((float(row[3]) / 0.0005) * 100, 100.0)
                         if estimated_cpu > 70:
                             insights.append("High CPU: Optimize loops")
                         elif estimated_cpu < 20:
@@ -1078,7 +1084,7 @@ class EcoTrace:
                 # Calculate metrics
                 avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
                 carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-                self._accumulate_carbon(carbon_emitted, block_name, duration)
+                self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
                 
                 print(f"[EcoTrace] Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
 
