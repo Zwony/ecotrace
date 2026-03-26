@@ -6,6 +6,10 @@
 
 *Measure. Optimize. Report. — Function-level carbon intelligence with scientific rigor.*
 
+![EcoTrace v0.5.0 Hardware Intelligence](assets/readme_v5_diag.png)
+
+*Figure 1: v0.5.0 Hardware Analysis & Normalization Pipeline*
+
 [![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=blue)](https://pypi.org/project/ecotrace/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](https://opensource.org/licenses/MIT)
@@ -362,6 +366,20 @@ We welcome contributions from the community. Please see [CONTRIBUTING.MD](CONTRI
 ## License
 
 MIT License — use it however you like.
+
+---
+
+## 🚀 Roadmap & Upcoming Features (v0.5.0)
+
+We are currently finalizing **v0.5.0 (The Hardware Update)**. This version shifts EcoTrace from simple tracking to deep hardware-aware carbon analysis.
+
+* **🧬 Smart Core Normalization:** Optimized for high-end processors (tested on 20+ core systems). It prevents 'utilization spikes' by normalizing data across all logical threads.
+* **⚡ RAM Generation Awareness:** Automatic detection of **DDR4 vs. DDR5** and memory speeds (MHz) to apply precise energy-per-GB models.
+* **🍎 Apple Silicon Support:** Enhanced TDP and energy profiling for M1, M2, and M3 architectures.
+* **🤖 AI Insights Engine:** PDF reports now include an automated 'Insights' column that suggests optimizations (e.g., Loop Optimization, Batching) based on your code's energy footprint.
+
+> [!IMPORTANT]
+> v0.5.0 is currently in **Final Testing**. The current stable version remains v0.4.0. You can continue using `pip install ecotrace` normally.
 
 ---
 

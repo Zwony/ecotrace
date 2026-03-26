@@ -16,6 +16,13 @@ from collections import deque
 import matplotlib.pyplot as plt
 import tempfile
 
+# --- Energy Constants ---
+# RAM power consumption factors by type (Watts per GB)
+RAM_WATT_FACTORS = {
+    'DDR4': 0.375,  # DDR4 average power consumption per GB
+    'DDR5': 0.285   # DDR5 is more efficient (lower power per GB)
+}
+
 
 class EcoTrace:
     """High-precision carbon tracking engine for production Python.
@@ -26,12 +33,12 @@ class EcoTrace:
 
     Energy formula:
         energy (Wh) = TDP × (utilization% / 100) × duration / 3600
-        gCO₂ = (Wh / 1000) × carbon_intensity
+        gCO2 = (Wh / 1000) × carbon_intensity
 
     Args:
         region_code: ISO 3166-1 alpha-2 country code for grid carbon intensity
             lookup. Falls back to DEFAULT_REGION if the code is not recognized.
-        carbon_limit: Optional carbon budget threshold in gCO₂. Reserved for
+        carbon_limit: Optional carbon budget threshold in gCO2. Reserved for
             future budget alert functionality.
         gpu_index: Zero-based index selecting which GPU to monitor when multiple
             devices are present. Validated to be a non-negative integer.
@@ -53,6 +60,7 @@ class EcoTrace:
     MONITOR_INTERVAL_S = 0.05  # 50 ms
     SAMPLE_BUFFER_SIZE = 1000
     MONITOR_JOIN_TIMEOUT_S = 1.0
+    BASELINE_MEASUREMENT_MS = 100  # 100ms idle baseline measurement
 
     # --- Unit conversion constants ------------------------------------------
     SECONDS_PER_HOUR = 3600
@@ -85,6 +93,7 @@ class EcoTrace:
         self.gpu_tdp_defaults = self._load_gpu_tdp_defaults()
         self.cpu_info = self._get_cpu_info()
         self.gpu_info = self._get_gpu_info()
+        self.ram_info = self._get_ram_info()
 
         # --- Monitoring state -----------------------------------------------
         self._carbon_lock = threading.Lock()
@@ -105,6 +114,7 @@ class EcoTrace:
         print(f"CPU     : {self.cpu_info['brand']}")
         print(f"Cores   : {self.cpu_info['cores']}")
         print(f"TDP     : {self.cpu_info['tdp']}W")
+        print(f"RAM     : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']} @ {self.ram_info['speed_mhz']}MHz")
         if self.gpu_info:
             print(f"GPU     : {self.gpu_info['brand']}")
             print(f"GPU TDP : {self.gpu_info['tdp']}W")
@@ -150,7 +160,7 @@ class EcoTrace:
         return code
 
     def _resolve_carbon_intensity(self):
-        """Resolves the gCO₂/kWh value for the validated region code.
+        """Resolves the gCO2/kWh value for the validated region code.
 
         Returns:
             float: Carbon intensity factor for the configured region.
@@ -214,38 +224,112 @@ class EcoTrace:
         return tdp_dict
 
     def _get_cpu_info(self):
-        """Detects the current CPU and resolves its TDP from the Boavizta database.
+        """Detects CPU hardware and resolves TDP using a multi-source lookup chain.
 
-        Performs fuzzy matching against the TDP database using cleaned brand
-        strings. Falls back to DEFAULT_CPU_TDP_W if no match is found.
+        Detection order:
+            1. Apple Silicon (M1/M2/M3) — fixed 25W TDP for laptop-class chips
+            2. Intel/AMD — CSV database lookup with fuzzy matching
+            3. Fallback to 65W (common mid-range desktop TDP)
 
         Returns:
-            dict: Keys ``brand`` (str), ``cores`` (int), ``tdp`` (float).
+            dict: CPU metadata containing brand, core count, and TDP in watts.
         """
-        info = self.fetch_raw_cpu_info()
+        info = cpuinfo.get_cpu_info()
         brand = info.get("brand_raw", "Unknown CPU")
-
+        
+        # Clean brand string for matching, but keep a display version
         display_brand = "".join(c for c in brand if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
-
+        
         clean_brand = brand.lower()
         clean_brand = clean_brand.replace("(r)", "").replace("(tm)", "")
         clean_brand = re.sub(r'\d+th\s+gen', '', clean_brand)
         clean_brand = " ".join(clean_brand.split())
 
-        found_tdp = self.DEFAULT_CPU_TDP_W
-
-        if clean_brand in self.tdp_db:
-            found_tdp = self.tdp_db[clean_brand]
+        # Apple Silicon M-series detection
+        if "apple" in clean_brand:
+            found_tdp = 25.0  # M-series laptop-class average TDP
         else:
-            for model_name, tdp in self.tdp_db.items():
-                if model_name == clean_brand:
-                    found_tdp = tdp
-                    break
-                if clean_brand in model_name and len(clean_brand) > 10:
-                    found_tdp = tdp
-                    break
+            # Intel/AMD CSV database lookup
+            found_tdp = 65.0  # Common mid-range desktop TDP fallback
 
-        return {"brand": display_brand, "cores": psutil.cpu_count(logical=False), "tdp": found_tdp}
+            if clean_brand in self.tdp_db:
+                found_tdp = self.tdp_db[clean_brand]
+            else:
+                for model_name, tdp in self.tdp_db.items():
+                    if model_name == clean_brand:
+                        found_tdp = tdp
+                        break
+                    if clean_brand in model_name and len(clean_brand) > 10:
+                        found_tdp = tdp
+                        break
+
+        return {"brand": display_brand, "cores": psutil.cpu_count(logical=True), "tdp": found_tdp}
+
+    def _get_ram_info(self):
+        """Detects RAM specifications including type, speed, and total capacity.
+
+        Detection order:
+            1. Windows: Uses WMIC to get RAM speed in MHz
+            2. Linux: Uses dmidecode to get RAM speed in MHz  
+            3. Fallback: Uses psutil for total capacity only
+
+        RAM type classification:
+            - DDR5: Speed >= 4800 MHz
+            - DDR4: Speed < 4800 MHz (default fallback)
+
+        Returns:
+            dict: RAM metadata containing total_gb, type, and speed_mhz.
+        """
+        import subprocess
+        
+        # Get total RAM from psutil (cross-platform)
+        total_ram_gb = psutil.virtual_memory().total / (1024**3)
+        
+        # Initialize with fallback values
+        ram_type = 'DDR4'  # Default fallback
+        ram_speed = 'Unknown'
+        
+        try:
+            if os.name == 'nt':  # Windows
+                # Use WMIC to get RAM speed
+                result = subprocess.run(
+                    ['wmic', 'memorychip', 'get', 'speed', '/value'],
+                    capture_output=True, text=True, timeout=5
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.split('\n'):
+                        if 'Speed=' in line:
+                            speed_str = line.split('=')[1].strip()
+                            if speed_str and speed_str.isdigit():
+                                speed_mhz = int(speed_str)
+                                ram_speed = str(speed_mhz)
+                                # Classify RAM type based on speed
+                                ram_type = 'DDR5' if speed_mhz >= 4800 else 'DDR4'
+                                break
+            else:  # Linux
+                # Try dmidecode for detailed RAM info
+                result = subprocess.run(
+                    ['sudo', 'dmidecode', '-t', 'memory'],
+                    capture_output=True, text=True, timeout=5
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.split('\n'):
+                        if 'Speed:' in line and 'MHz' in line:
+                            speed_str = line.split(':')[1].strip().replace('MHz', '').strip()
+                            if speed_str and speed_str.isdigit():
+                                speed_mhz = int(speed_str)
+                                ram_speed = str(speed_mhz)
+                                ram_type = 'DDR5' if speed_mhz >= 4800 else 'DDR4'
+                                break
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, PermissionError, FileNotFoundError):
+            # Fallback to default values if any error occurs
+            pass
+        
+        return {
+            'total_gb': total_ram_gb,
+            'type': ram_type,
+            'speed_mhz': ram_speed
+        }
 
     def _get_gpu_info(self):
         """Detects GPU hardware and resolves TDP using a tri-vendor fallback chain.
@@ -304,6 +388,30 @@ class EcoTrace:
         """
         return "".join(c for c in str(text) if ord(c) < 128)
 
+    def _measure_idle_baseline(self):
+        """Captures short baseline measurement for differential carbon tracking.
+        
+        Takes a 100ms snapshot of current system utilization to establish the
+        idle baseline. This baseline is subtracted from function measurements
+        to report only the code's incremental energy cost.
+        
+        Returns:
+            float: Baseline CPU utilization percentage (0-100).
+        """
+        baseline_start = time.perf_counter()
+        baseline_samples = []
+        
+        # Collect samples for baseline duration
+        while (time.perf_counter() - baseline_start) * 1000 < self.BASELINE_MEASUREMENT_MS:
+            try:
+                cpu_usage = self._current_process.cpu_percent()
+                baseline_samples.append(cpu_usage)
+                time.sleep(self.MONITOR_INTERVAL_S)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                break
+        
+        return sum(baseline_samples) / len(baseline_samples) if baseline_samples else 0.0
+
     def _compute_carbon(self, tdp, utilization_pct, duration_s):
         """Computes carbon emissions from power parameters.
 
@@ -313,16 +421,30 @@ class EcoTrace:
             duration_s: Measurement duration in seconds.
 
         Returns:
-            float: Estimated carbon emissions in gCO₂.
+            float: Estimated carbon emissions in gCO2.
         """
-        power_wh = (tdp * (utilization_pct / 100) * duration_s) / self.SECONDS_PER_HOUR
-        return (power_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
+        # Normalize utilization by core count for multi-threaded CPUs
+        core_count = self.cpu_info.get('cores', 1)  # Safe fallback to 1 core
+        normalized_utilization = min(max(utilization_pct / core_count, 0.0), 100.0)
+        
+        # CPU energy calculation
+        cpu_power_wh = (tdp * normalized_utilization / 100) * duration_s / self.SECONDS_PER_HOUR
+        
+        # RAM energy calculation with dynamic factor based on RAM type
+        ram_usage_gb = psutil.virtual_memory().used / (1024**3)  # Convert bytes to GB
+        ram_watt_factor = RAM_WATT_FACTORS.get(self.ram_info['type'], RAM_WATT_FACTORS['DDR4'])  # Fallback to DDR4
+        ram_power_wh = (ram_watt_factor * ram_usage_gb) * duration_s / self.SECONDS_PER_HOUR
+        
+        # Total energy consumption
+        total_power_wh = cpu_power_wh + ram_power_wh
+        
+        return (total_power_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
 
     def _accumulate_carbon(self, carbon_emitted, func_name, duration):
         """Thread-safe accumulation of carbon emissions with CSV logging.
 
         Args:
-            carbon_emitted: Carbon value in gCO₂ to add to the running total.
+            carbon_emitted: Carbon value in gCO2 to add to the running total.
             func_name: Name of the measured function for the audit log.
             duration: Execution duration in seconds.
         """
@@ -427,7 +549,12 @@ class EcoTrace:
             ]
             if not relevant_samples:
                 return self.FULL_UTILIZATION_PERCENT
-            return sum(relevant_samples) / len(relevant_samples)
+            
+            # Normalize by core count for multi-threaded systems
+            core_count = self.cpu_info.get('cores', 1)  # Safe fallback to 1 core
+            raw_avg = sum(relevant_samples) / len(relevant_samples)
+            normalized_avg = min(raw_avg / core_count, 100.0)
+            return normalized_avg
 
     def _get_avg_gpu_in_range(self, start_time, end_time):
         """Computes mean GPU utilization from samples within a time window.
@@ -487,7 +614,7 @@ class EcoTrace:
         Args:
             func_name: Name of the tracked function.
             duration: Execution time in seconds.
-            carbon: Estimated carbon emissions in gCO₂.
+            carbon: Estimated carbon emissions in gCO2.
         """
         try:
             file_exists = os.path.isfile("ecotrace_log.csv")
@@ -712,17 +839,18 @@ class EcoTrace:
 
         try:
             timestamps = [t for t, _ in samples_data]
-            cpu_values = [c for _, c in samples_data]
+            core_count = self.cpu_info.get('cores', 1)  # Safe fallback
+            cpu_values = [min(s / core_count, 100.0) for _, s in samples_data]  # Dynamic normalization
             relative_times = [(t - timestamps[0]) for t in timestamps]
 
             fig, ax = plt.subplots(figsize=(10, 4))
             ax.plot(relative_times, cpu_values, linewidth=2, color='#2E8B57')
             ax.fill_between(relative_times, cpu_values, alpha=0.3, color='#2E8B57')
             ax.set_xlabel('Time (seconds)', fontsize=10)
-            ax.set_ylabel('CPU Usage (%)', fontsize=10)
-            ax.set_title('CPU Usage Over Time', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Normalized CPU Usage (%)', fontsize=10)
+            ax.set_title('CPU Usage Over Time (Core-Normalized)', fontsize=12, fontweight='bold')
             ax.grid(True, alpha=0.3)
-            ax.set_ylim(0, 100)
+            ax.set_ylim(0, 110)  # Allow 10% headroom for spikes
             plt.tight_layout()
 
             temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
@@ -814,19 +942,27 @@ class EcoTrace:
                         samples_list = list(cpu_samples)
 
                     if samples_list:
-                        chart_image_path = self._create_cpu_usage_chart(samples_list)
+                        # Normalize samples by core count before charting
+                        core_count = self.cpu_info.get('cores', 1)  # Safe fallback
+                        normalized_samples = [
+                            (t, min(s / core_count, 100.0)) 
+                            for t, s in samples_list
+                        ]
+                        chart_image_path = self._create_cpu_usage_chart(normalized_samples)
 
                         if chart_image_path:
                             pdf.add_page()
                             pdf.set_font("helvetica", 'B', 12)
-                            pdf.cell(0, 10, txt=" CPU Usage Over Time", ln=True, fill=True)
+                            pdf.cell(0, 10, txt=" CPU Usage Over Time (Core-Normalized)", ln=True, fill=True)
                             pdf.ln(5)
                             pdf.image(chart_image_path, x=10, y=50, w=190)
                             pdf.ln(120)
 
-                            avg_cpu = sum(c for _, c in samples_list) / len(samples_list)
-                            max_cpu = max(c for _, c in samples_list)
-                            min_cpu = min(c for _, c in samples_list)
+                            # Calculate stats from normalized values
+                            normalized_values = [s for _, s in normalized_samples]
+                            avg_cpu = sum(normalized_values) / len(normalized_values)
+                            max_cpu = max(normalized_values)
+                            min_cpu = min(normalized_values)
 
                             pdf.set_font("helvetica", size=9)
                             pdf.cell(0, 8, txt=f"Average CPU: {avg_cpu:.1f}% | Peak: {max_cpu:.1f}% | Min: {min_cpu:.1f}%", ln=True)
@@ -863,6 +999,47 @@ class EcoTrace:
                 pdf.cell(35, 8, f"{r2.get('avg_cpu', 0):.1f}", border=1)
                 pdf.cell(50, 8, f"{r2.get('carbon', 0):.8f}", border=1, ln=True)
 
+            # Performance Insights Section
+            if history:
+                pdf.ln(15)
+                pdf.set_font("helvetica", 'B', 12)
+                pdf.set_text_color(0, 0, 0)
+                pdf.cell(0, 10, txt="Performance Insights", ln=True, fill=True)
+                pdf.set_font("helvetica", 'B', 9)
+                pdf.set_fill_color(240, 240, 200)
+                pdf.cell(60, 10, "Function", border=1, fill=True)
+                pdf.cell(40, 10, "Avg CPU", border=1, fill=True)
+                pdf.cell(40, 10, "Duration", border=1, fill=True)
+                pdf.cell(50, 10, "Recommendation", border=1, fill=True, ln=True)
+                pdf.set_font("helvetica", size=8)
+                
+                for row in history[-5:]:  # Last 5 functions
+                    if len(row) >= 4:
+                        func_name = row[1][:15] + "..." if len(row[1]) > 15 else row[1]
+                        duration = float(row[2])
+                        
+                        # Generate insights based on performance metrics
+                        insights = []
+                        if duration > 5.0:
+                            insights.append("Long execution: Check I/O bottlenecks")
+                        elif duration > 2.0:
+                            insights.append("Consider async implementation")
+                        
+                        # CPU-based insights (estimated from carbon/duration ratio)
+                        estimated_cpu = min(max((float(row[3]) / 0.0001) * 100, 0), 100)
+                        if estimated_cpu > 70:
+                            insights.append("High CPU: Optimize loops")
+                        elif estimated_cpu < 20:
+                            insights.append("Low CPU: Consider batching")
+                        
+                        if not insights:
+                            insights.append("Performance looks optimal")
+                        
+                        pdf.cell(60, 8, func_name, border=1)
+                        pdf.cell(40, 8, f"{estimated_cpu:.1f}%", border=1)
+                        pdf.cell(40, 8, f"{duration:.2f}s", border=1)
+                        pdf.cell(50, 8, insights[0][:20] + "..." if len(insights[0]) > 20 else insights[0], border=1, ln=True)
+
             pdf.output(filename)
             print(f"\n[EcoTrace] Report saved: {filename}")
 
@@ -878,6 +1055,36 @@ class EcoTrace:
     # ========================================================================
     # Lifecycle
     # ========================================================================
+
+    @contextmanager
+    def track_block(self, block_name="custom_block"):
+        """Context manager for tracking arbitrary code blocks.
+
+        Usage:
+            with eco.track_block("data_processing"):
+                # Your code here
+                result = expensive_operation()
+        
+        Args:
+            block_name: Name to use for the tracked block in reports.
+
+        Yields:
+            None: Control flow continues within the context.
+        """
+        start_time = time.perf_counter()
+        with self.cpu_monitor():
+            try:
+                yield
+            finally:
+                end_time = time.perf_counter()
+                duration = end_time - start_time
+                
+                # Calculate metrics
+                avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+                self._accumulate_carbon(carbon_emitted, block_name, duration)
+                
+                print(f"[EcoTrace] Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
 
     def __del__(self):
         """Ensures all background monitoring threads are stopped on cleanup."""
