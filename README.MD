@@ -31,7 +31,11 @@ EcoTrace v0.5.0 represents a massive leap in carbon tracking accuracy and archit
 - **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
 
 > [!NOTE]
+<<<<<<< HEAD
 > v0.5.0 is currently in the final testing phase. Estimated release date: 29.03.2026!!
+=======
+> v0.5.0 is currently in the final testing phase. Estimated release date: **29.03.2026**!
+>>>>>>> 58d18a3 (Docs: Dünya haritası eklendi ve README görselleri v0.5.0'a göre güncellendi.)
 
 ## 🚀 Quick Start
 
@@ -75,7 +79,11 @@ eco.generate_pdf_report("my_report.pdf")
 <br>
 <br>
 
+![EcoTrace v0.5.0 Output](assets/v050_output.png)
+*Figure 2: v0.5.0 High-Precision Hardware Initialization & Measurement*
+
 ![EcoTrace Demo](demo.gif)
+*Figure 3: Original EcoTrace Logic in Action*
 
 </div>
 
@@ -304,6 +312,8 @@ EcoTrace auto-detects your CPU and resolves its TDP from the **Boavizta crowdsou
 | **Intel** | WMI (Windows) | Vendor-class estimate (15W) |
 
 ### Supported Regions (40+)
+
+![EcoTrace Global Coverage](assets/world_map.png)
 
 <details>
 <summary><strong>Click to expand full region table</strong></summary>
