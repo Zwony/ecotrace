@@ -48,7 +48,7 @@ class EcoTrace:
     # --- Sampling configuration ---------------------------------------------
     FULL_UTILIZATION_PERCENT = 100.0
     MONITOR_INTERVAL_S = 0.05  # 50 ms
-    SAMPLE_BUFFER_SIZE = 1000
+    SAMPLE_BUFFER_SIZE = 10000  # Increased for longer sessions (8+ mins at 50ms)
     MONITOR_JOIN_TIMEOUT_S = 1.0
     BASELINE_MEASUREMENT_MS = 100  # 100ms idle baseline measurement
 
@@ -96,6 +96,8 @@ class EcoTrace:
         self._cpu_monitor_thread = None
         self._cpu_samples = deque(maxlen=self.SAMPLE_BUFFER_SIZE)
         self._cpu_sample_lock = threading.Lock()
+        self._cpu_monitor_ref_count = 0  # Support for nested monitoring
+        self._gpu_monitor_ref_count = 0 
         self._monitor_interval = self.MONITOR_INTERVAL_S
         self._current_process = psutil.Process()
 
@@ -155,9 +157,13 @@ class EcoTrace:
         # CPU energy calculation
         cpu_power_wh = (tdp * normalized_utilization / 100) * duration_s / self.SECONDS_PER_HOUR
         
-        # RAM energy calculation with dynamic factor based on RAM type
-        ram_usage_gb = psutil.virtual_memory().used / (1024**3)  # Convert bytes to GB
-        ram_watt_factor = RAM_WATT_FACTORS.get(self.ram_info['type'], RAM_WATT_FACTORS['DDR4'])  # Fallback to DDR4
+        # RAM energy calculation - Process-specific (RSS) for accuracy
+        try:
+            ram_usage_gb = self._current_process.memory_info().rss / (1024**3)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            ram_usage_gb = 0.0
+            
+        ram_watt_factor = RAM_WATT_FACTORS.get(self.ram_info['type'], RAM_WATT_FACTORS['DDR4'])
         ram_power_wh = (ram_watt_factor * ram_usage_gb) * duration_s / self.SECONDS_PER_HOUR
         
         # Total energy consumption
@@ -263,34 +269,48 @@ class EcoTrace:
                 break
 
     def _start_cpu_monitor(self):
-        """Spawns the background CPU sampling thread if not already running."""
-        if not self._cpu_monitor_active:
-            self._cpu_monitor_active = True
-            self._cpu_samples.clear()
-            self._cpu_monitor_thread = threading.Thread(target=self._cpu_monitor_worker, daemon=True)
-            self._cpu_monitor_thread.start()
+        """Spawns the background CPU sampling thread with reference counting."""
+        with self._cpu_sample_lock:
+            self._cpu_monitor_ref_count += 1
+            if self._cpu_monitor_ref_count == 1:
+                self._cpu_monitor_active = True
+                self._cpu_samples.clear()
+                self._cpu_monitor_thread = threading.Thread(target=self._cpu_monitor_worker, daemon=True)
+                self._cpu_monitor_thread.start()
 
     def _stop_cpu_monitor(self):
-        """Signals the CPU sampling thread to stop and waits for it to exit."""
-        self._cpu_monitor_active = False
-        if self._cpu_monitor_thread:
-            self._cpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
-            self._cpu_monitor_thread = None
+        """Signals the CPU sampling thread to stop only when ref count hits zero."""
+        with self._cpu_sample_lock:
+            if self._cpu_monitor_ref_count > 0:
+                self._cpu_monitor_ref_count -= 1
+            
+            if self._cpu_monitor_ref_count == 0 and self._cpu_monitor_active:
+                self._cpu_monitor_active = False
+                if self._cpu_monitor_thread:
+                    self._cpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
+                    self._cpu_monitor_thread = None
 
     def _start_gpu_monitor(self):
-        """Spawns the background GPU sampling thread if not already running."""
-        if not self._gpu_monitor_active:
-            self._gpu_monitor_active = True
-            self._gpu_samples.clear()
-            self._gpu_monitor_thread = threading.Thread(target=self._gpu_monitor_worker, daemon=True)
-            self._gpu_monitor_thread.start()
+        """Spawns the background GPU sampling thread with reference counting."""
+        with self._gpu_sample_lock:
+            self._gpu_monitor_ref_count += 1
+            if self._gpu_monitor_ref_count == 1:
+                self._gpu_monitor_active = True
+                self._gpu_samples.clear()
+                self._gpu_monitor_thread = threading.Thread(target=self._gpu_monitor_worker, daemon=True)
+                self._gpu_monitor_thread.start()
 
     def _stop_gpu_monitor(self):
-        """Signals the GPU sampling thread to stop and waits for it to exit."""
-        self._gpu_monitor_active = False
-        if self._gpu_monitor_thread:
-            self._gpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
-            self._gpu_monitor_thread = None
+        """Signals the GPU sampling thread to stop only when ref count hits zero."""
+        with self._gpu_sample_lock:
+            if self._gpu_monitor_ref_count > 0:
+                self._gpu_monitor_ref_count -= 1
+            
+            if self._gpu_monitor_ref_count == 0 and self._gpu_monitor_active:
+                self._gpu_monitor_active = False
+                if self._gpu_monitor_thread:
+                    self._gpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
+                    self._gpu_monitor_thread = None
 
     def _get_avg_cpu_in_range(self, start_time, end_time):
         """Computes mean CPU utilization from samples within a time window.
