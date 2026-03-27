@@ -75,11 +75,8 @@ eco.generate_pdf_report("my_report.pdf")
 <br>
 <br>
 
-![EcoTrace v0.5.0 Output](assets/v050_output.png)
-*Figure 2: v0.5.0 High-Precision Hardware Initialization & Measurement*
-
 ![EcoTrace Demo](demo.gif)
-*Figure 3: Original EcoTrace Logic in Action*
+*Figure 2: EcoTrace Logic in Action*
 
 </div>
 
