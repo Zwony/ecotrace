@@ -19,19 +19,19 @@ graph LR
 
 *Figure 1: v0.5.0 Hardware Analysis & Normalization Pipeline*
 
-## 🔥 v0.5.0 - The Hardware Intelligence Update (Coming Soon)
+## 🔥 v0.5.0 - The Hardware Intelligence Update
 
-EcoTrace v0.5.0 will represent the biggest leap in carbon tracking accuracy. We're evolving from simple monitoring to deep hardware-aware analysis that will scale from 1 to 128+ CPU cores with scientific precision.
+EcoTrace v0.5.0 represents a massive leap in carbon tracking accuracy and architectural modularity. We've evolved from simple monitoring to deep hardware-aware analysis scaling from 1 to 128+ CPU cores with scientific precision.
 
 **Key Innovations:**
-- **🧬 Smart Core Normalization:** Will eliminate utilization spikes on multi-core systems
+- **🧬 Smart Core Normalization:** Eliminates utilization spikes on multi-core systems
 - **⚡ RAM Generation Awareness:** DDR4/DDR5 detection with MHz speed analysis  
 - **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
 - **🤖 AI Insights Engine:** Automated optimization suggestions in PDF reports
-- **📊 Universal Compatibility:** Works seamlessly across all processor architectures
+- **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
 
 > [!NOTE]
-> v0.5.0 is currently in final testing phase. Coming very soon to users!
+> v0.5.0 is now live and stable for production use!
 
 ## 🚀 Quick Start
 
