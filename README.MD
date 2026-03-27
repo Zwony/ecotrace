@@ -31,7 +31,7 @@ EcoTrace v0.5.0 represents a massive leap in carbon tracking accuracy and archit
 - **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
 
 > [!NOTE]
-> v0.5.0 is now live and stable for production use!
+> v0.5.0 is currently in the final testing phase. Estimated release date: 29.03.2026!!
 
 ## 🚀 Quick Start
 
