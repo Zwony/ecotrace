@@ -35,6 +35,10 @@ EcoTrace v0.5.0 will represent the biggest leap in carbon tracking accuracy. We'
 
 ## 🚀 Quick Start
 
+```bash
+pip install ecotrace
+```
+
 ```python
 from ecotrace import EcoTrace
 
@@ -44,7 +48,10 @@ eco = EcoTrace(region_code="TR")
 # Function-level tracking
 @eco.track
 def my_function():
-    return expensive_computation()
+    return sum(i * i for i in range(10**6))
+
+# Execute the function
+my_function()
 
 # Generate comprehensive report
 eco.generate_pdf_report("my_report.pdf")
@@ -126,23 +133,10 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ---
 
-## Quick Start
-
-```bash
-pip install ecotrace
-```
+## Example Output
 
 ```python
-from ecotrace import EcoTrace
-
-eco = EcoTrace(region_code="US")
-
-@eco.track
-def process_data():
-    return sum(i * i for i in range(10**6))
-
-process_data()
-# [EcoTrace] Function   : process_data
+# [EcoTrace] Function   : my_function
 # [EcoTrace] Duration   : 0.0452 sec
 # [EcoTrace] Avg CPU    : 23.4%
 # [EcoTrace] CO2 Emitted: 0.00001823 gCO2
