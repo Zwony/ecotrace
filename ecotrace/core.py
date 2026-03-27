@@ -189,13 +189,48 @@ class EcoTrace:
         storing ``(timestamp, cpu_percent)`` tuples in a thread-safe deque.
         Exits gracefully if the process is no longer accessible.
         """
-        self._current_process.cpu_percent()  # Discard first call — psutil always returns 0.0 initially
+        self._current_process.cpu_percent()  # Discard first call
+        child_cache = {}  # pid -> psutil.Process object
+        
         while self._cpu_monitor_active:
             try:
-                cpu_usage = self._current_process.cpu_percent()
+                # 1. Start with parent process usage
+                total_usage = self._current_process.cpu_percent()
+                
+                # 2. Get current children
+                try:
+                    current_children = self._current_process.children(recursive=True)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    current_children = []
+                
+                # 3. Update cache and sum usage
+                active_pids = set()
+                for child in current_children:
+                    pid = child.pid
+                    active_pids.add(pid)
+                    if pid not in child_cache:
+                        # First time seeing this child, call once to initialize
+                        try:
+                            child.cpu_percent()
+                            child_cache[pid] = child
+                        except (psutil.NoSuchProcess, psutil.AccessDenied):
+                            continue
+                    else:
+                        # Existing child, add its usage
+                        try:
+                            total_usage += child_cache[pid].cpu_percent()
+                        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                            del child_cache[pid]
+                
+                # 4. Cleanup dead processes from cache
+                for pid in list(child_cache.keys()):
+                    if pid not in active_pids:
+                        del child_cache[pid]
+                
                 timestamp = time.perf_counter()
                 with self._cpu_sample_lock:
-                    self._cpu_samples.append((timestamp, cpu_usage))
+                    self._cpu_samples.append((timestamp, total_usage))
+                
                 time.sleep(self._monitor_interval)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 break

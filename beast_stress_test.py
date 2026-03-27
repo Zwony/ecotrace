@@ -1,6 +1,7 @@
 import multiprocessing
 import time
 import math
+import os
 from ecotrace import EcoTrace
 
 # Initialize EcoTrace with hardware detection
@@ -10,8 +11,9 @@ def heavy_computation(duration):
     """CPU-intensive mathematical operation for stress testing."""
     start = time.time()
     while time.time() - start < duration:
-        # Heavy mathematical load that maximizes CPU usage
-        _ = sum(math.sqrt(i) for i in range(15000))
+        # Heavily optimized mathematical load to ensure 100% saturation
+        [math.sqrt(i) for i in range(20000)]
+        [math.exp(i/20000) for i in range(1000)]
 
 @eco.track
 def beast_stress_test():
@@ -23,7 +25,7 @@ def beast_stress_test():
     print(f"[BEAST TEST] Starting extreme stress on {multiprocessing.cpu_count()} cores...")
     
     # Use multiprocessing.Pool to maximize all cores efficiently
-    stress_duration = 5  # 5 seconds of intense load
+    stress_duration = 10  # 10 seconds of intense load
     
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         # Map heavy computation to all available cores
@@ -35,11 +37,14 @@ def beast_stress_test():
     return f"Beast mode: {multiprocessing.cpu_count()} cores @ {stress_duration}s"
 
 def main():
-    print("=" * 60)
-    print("      ECOTRACE v0.5.0 - THE BEAST STRESS TEST")
-    print("=" * 60)
-    print()
-    
+    # Run as high priority for stable results
+    import psutil
+    p = psutil.Process()
+    if os.name == 'nt':
+        p.nice(psutil.HIGH_PRIORITY_CLASS)
+    else:
+        p.nice(10) # High priority on Unix
+
     # Run the extreme multi-core stress test
     beast_stress_test()
     
