@@ -157,9 +157,15 @@ class EcoTrace:
         # CPU energy calculation
         cpu_power_wh = (tdp * normalized_utilization / 100) * duration_s / self.SECONDS_PER_HOUR
         
-        # RAM energy calculation - Process-specific (RSS) for accuracy
+        # RAM energy calculation - Recursive Process Tree (RSS) for accuracy
         try:
-            ram_usage_gb = self._current_process.memory_info().rss / (1024**3)
+            total_rss = self._current_process.memory_info().rss
+            for child in self._current_process.children(recursive=True):
+                try:
+                    total_rss += child.memory_info().rss
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+            ram_usage_gb = total_rss / (1024**3)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             ram_usage_gb = 0.0
             
@@ -197,7 +203,7 @@ class EcoTrace:
         """
         self._current_process.cpu_percent()  # Discard first call
         child_cache = {}  # pid -> psutil.Process object
-        
+        next_sample_time = time.perf_counter()
         while self._cpu_monitor_active:
             try:
                 # 1. Start with parent process usage
@@ -215,20 +221,18 @@ class EcoTrace:
                     pid = child.pid
                     active_pids.add(pid)
                     if pid not in child_cache:
-                        # First time seeing this child, call once to initialize
                         try:
                             child.cpu_percent()
                             child_cache[pid] = child
                         except (psutil.NoSuchProcess, psutil.AccessDenied):
                             continue
                     else:
-                        # Existing child, add its usage
                         try:
                             total_usage += child_cache[pid].cpu_percent()
                         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                             del child_cache[pid]
                 
-                # 4. Cleanup dead processes from cache
+                # 4. Cleanup dead processes
                 for pid in list(child_cache.keys()):
                     if pid not in active_pids:
                         del child_cache[pid]
@@ -237,7 +241,14 @@ class EcoTrace:
                 with self._cpu_sample_lock:
                     self._cpu_samples.append((timestamp, total_usage))
                 
-                time.sleep(self._monitor_interval)
+                # Tight timing control: account for computation duration
+                next_sample_time += self._monitor_interval
+                sleep_duration = next_sample_time - time.perf_counter()
+                if sleep_duration > 0:
+                    time.sleep(sleep_duration)
+                else:
+                    # Compensation for heavy loop: don't sleep, but catch up next time
+                    next_sample_time = time.perf_counter()
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 break
 
@@ -676,6 +687,11 @@ class EcoTrace:
                     print(f"[EcoTrace] WARNING: Block measurement failed for '{block_name}': {e}")
 
     def __del__(self):
-        """Ensures all background monitoring threads are stopped on cleanup."""
+        """Ensures all background monitoring threads are stopped and resources released."""
         self._stop_cpu_monitor()
         self._stop_gpu_monitor()
+        try:
+            import nvidia_ml_py as pynvml
+            pynvml.nvmlShutdown()
+        except (ImportError, Exception):
+            pass
