@@ -635,13 +635,29 @@ class EcoTrace:
     # Reporting
     # ========================================================================
 
-    def generate_pdf_report(self, filename="ecotrace_full_report.pdf", comparison=None, cpu_samples=None):
-        """Generates a comprehensive PDF audit report dynamically."""
+    def generate_pdf_report(self, filename="ecotrace_full_report.pdf", comparison=None, cpu_samples=None, gpu_samples=None):
+        """Generates a comprehensive PDF audit report dynamically.
+        
+        If cpu_samples or gpu_samples are not provided, the engine automatically
+        snapshots the internal session deques for full-history reporting.
+        """
         from .report import generate_pdf_report as generate_pdf
-        samples_list = None
-        if cpu_samples:
+        
+        # CPU Samples snapshot
+        final_cpu_samples = None
+        if cpu_samples is not None:
+            final_cpu_samples = list(cpu_samples)
+        else:
             with self._cpu_sample_lock:
-                samples_list = list(cpu_samples)
+                final_cpu_samples = list(self._cpu_samples)
+                
+        # GPU Samples snapshot
+        final_gpu_samples = None
+        if gpu_samples is not None:
+            final_gpu_samples = list(gpu_samples)
+        elif self.gpu_info:
+            with self._gpu_sample_lock:
+                final_gpu_samples = list(self._gpu_samples)
 
         generate_pdf(
             filename=filename,
@@ -649,7 +665,8 @@ class EcoTrace:
             gpu_info=self.gpu_info,
             region_code=self.region_code,
             comparison=comparison,
-            cpu_samples=samples_list,
+            cpu_samples=final_cpu_samples,
+            gpu_samples=final_gpu_samples,
             api_key=self.api_key
         )
 

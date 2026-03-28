@@ -53,7 +53,43 @@ def create_cpu_usage_chart(samples_data, core_count=1):
         return temp_file.name
 
     except Exception as e:
-        print(f"[EcoTrace] Chart generation failed: {e}")
+        print(f"[EcoTrace] CPU Chart generation failed: {e}")
+        return None
+
+def create_gpu_usage_chart(samples_data):
+    """Renders a GPU utilization line chart and saves it as a temporary PNG.
+
+    Args:
+        samples_data (list): List of ``(timestamp, gpu_percent)`` float tuples.
+
+    Returns:
+        str or None: Path to PNG or None on failure.
+    """
+    if not samples_data:
+        return None
+
+    try:
+        timestamps = [t for t, _ in samples_data]
+        gpu_values = [min(s, 100.0) for _, s in samples_data]
+        relative_times = [(t - timestamps[0]) for t in timestamps]
+
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.plot(relative_times, gpu_values, linewidth=2, color='#4682B4')  # SteelBlue for GPU
+        ax.fill_between(relative_times, gpu_values, alpha=0.3, color='#4682B4')
+        ax.set_xlabel('Time (seconds)', fontsize=10)
+        ax.set_ylabel('GPU Utilization (%)', fontsize=10)
+        ax.set_title('GPU Utilization Over Time', fontsize=12, fontweight='bold')
+        ax.grid(True, alpha=0.3)
+        ax.set_ylim(0, 110)
+        plt.tight_layout()
+
+        temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        plt.savefig(temp_file.name, dpi=150, bbox_inches='tight')
+        plt.close(fig)
+        return temp_file.name
+
+    except Exception as e:
+        print(f"[EcoTrace] GPU Chart generation failed: {e}")
         return None
 
 def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):
@@ -120,6 +156,7 @@ def generate_pdf_report(
     region_code="TR", 
     comparison=None, 
     cpu_samples=None,
+    gpu_samples=None,
     api_key=None
 ):
     """Generates a comprehensive PDF audit report covering energy footprint data.
@@ -134,6 +171,8 @@ def generate_pdf_report(
         region_code (str): Carbon regional intensity modifier identifier.
         comparison (dict): Context mappings when processing paired run analyses.
         cpu_samples (list): Captured process thread state samples for visualization rendering.
+        gpu_samples (list): Captured GPU utilization samples for visualization rendering.
+        api_key (str): Optional Google Gemini API key.
 
     Returns:
         None: Operations output side-effects to the disk format system, with CLI feedbacks.
@@ -149,7 +188,7 @@ def generate_pdf_report(
                 reader = csv.reader(f)
                 next(reader)
                 for row in reader:
-                    if len(row) >= 5:
+                    if len(row) >= 6:
                         history.append(row)
 
         pdf = FPDF()
@@ -201,37 +240,46 @@ def generate_pdf_report(
             except ValueError:
                 pass
 
-        chart_image_path = None
-        try:
-            if cpu_samples:
-                samples_list = cpu_samples
+        # CPU Chart Section
+        if cpu_samples:
+            core_count = cpu_info.get("cores", 1)
+            normalized_samples = [(t, min(s / core_count, 100.0)) for t, s in cpu_samples]
+            chart_path = create_cpu_usage_chart(normalized_samples, core_count)
+            if chart_path:
+                pdf.add_page()
+                pdf.set_font("helvetica", 'B', 12)
+                pdf.cell(0, 10, txt=" CPU Usage Over Time (Core-Normalized)", ln=True, fill=True)
+                pdf.ln(5)
+                pdf.image(chart_path, x=10, y=50, w=190)
+                pdf.ln(120)
 
-                if samples_list:
-                    core_count = cpu_info.get("cores", 1)
-                    normalized_samples = [
-                        (t, min(s / core_count, 100.0)) 
-                        for t, s in samples_list
-                    ]
-                    chart_image_path = create_cpu_usage_chart(normalized_samples, core_count)
+                normalized_values = [s for _, s in normalized_samples]
+                avg_cpu = sum(normalized_values) / len(normalized_values) if normalized_values else 0.0
+                max_cpu = max(normalized_values) if normalized_values else 0.0
+                min_cpu = min(normalized_values) if normalized_values else 0.0
 
-                    if chart_image_path:
-                        pdf.add_page()
-                        pdf.set_font("helvetica", 'B', 12)
-                        pdf.cell(0, 10, txt=" CPU Usage Over Time (Core-Normalized)", ln=True, fill=True)
-                        pdf.ln(5)
-                        pdf.image(chart_image_path, x=10, y=50, w=190)
-                        pdf.ln(120)
+                pdf.set_font("helvetica", size=9)
+                pdf.cell(0, 8, txt=f"Average CPU: {avg_cpu:.1f}% | Peak: {max_cpu:.1f}% | Min: {min_cpu:.1f}%", ln=True)
+                if os.path.exists(chart_path): os.unlink(chart_path)
 
-                        normalized_values = [s for _, s in normalized_samples]
-                        avg_cpu = sum(normalized_values) / len(normalized_values)
-                        max_cpu = max(normalized_values)
-                        min_cpu = min(normalized_values)
+        # GPU Chart Section
+        if gpu_samples:
+            gpu_chart_path = create_gpu_usage_chart(gpu_samples)
+            if gpu_chart_path:
+                pdf.add_page()
+                pdf.set_font("helvetica", 'B', 12)
+                pdf.cell(0, 10, txt=" GPU Utilization Over Time", ln=True, fill=True)
+                pdf.ln(5)
+                pdf.image(gpu_chart_path, x=10, y=50, w=190)
+                pdf.ln(120)
 
-                        pdf.set_font("helvetica", size=9)
-                        pdf.cell(0, 8, txt=f"Average CPU: {avg_cpu:.1f}% | Peak: {max_cpu:.1f}% | Min: {min_cpu:.1f}%", ln=True)
-
-        except Exception as e:
-            print(f"[EcoTrace] Chart section error: {e}")
+                gpu_values = [s for _, s in gpu_samples]
+                avg_gpu = sum(gpu_values) / len(gpu_values) if gpu_values else 0.0
+                peak_gpu = max(gpu_values) if gpu_values else 0.0
+                
+                pdf.set_font("helvetica", size=9)
+                pdf.cell(0, 8, txt=f"Average GPU Usage: {avg_gpu:.1f}% | Peak Usage: {peak_gpu:.1f}%", ln=True)
+                if os.path.exists(gpu_chart_path): os.unlink(gpu_chart_path)
 
         pdf.ln(10)
         pdf.set_font("helvetica", 'B', 14)
@@ -275,66 +323,58 @@ def generate_pdf_report(
             pdf.cell(50, 10, "Recommendation", border=1, fill=True, ln=True)
             pdf.set_font("helvetica", size=8)
             
+            # Logic: Scale thresholds by core count for accurate reporting
+            core_count = cpu_info.get("cores", 1)
+            single_core_threshold = 100.0 / core_count
+            
             for row in history[-5:]:
                 try:
-                    if len(row) < 6:
-                        continue
-                        
                     func_name = row[1][:15] + "..." if len(row[1]) > 15 else row[1]
                     duration = float(row[2])
-                    carbon = float(row[3])  
                     avg_cpu = float(row[5])
                     
-                    insights = []
-                    if duration > 5.0:
-                        insights.append("Long execution: Check I/O bottlenecks")
-                    elif duration > 2.0:
-                        insights.append("Consider async implementation")
+                    # --- Balanced Insight Engine ---
+                    recommendation = "Optimal"
                     
-                    if avg_cpu > 70:
-                        insights.append("High CPU: Optimize loops")
-                    elif avg_cpu < 20:
-                        insights.append("Low CPU: Consider batching")
+                    # 1. Critical Duration (Time is the biggest carbon factor)
+                    if duration > 10.0:
+                        recommendation = "Check I/O bottlenecks"
+                    elif duration > 3.0:
+                        recommendation = "Try async implementation"
                     
-                    if not insights:
-                        insights.append("Performance looks optimal")
+                    # 2. Strategic CPU Utilization
+                    elif avg_cpu > 50.0:
+                        recommendation = "High Multi-Core Load"
+                    elif avg_cpu > 25.0:
+                        recommendation = "High CPU: Optimize loops"
+                    elif (single_core_threshold * 0.7) <= avg_cpu <= (single_core_threshold * 1.3):
+                        # Task is hitting 1 full core (common in Python due to GIL)
+                        recommendation = "Single-Thread Intensive"
+                    elif avg_cpu < 1.0:
+                        recommendation = "Low CPU: Try batching"
                     
                     pdf.cell(60, 8, func_name, border=1)
                     pdf.cell(40, 8, f"{avg_cpu:.1f}%", border=1)
                     pdf.cell(40, 8, f"{duration:.2f}s", border=1)
-                    pdf.cell(50, 8, insights[0][:20] + "..." if len(insights[0]) > 20 else insights[0], border=1, ln=True)
-                    
-                except (IndexError, ValueError) as e:
-                    continue
+                    pdf.cell(50, 8, recommendation, border=1, ln=True)
+                except: continue
 
-        # --- Gemini AI Insights Section ---
         if api_key and history:
             ai_text = get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code)
             if ai_text:
                 pdf.add_page()
                 pdf.set_font("helvetica", 'B', 16)
-                pdf.set_text_color(46, 139, 87) # Eco Green
+                pdf.set_text_color(46, 139, 87)
                 pdf.cell(0, 15, txt="EcoTrace AI Insights (Beta)", ln=True, align='C')
                 pdf.ln(5)
-                
-                # Background box for AI Insights
                 pdf.set_fill_color(240, 255, 240)
                 pdf.set_font("helvetica", 'I', 10)
                 pdf.set_text_color(40, 40, 40)
-                
-                # Strip Markdown bold/italic for FPDF compatibility
                 clean_ai_text = ai_text.replace("**", "").replace("*", "").replace("`", "")
                 pdf.multi_cell(0, 8, txt=sanitize_for_pdf(clean_ai_text), border=1, fill=True)
-                pdf.ln(10)
 
         pdf.output(filename)
         print(f"\n[EcoTrace] Report saved: {filename}")
-
-        if chart_image_path and os.path.exists(chart_image_path):
-            try:
-                os.unlink(chart_image_path)
-            except Exception:
-                pass
 
     except Exception as e:
         print(f"\n[EcoTrace] PDF Error: {e}")
