@@ -17,22 +17,23 @@ graph LR
     style D fill:#fff3e0
 ```
 
-*Figure 1: v0.5.1 Hardware Analysis & Normalization Pipeline*
+*Figure 1: v0.5.2 Hardware Analysis & Normalization Pipeline*
 
-## 🔥 v0.5.1 - The Precision & Reporting Patch
+## 🔥 v0.5.2 - The Unified Monitoring Update
 
-EcoTrace v0.5.1 refines the massive v0.5.0 update with automated visual reporting and core-aware "Smart Insights" for better performance diagnostics.
+EcoTrace v0.5.2 represents the definitive "Hardware Intelligence" release, integrating seamless CPU+GPU monitoring and automated visual reporting into a single, high-precision engine.
 
 **Key Innovations:**
 - **🧬 Smart Core Normalization:** Eliminates utilization spikes on multi-core systems
-- **📊 Automated PDF Charts:** CPU and GPU utilization graphs generated automatically
+- **📊 Automated Visual Reporting:** CPU and GPU utilization graphs generated automatically
+- **🛰️ Unified Monitoring:** Standard `@track` now aggregates both CPU and GPU carbon
 - **⚡ RAM Generation Awareness:** DDR4/DDR5 detection with MHz speed analysis  
 - **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
 - **🤖 Gemini AI Insights:** Hardware-aware, dynamic "Green Coding" recommendations powered by Google Gemini
 - **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
 
 > [!IMPORTANT]
-> **EcoTrace v0.5.1 is LIVE!** 🚀 The Precision & Reporting Patch is now officially released.  
+> **EcoTrace v0.5.2 is LIVE!** 🚀 The Unified Monitoring Patch is now officially released.  
 > Update now: `pip install --upgrade ecotrace`
 
 

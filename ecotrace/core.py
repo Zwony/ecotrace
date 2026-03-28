@@ -512,7 +512,11 @@ class EcoTrace:
 
         try:
             with self.cpu_monitor():
-                result_data = func(*args, **kwargs)
+                if self.gpu_info:
+                    with self.gpu_monitor():
+                        result_data = func(*args, **kwargs)
+                else:
+                    result_data = func(*args, **kwargs)
                 func_success = True
         finally:
             end_time = time.perf_counter()
@@ -575,7 +579,11 @@ class EcoTrace:
         try:
             with self.cpu_monitor():
                 try:
-                    result_data = await func(*args, **kwargs)
+                    if self.gpu_info:
+                        with self.gpu_monitor():
+                            result_data = await func(*args, **kwargs)
+                    else:
+                        result_data = await func(*args, **kwargs)
                     func_success = True
                 finally:
                     await asyncio.sleep(self.MONITOR_INTERVAL_S)  # Allow trailing samples to be captured
@@ -691,21 +699,31 @@ class EcoTrace:
         """
         start_time = time.perf_counter()
         with self.cpu_monitor():
-            try:
+            if self.gpu_info:
+                with self.gpu_monitor():
+                    yield
+            else:
                 yield
-            finally:
-                end_time = time.perf_counter()
-                duration = end_time - start_time
+            
+            end_time = time.perf_counter()
+            duration = end_time - start_time
+            
+            try:
+                # Calculate metrics
+                avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+                cpu_carbon = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
                 
-                try:
-                    # Calculate metrics
-                    avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
-                    carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-                    self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
-                    
-                    print(f"[EcoTrace] Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
-                except Exception as e:
-                    print(f"[EcoTrace] WARNING: Block measurement failed for '{block_name}': {e}")
+                gpu_carbon = 0.0
+                if self.gpu_info:
+                    avg_gpu = self._get_avg_gpu_in_range(start_time, end_time)
+                    gpu_carbon = self._compute_carbon(self.gpu_info['tdp'], avg_gpu, duration)
+                
+                carbon_emitted = cpu_carbon + gpu_carbon
+                self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
+                
+                print(f"[EcoTrace] Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
+            except Exception as e:
+                print(f"[EcoTrace] WARNING: Block measurement failed for '{block_name}': {e}")
 
     def __del__(self):
         """Ensures all background monitoring threads are stopped and resources released."""
