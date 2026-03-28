@@ -27,7 +27,7 @@ EcoTrace v0.5.0 represents a massive leap in carbon tracking accuracy and archit
 - **🧬 Smart Core Normalization:** Eliminates utilization spikes on multi-core systems
 - **⚡ RAM Generation Awareness:** DDR4/DDR5 detection with MHz speed analysis  
 - **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
-- **🤖 AI Insights Engine:** Automated optimization suggestions in PDF reports
+- **🤖 Gemini AI Insights:** Hardware-aware, dynamic "Green Coding" recommendations powered by Google Gemini
 - **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
 
 > [!NOTE]
@@ -235,6 +235,49 @@ eco.generate_pdf_report(
 
 ---
 
+### 🤖 Gemini AI Insights — Green Coding Assistant
+
+EcoTrace v0.5.0 integrates **Google Gemini AI** to transform raw metrics into actionable optimization advice. Instead of static rules, it analyzes your hardware, region, and function semantics to suggest "Green Coding" improvements.
+
+```python
+# Initialize with your Gemini API Key
+eco = EcoTrace(api_key="YOUR_GEMINI_API_KEY")
+
+# Or set it as an environment variable:
+# os.environ["GEMINI_API_KEY"] = "YOUR_KEY"
+
+eco.generate_pdf_report("smart_audit.pdf")
+```
+
+**AI-Powered Insights include:**
+- **Vectorization Suggestions:** "Your i7-13700H supports AVX-512; use NumPy for this loop to save 15% energy."
+- **Architecture Tuning:** "This function is I/O bound; switching to `asyncio` could reduce idle CPU carbon by 20%."
+- **Library Swaps:** "Consider `lxml` instead of `xml.etree` for this specific workload to improve energy efficiency."
+
+---
+
+
+### 🤖 Gemini AI Insights — Green Coding Assistant
+
+EcoTrace v0.5.0 integrates **Google Gemini AI** to transform raw metrics into actionable optimization advice. Instead of static rules, it analyzes your hardware, region, and function semantics to suggest "Green Coding" improvements.
+
+```python
+# Initialize with your Gemini API Key
+eco = EcoTrace(api_key="YOUR_GEMINI_API_KEY")
+
+# Or set it as an environment variable:
+# os.environ["GEMINI_API_KEY"] = "YOUR_KEY"
+
+eco.generate_pdf_report("smart_audit.pdf")
+```
+
+**AI-Powered Insights include:**
+- **Vectorization Suggestions:** "Your i7-13700H supports AVX-512; use NumPy for this loop to save 15% energy."
+- **Architecture Tuning:** "This function is I/O bound; switching to `asyncio` could reduce idle CPU carbon by 20%."
+- **Library Swaps:** "Consider `lxml` instead of `xml.etree` for this specific workload to improve energy efficiency."
+
+---
+
 ## The Science Behind EcoTrace
 
 EcoTrace implements a **TDP-based energy estimation model**, the industry-standard approach for software-level carbon measurement.
@@ -350,6 +393,7 @@ EcoTrace auto-detects your CPU and resolves its TDP from the **Boavizta crowdsou
 | **PDF audit reports** | ✅ Built-in | ❌ | ❌ |
 | **CPU usage charts** | ✅ Matplotlib | ❌ | ❌ |
 | **Function comparison** | ✅ `eco.compare()` | ❌ | ❌ |
+| **AI Insights (Gemini)** | ✅ **Hardware-Aware** | ❌ | ❌ |
 | **CPU TDP database** | ✅ 1,800+ models | ✅ ~1,000 models | ❌ Manual config |
 | **Zero-config setup** | ✅ Auto-detection | ⚠️ Config required | ⚠️ Config required |
 | **Graceful GPU fallback** | ✅ Never crashes | ❌ Raises exceptions | ❌ Raises exceptions |
@@ -381,6 +425,7 @@ py-cpuinfo      — Hardware identification
 fpdf            — PDF report generation
 matplotlib      — CPU usage charting
 nvidia-ml-py    — NVIDIA GPU monitoring (optional at runtime)
+google-generativeai — Gemini AI Insights engine (optional)
 wmi             — AMD/Intel GPU detection (Windows only)
 ```
 
