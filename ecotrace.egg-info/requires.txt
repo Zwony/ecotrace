@@ -3,6 +3,7 @@ py-cpuinfo
 fpdf
 matplotlib
 nvidia-ml-py
+google-generativeai
 
 [:sys_platform == "win32"]
 wmi

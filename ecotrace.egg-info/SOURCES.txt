@@ -4,9 +4,14 @@ README.md
 pyproject.toml
 setup.py
 ecotrace/__init__.py
+ecotrace/config.py
 ecotrace/constants.json
 ecotrace/core.py
+ecotrace/cpu.py
 ecotrace/cpu_data.csv
+ecotrace/gpu.py
+ecotrace/ram.py
+ecotrace/report.py
 ecotrace.egg-info/PKG-INFO
 ecotrace.egg-info/SOURCES.txt
 ecotrace.egg-info/dependency_links.txt

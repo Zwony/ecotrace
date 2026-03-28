@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ecotrace
-Version: 0.4.0
+Version: 0.5.0
 Summary: EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting.
 Author-email: Emre Ozkal <emreozkal03@gmail.com>
 Project-URL: Homepage, https://github.com/Zwony/ecotrace
@@ -10,14 +10,11 @@ Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
-Classifier: Programming Language :: Python :: 3.7
-Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
-Classifier: Topic :: Software Development :: Libraries :: Python Modules
-Classifier: Topic :: Scientific/Engineering :: Information Analysis
-Requires-Python: >=3.7
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: psutil
@@ -25,6 +22,7 @@ Requires-Dist: py-cpuinfo
 Requires-Dist: fpdf
 Requires-Dist: matplotlib
 Requires-Dist: nvidia-ml-py
+Requires-Dist: google-generativeai
 Requires-Dist: wmi; sys_platform == "win32"
 Dynamic: license-file
 
@@ -36,17 +34,100 @@ Dynamic: license-file
 
 *Measure. Optimize. Report. — Function-level carbon intelligence with scientific rigor.*
 
-[![PyPI version](https://badge.fury.io/py/ecotrace.svg)](https://badge.fury.io/py/ecotrace)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
+```mermaid
+graph LR
+    A[Hardware Detection] --> B[EcoTrace Engine]
+    B --> C[Normalization & RAM Logic]
+    C --> D[PDF Report & AI Insights]
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+```
+
+*Figure 1: v0.5.0 Hardware Analysis & Normalization Pipeline*
+
+## 🔥 v0.5.0 - The Hardware Intelligence Update
+
+EcoTrace v0.5.0 represents a massive leap in carbon tracking accuracy and architectural modularity. We've evolved from simple monitoring to deep hardware-aware analysis scaling from 1 to 128+ CPU cores with scientific precision.
+
+**Key Innovations:**
+- **🧬 Smart Core Normalization:** Eliminates utilization spikes on multi-core systems
+- **⚡ RAM Generation Awareness:** DDR4/DDR5 detection with MHz speed analysis  
+- **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
+- **🤖 Gemini AI Insights:** Hardware-aware, dynamic "Green Coding" recommendations powered by Google Gemini
+- **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
+
+> [!NOTE]
+> v0.5.0 is currently in the final testing phase. Estimated release date: **29.03.2026**!
+
+## 🚀 Quick Start
+
+```bash
+pip install ecotrace
+```
+
+```python
+from ecotrace import EcoTrace
+
+# Initialize with hardware detection
+eco = EcoTrace(region_code="TR")
+
+# Function-level tracking
+@eco.track
+def my_function():
+    return sum(i * i for i in range(10**6))
+
+# Execute the function
+my_function()
+
+# Generate comprehensive report
+eco.generate_pdf_report("my_report.pdf")
+```
+
+[![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=blue)](https://pypi.org/project/ecotrace/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](https://opensource.org/licenses/MIT)
 [![Carbon Aware](https://img.shields.io/badge/Carbon-Aware-2E8B57?logo=leaflet&logoColor=white)](https://github.com/Zwony/ecotrace)
 [![Downloads](https://pepy.tech/badge/ecotrace)](https://pepy.tech/project/ecotrace)
 [![Downloads/Month](https://pepy.tech/badge/ecotrace/month)](https://pepy.tech/project/ecotrace)
 [![GitHub stars](https://img.shields.io/github/stars/Zwony/ecotrace?style=social)](https://github.com/Zwony/ecotrace/stargazers)
 
+<br>
+<br>
+
+[![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Discord&logo=discord&style=for-the-badge)](https://discord.gg/hs58XXb3Uq)
+
+*🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
+
+<br>
+<br>
+
 ![EcoTrace Demo](demo.gif)
+*Figure 2: EcoTrace Logic in Action*
 
 </div>
+
+---
+
+## 🆚 EcoTrace vs CodeCarbon
+
+| Feature | EcoTrace | CodeCarbon |
+|---|---|---|
+| CPU tracking | ✅ | ✅ |
+| NVIDIA GPU tracking | ✅ | ✅ |
+| **AMD + Intel GPU tracking** | ✅ | ❌ |
+| **Async function support** | ✅ | ❌ |
+| **Process-scoped CPU** (not system-wide) | ✅ | ❌ |
+| **50ms continuous sampling** | ✅ | ❌ |
+| **Side-by-side comparison** (`compare()`) | ✅ | ❌ |
+| **PDF report with CPU charts** | ✅ | ❌ |
+| **Thread-safe multi-decorator** | ✅ | ❌ |
+| **1800+ CPU TDP database** (Boavizta) | ✅ | ❌ |
+| **Crash-proof decorators** (result always returned) | ✅ | ❌ |
+| 40+ region support | ✅ | Limited |
+| CSV audit logging | ✅ | ✅ |
+| Zero-config decorator | ✅ | ✅ |
 
 ---
 
@@ -81,23 +162,10 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ---
 
-## Quick Start
-
-```bash
-pip install ecotrace
-```
+## Example Output
 
 ```python
-from ecotrace import EcoTrace
-
-eco = EcoTrace(region_code="US")
-
-@eco.track
-def process_data():
-    return sum(i * i for i in range(10**6))
-
-process_data()
-# [EcoTrace] Function   : process_data
+# [EcoTrace] Function   : my_function
 # [EcoTrace] Duration   : 0.0452 sec
 # [EcoTrace] Avg CPU    : 23.4%
 # [EcoTrace] CO2 Emitted: 0.00001823 gCO2
@@ -195,6 +263,53 @@ eco.generate_pdf_report(
 
 ---
 
+### 🤖 Gemini AI Insights — Green Coding Assistant
+
+EcoTrace v0.5.0 integrates **Google Gemini AI** to transform raw metrics into actionable optimization advice. Instead of static rules, it analyzes your hardware, region, and function semantics to suggest "Green Coding" improvements.
+
+```python
+# Initialize with your Gemini API Key
+eco = EcoTrace(api_key="YOUR_GEMINI_API_KEY")
+
+# Or set it as an environment variable:
+# os.environ["GEMINI_API_KEY"] = "YOUR_KEY"
+
+eco.generate_pdf_report("smart_audit.pdf")
+```
+
+**AI-Powered Insights include:**
+- **Vectorization Suggestions:** "Your i7-13700H supports AVX-512; use NumPy for this loop to save 15% energy."
+- **Architecture Tuning:** "This function is I/O bound; switching to `asyncio` could reduce idle CPU carbon by 20%."
+- **Library Swaps:** "Consider `lxml` instead of `xml.etree` for this specific workload to improve energy efficiency."
+
+---
+
+
+### 🤖 Gemini AI Insights — Green Coding Assistant
+
+EcoTrace v0.5.0 integrates **Google Gemini AI** to transform raw metrics into actionable optimization advice. Instead of static rules, it analyzes your hardware, region, and function semantics to suggest "Green Coding" improvements.
+
+```python
+# Initialize with your Gemini API Key
+eco = EcoTrace(api_key="YOUR_GEMINI_API_KEY")
+
+# Or set it as an environment variable:
+# os.environ["GEMINI_API_KEY"] = "YOUR_KEY"
+
+eco.generate_pdf_report("smart_audit.pdf")
+```
+
+> [!NOTE]
+> **Opt-in Feature:** Gemini AI Insights is an optional, developer-driven feature. It is only activated when a valid `GEMINI_API_KEY` is provided. If no key is detected, EcoTrace continues to operate with its high-precision local monitoring and static rule-based insights.
+
+
+**AI-Powered Insights include:**
+- **Vectorization Suggestions:** "Your i7-13700H supports AVX-512; use NumPy for this loop to save 15% energy."
+- **Architecture Tuning:** "This function is I/O bound; switching to `asyncio` could reduce idle CPU carbon by 20%."
+- **Library Swaps:** "Consider `lxml` instead of `xml.etree` for this specific workload to improve energy efficiency."
+
+---
+
 ## The Science Behind EcoTrace
 
 EcoTrace implements a **TDP-based energy estimation model**, the industry-standard approach for software-level carbon measurement.
@@ -266,6 +381,8 @@ EcoTrace auto-detects your CPU and resolves its TDP from the **Boavizta crowdsou
 
 ### Supported Regions (40+)
 
+![EcoTrace Global Coverage](assets/world_map.png)
+
 <details>
 <summary><strong>Click to expand full region table</strong></summary>
 
@@ -308,6 +425,7 @@ EcoTrace auto-detects your CPU and resolves its TDP from the **Boavizta crowdsou
 | **PDF audit reports** | ✅ Built-in | ❌ | ❌ |
 | **CPU usage charts** | ✅ Matplotlib | ❌ | ❌ |
 | **Function comparison** | ✅ `eco.compare()` | ❌ | ❌ |
+| **AI Insights (Gemini)** | ✅ **Hardware-Aware** | ❌ | ❌ |
 | **CPU TDP database** | ✅ 1,800+ models | ✅ ~1,000 models | ❌ Manual config |
 | **Zero-config setup** | ✅ Auto-detection | ⚠️ Config required | ⚠️ Config required |
 | **Graceful GPU fallback** | ✅ Never crashes | ❌ Raises exceptions | ❌ Raises exceptions |
@@ -339,21 +457,11 @@ py-cpuinfo      — Hardware identification
 fpdf            — PDF report generation
 matplotlib      — CPU usage charting
 nvidia-ml-py    — NVIDIA GPU monitoring (optional at runtime)
+google-generativeai — Gemini AI Insights engine (optional)
 wmi             — AMD/Intel GPU detection (Windows only)
 ```
 
-> **Compatibility:** EcoTrace is tested on Python 3.7+ and runs on Windows, macOS, and Linux. GPU features require appropriate vendor drivers.
-
----
-
-## Community & Support
-
-[![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Discord&logo=discord&style=for-the-badge)](https://discord.gg/hs58XXb3Uq)
-
-- 🐛 **Report bugs** — Help us improve reliability
-- 💡 **Suggest features** — Shape the EcoTrace Pro roadmap
-- 💻 **Contribute TDP data** — Expand hardware coverage
-- 🛠️ **Get support** — Installation and usage help
+> **Compatibility:** EcoTrace is tested on Python 3.9+ and runs on Windows, macOS, and Linux. GPU features require appropriate vendor drivers.
 
 ---
 

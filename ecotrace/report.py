@@ -3,6 +3,7 @@ import csv
 import tempfile
 from fpdf import FPDF
 import matplotlib.pyplot as plt
+import google.generativeai as genai
 
 def sanitize_for_pdf(text):
     """Strips non-ASCII characters for safe PDF rendering.
@@ -55,13 +56,71 @@ def create_cpu_usage_chart(samples_data, core_count=1):
         print(f"[EcoTrace] Chart generation failed: {e}")
         return None
 
+def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):
+    """Fetches dynamic carbon-optimization insights from Google Gemini.
+
+    Constructs a detailed prompt containing hardware specs, regional grid intensity,
+    and recent execution history to generate actionable 'Green Coding' advice.
+
+    Args:
+        api_key (str): Google Gemini API key.
+        cpu_info (dict): CPU hardware specs.
+        gpu_info (dict): GPU hardware specs (optional).
+        history (list): Recent measurements from CSV.
+        region_code (str): ISO region for grid intensity context.
+
+    Returns:
+        str: AI-generated insights or an error message if the call fails.
+    """
+    if not api_key:
+        return None
+
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+
+        # Limit history to last 5 entries for prompt efficiency
+        recent_history = history[-5:]
+        history_summary = ""
+        for row in recent_history:
+            history_summary += f"- {row[1]}: {row[2]}s, {row[3]}gCO2, {row[5]}% CPU\n"
+
+        gpu_desc = f"GPU: {gpu_info.get('brand')} ({gpu_info.get('tdp')}W)" if gpu_info else "No GPU"
+
+        prompt = f"""
+        You are 'EcoTrace AI', a green computing expert. Analyze this Python execution data and provide 3-4 concise, 
+        highly technical 'Eco-Insights' for the developer to reduce their carbon footprint.
+        
+        SYSTEM INFO:
+        - CPU: {cpu_info.get('brand')} ({cpu_info.get('cores')} cores, {cpu_info.get('tdp')}W TDP)
+        - {gpu_desc}
+        - Region: {region_code}
+        
+        RECENT PERFORMANCE HISTORY:
+        {history_summary}
+        
+        REQUIREMENTS:
+        - Focus on energy efficiency and carbon reduction.
+        - Be specific to the hardware if relevant.
+        - Suggest Pythonic optimizations (e.g., vectorized operations, async, library swaps).
+        - Keep insights under 60 words each.
+        - Response should be in the same language as the function names if possible, but default to English if unsure.
+        """
+
+        response = model.generate_content(prompt)
+        return response.text.strip()
+
+    except Exception as e:
+        return f"Gemini Insights unavailable: {str(e)}"
+
 def generate_pdf_report(
     filename="ecotrace_full_report.pdf", 
     cpu_info=None, 
     gpu_info=None, 
     region_code="TR", 
     comparison=None, 
-    cpu_samples=None
+    cpu_samples=None,
+    api_key=None
 ):
     """Generates a comprehensive PDF audit report covering energy footprint data.
 
@@ -247,6 +306,26 @@ def generate_pdf_report(
                     
                 except (IndexError, ValueError) as e:
                     continue
+
+        # --- Gemini AI Insights Section ---
+        if api_key and history:
+            ai_text = get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code)
+            if ai_text:
+                pdf.add_page()
+                pdf.set_font("helvetica", 'B', 16)
+                pdf.set_text_color(46, 139, 87) # Eco Green
+                pdf.cell(0, 15, txt="EcoTrace AI Insights (Beta)", ln=True, align='C')
+                pdf.ln(5)
+                
+                # Background box for AI Insights
+                pdf.set_fill_color(240, 255, 240)
+                pdf.set_font("helvetica", 'I', 10)
+                pdf.set_text_color(40, 40, 40)
+                
+                # Strip Markdown bold/italic for FPDF compatibility
+                clean_ai_text = ai_text.replace("**", "").replace("*", "").replace("`", "")
+                pdf.multi_cell(0, 8, txt=sanitize_for_pdf(clean_ai_text), border=1, fill=True)
+                pdf.ln(10)
 
         pdf.output(filename)
         print(f"\n[EcoTrace] Report saved: {filename}")

@@ -40,6 +40,8 @@ class EcoTrace:
             future budget alert functionality.
         gpu_index: Zero-based index selecting which GPU to monitor when multiple
             devices are present. Validated to be a non-negative integer.
+        api_key: Optional Google Gemini API key. If not provided, it will
+            check the GEMINI_API_KEY environment variable.
 
     Raises:
         TypeError: If gpu_index is not an integer or carbon_limit is not numeric.
@@ -56,7 +58,7 @@ class EcoTrace:
     SECONDS_PER_HOUR = 3600
     WATTS_PER_KILOWATT = 1000
 
-    def __init__(self, region_code="TR", carbon_limit=None, gpu_index=0):
+    def __init__(self, region_code="TR", carbon_limit=None, gpu_index=0, api_key=None):
         # --- Input validation -----------------------------------------------
         if not isinstance(gpu_index, int) or gpu_index < 0:
             print(f"[EcoTrace] WARNING: Invalid gpu_index={gpu_index!r}, defaulting to 0.")
@@ -70,6 +72,7 @@ class EcoTrace:
         self.carbon_limit = carbon_limit
         self.total_carbon = 0.0
         self.gpu_index = gpu_index
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(self.base_dir, "constants.json")
@@ -646,7 +649,8 @@ class EcoTrace:
             gpu_info=self.gpu_info,
             region_code=self.region_code,
             comparison=comparison,
-            cpu_samples=samples_list
+            cpu_samples=samples_list,
+            api_key=self.api_key
         )
 
     # ========================================================================

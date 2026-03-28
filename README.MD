@@ -30,8 +30,10 @@ EcoTrace v0.5.0 represents a massive leap in carbon tracking accuracy and archit
 - **🤖 Gemini AI Insights:** Hardware-aware, dynamic "Green Coding" recommendations powered by Google Gemini
 - **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
 
-> [!NOTE]
-> v0.5.0 is currently in the final testing phase. Estimated release date: **29.03.2026**!
+> [!IMPORTANT]
+> **EcoTrace v0.5.0 is LIVE!** 🚀 The Hardware Intelligence Update is now officially released.  
+> Update now: `pip install --upgrade ecotrace`
+
 
 ## 🚀 Quick Start
 
@@ -58,7 +60,7 @@ eco.generate_pdf_report("my_report.pdf")
 ```
 
 [![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=blue)](https://pypi.org/project/ecotrace/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](https://opensource.org/licenses/MIT)
 [![Carbon Aware](https://img.shields.io/badge/Carbon-Aware-2E8B57?logo=leaflet&logoColor=white)](https://github.com/Zwony/ecotrace)
 [![Downloads](https://pepy.tech/badge/ecotrace)](https://pepy.tech/project/ecotrace)
@@ -271,6 +273,10 @@ eco = EcoTrace(api_key="YOUR_GEMINI_API_KEY")
 eco.generate_pdf_report("smart_audit.pdf")
 ```
 
+> [!NOTE]
+> **Opt-in Feature:** Gemini AI Insights is an optional, developer-driven feature. It is only activated when a valid `GEMINI_API_KEY` is provided. If no key is detected, EcoTrace continues to operate with its high-precision local monitoring and static rule-based insights.
+
+
 **AI-Powered Insights include:**
 - **Vectorization Suggestions:** "Your i7-13700H supports AVX-512; use NumPy for this loop to save 15% energy."
 - **Architecture Tuning:** "This function is I/O bound; switching to `asyncio` could reduce idle CPU carbon by 20%."
@@ -429,7 +435,7 @@ google-generativeai — Gemini AI Insights engine (optional)
 wmi             — AMD/Intel GPU detection (Windows only)
 ```
 
-> **Compatibility:** EcoTrace is tested on Python 3.7+ and runs on Windows, macOS, and Linux. GPU features require appropriate vendor drivers.
+> **Compatibility:** EcoTrace is tested on Python 3.9+ and runs on Windows, macOS, and Linux. GPU features require appropriate vendor drivers.
 
 ---
 

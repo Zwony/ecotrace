@@ -12,16 +12,13 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Programming Language :: Python :: 3.12"
 ]
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 # İsim ve e-posta kısmını buraya böyle ekleyebilirsin:
 authors = [
   { name="Emre Ozkal", email="emreozkal03@gmail.com" }
@@ -32,6 +29,7 @@ dependencies = [
     "fpdf",
     "matplotlib",
     "nvidia-ml-py",
+    "google-generativeai",
     "wmi; sys_platform == 'win32'"
 ]
 [project.urls]
