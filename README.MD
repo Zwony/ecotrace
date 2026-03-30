@@ -19,22 +19,17 @@ graph LR
 
 *Figure 1: v0.5.2 Hardware Analysis & Normalization Pipeline*
 
-## 🔥 v0.5.2 - The Unified Monitoring Update
+## 🌍 Next Generation: Live Grid API Integration (In Development)
 
-EcoTrace v0.5.2 represents the definitive "Hardware Intelligence" release, integrating seamless CPU+GPU monitoring and automated visual reporting into a single, high-precision engine.
+EcoTrace is entering the "Scientific Integrity" era. We are currently working on integrating real-time carbon intensity data from global energy grids into the core engine.
 
-**Key Innovations:**
-- **🧬 Smart Core Normalization:** Eliminates utilization spikes on multi-core systems
-- **📊 Automated Visual Reporting:** CPU and GPU utilization graphs generated automatically
-- **🛰️ Unified Monitoring:** Standard `@track` now aggregates both CPU and GPU carbon
-- **⚡ RAM Generation Awareness:** DDR4/DDR5 detection with MHz speed analysis  
-- **🍎 Apple Silicon Support:** Full M1/M2/M3 architecture optimization
-- **🤖 Gemini AI Insights:** Hardware-aware, dynamic "Green Coding" recommendations powered by Google Gemini
-- **⚙️ Deep Modularization:** Hardened architecture separating CPU, GPU, and RAM analysis into standalone intelligence modules 
+**Current Focus:**
+- **🛰️ Live Carbon Intensity:** Moving from static regional constants to real-time API data (Electricity Maps integration).
+- **📉 Carbon-Aware Scheduling:** Actionable advice on when to run heavy workloads based on grid cleanliness.
+- **🛡️ CI/CD Carbon Gates:** Automating green code standards in development pipelines.
 
-> [!IMPORTANT]
-> **EcoTrace v0.5.2 is LIVE!** 🚀 The Unified Monitoring Patch is now officially released.  
-> Update now: `pip install --upgrade ecotrace`
+> [!NOTE]
+> **Active Development:** Live Grid API integration is currently being implemented. Stay tuned for the v0.6.0 release!
 
 
 ## 🚀 Quick Start
