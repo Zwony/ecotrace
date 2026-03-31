@@ -44,7 +44,7 @@ graph LR
     style E fill:#fce4ec,stroke:#c62828,color:#000
 ```
 
-*EcoTrace v6.0 — Sustainability OS Pipeline*
+*EcoTrace v0.6.0 — Sustainability OS Pipeline*
 
 <br>
 
@@ -80,7 +80,7 @@ eco.generate_pdf_report("carbon_audit.pdf")
 ```
 
 ```
---- EcoTrace v6.0 Initialized ---
+--- EcoTrace v0.6.0 Initialized ---
 Region  : TR (482 gCO2/kWh 🟢 LIVE)
 CPU     : 13th Gen Intel Core i7-13700H
 Cores   : 20
@@ -94,9 +94,9 @@ GPU     : Intel Iris Xe Graphics
 
 ---
 
-## 🆕 What's New in v6.0 — Sustainability OS
+## 🆕 What's New in v0.6.0 — Sustainability OS
 
-EcoTrace v6.0 transforms from a measurement tool into a **Sustainability Operating System** with two game-changing features:
+EcoTrace v0.6.0 transforms from a measurement tool into a **Sustainability Operating System** with two game-changing features:
 
 <table>
 <tr>
@@ -126,7 +126,7 @@ eco = EcoTrace(
 EcoTrace now checks for updates automatically at startup and asks politely:
 
 ```
-[EcoTrace] 🌱 Yeni bir sürüm mevcut! (v6.0.0 → v6.1.0)
+[EcoTrace] 🌱 Yeni bir sürüm mevcut! (v0.5.2 → v0.6.0)
 [EcoTrace] Güncellemek ister misiniz? (y/n):
 ```
 
@@ -174,7 +174,7 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ## 🆚 How EcoTrace Compares
 
-| Feature | **EcoTrace v6.0** | CodeCarbon | CarbonTracker |
+| Feature | **EcoTrace v0.6.0** | CodeCarbon | CarbonTracker |
 |---|:---:|:---:|:---:|
 | **API Style** | ✅ One-line `@track` decorator | ⚠️ Context manager only | ❌ Manual start/stop |
 | **Granularity** | ✅ Per-function | ⚠️ Session-level | ⚠️ Epoch-level |
@@ -283,7 +283,7 @@ eco.generate_pdf_report("quarterly_carbon_audit.pdf")
 
 ## 🌍 Live Grid API — Electricity Maps Integration
 
-EcoTrace v6.0 fetches **real-time carbon intensity** from the Electricity Maps API, replacing static constants with live grid data:
+EcoTrace v0.6.0 fetches **real-time carbon intensity** from the Electricity Maps API, replacing static constants with live grid data:
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -492,14 +492,14 @@ EcoTrace is building toward a **complete sustainability intelligence platform**:
 
 | Version | Feature | Status |
 |---|---|---|
-| **v6.0** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | ✅ Released |
-| **v6.0** | 🌱 Auto-Update — Interactive PyPI version check | ✅ Released |
-| **v6.1** | 📉 Carbon-Aware Scheduling — Optimal run-time suggestions based on grid | 🔨 In Progress |
-| **v6.1** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔨 In Progress |
-| **v7.0** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
-| **v7.0** | 📊 Automated ESG Reports — CSRD and GHG Protocol-compliant exports | 🔜 Planned |
-| **v7.x** | 🔗 AWS / Azure / GCP — Cloud resource carbon attribution | 🔜 Planned |
-| **v8.0** | 🏢 Team Carbon Budgets — Multi-project rollup with alerting | 🔜 Planned |
+| **v0.6.0** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | 🔨 In Progress |
+| **v0.6.0** | 🌱 Auto-Update — Interactive PyPI version check | 🔨 In Progress |
+| **v0.6.1** | 📉 Carbon-Aware Scheduling — Optimal run-time suggestions based on grid | 🔜 Planned |
+| **v0.6.1** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔜 Planned |
+| **v0.7.0** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
+| **v0.7.0** | 📊 Automated ESG Reports — CSRD and GHG Protocol-compliant exports | 🔜 Planned |
+| **v0.7.x** | 🔗 AWS / Azure / GCP — Cloud resource carbon attribution | 🔜 Planned |
+| **v0.8.0** | 🏢 Team Carbon Budgets — Multi-project rollup with alerting | 🔜 Planned |
 
 > **Shape the roadmap:** [Open an issue](https://github.com/Zwony/ecotrace/issues) or join our [Discord](https://discord.gg/hs58XXb3Uq) to suggest features.
 
