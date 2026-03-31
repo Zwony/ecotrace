@@ -395,20 +395,19 @@ EcoTrace:     ──■──■──■──■──■──■──■─
 
 ---
 
-## 🛡️ Robustness & Safety
+## 🧪 Engineering Excellence & Robustness
 
-EcoTrace is engineered for **production deployment** with multiple layers of defensive design:
+EcoTrace is engineered for **enterprise-grade production deployment** with a focus on precision, safety, and zero-impact monitoring:
 
-| Safety Feature | Implementation |
+| Strategy | Technical Implementation |
 |---|---|
-| **GPU Fallback Chain** | NVIDIA (`pynvml`) → AMD/Intel (`WMI`) → graceful `None` — never crashes |
-| **Live Grid Fallback** | API → Memory Cache → Static `constants.json` — always resolves |
-| **Auto-Update Safety** | Network error? Timeout? CI/CD mode? → Silently skipped |
-| **Thread-Safe Sampling** | `threading.Lock` guards all buffers; `deque(maxlen)` prevents memory leaks |
-| **Process Isolation** | `psutil.Process()` scopes measurement — no cross-process noise |
-| **TDP Fallback** | Unknown CPUs default to 65W; GPUs use vendor estimates (Intel: 15W, AMD: 75W) |
-| **Crash-Proof Decorators** | Measurement fails? Function result is **always** returned |
-| **Clean Shutdown** | `__del__` + daemon threads ensure monitoring stops on exit |
+| **Smart Core Normalization** | Automatically scales multi-core CPU usage (e.g., 800% on 8 cores) down to a normalized **0-100% range** for intuitive analysis. |
+| **Process Tree Intelligence** | Uses recursive process tracking to capture carbon/RAM from all **child processes** in complex multi-processing applications. |
+| **Crash-Proof Diagnostics** | Replaces silent fail blocks with **descriptive error logging**. If measurement fails, the result is still returned, but the *reason* is clearly logged. |
+| **Idle Baseline Subtraction** | Conducts a **100ms system baseline measurement** to subtract background noise, reporting only your code's incremental carbon footprint. |
+| **Universal Async Support** | Zero-config `@track` decorator automatically detects and handles **asyncio** coroutines vs synchronous functions. |
+| **GPU Fallback Chain** | NVIDIA (`pynvml`) → AMD/Intel (`WMI`) → graceful `None`. Measurement never crashes your app if drivers are missing. |
+| **Thread-Safe Sampling** | All buffers are protected by `threading.Lock` and `deque(maxlen)` to prevent memory leaks and race conditions during high-frequency sampling. |
 
 ---
 
