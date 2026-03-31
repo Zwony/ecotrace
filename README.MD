@@ -126,8 +126,8 @@ eco = EcoTrace(
 EcoTrace now checks for updates automatically at startup and asks politely:
 
 ```
-[EcoTrace] 🌱 Yeni bir sürüm mevcut! (v0.5.2 → v0.6.0)
-[EcoTrace] Güncellemek ister misiniz? (y/n):
+[EcoTrace] 🌱 A new version is available! (v0.5.2 → v0.6.0)
+[EcoTrace] Would you like to update? (y/n):
 ```
 
 - **Non-blocking**: 3-second timeout, never delays your app
@@ -176,20 +176,27 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 | Feature | **EcoTrace v0.6.0** | CodeCarbon | CarbonTracker |
 |---|:---:|:---:|:---:|
-| **API Style** | ✅ One-line `@track` decorator | ⚠️ Context manager only | ❌ Manual start/stop |
-| **Granularity** | ✅ Per-function | ⚠️ Session-level | ⚠️ Epoch-level |
-| **Live Grid API** | ✅ Electricity Maps (38 zones) | ❌ Static only | ❌ Static only |
+| **API Style** | ✅ One-line `@track` decorator | ✅ Decorator + Context | ❌ Manual start/stop |
+| **Granularity** | ✅ Per-function (Micro-workloads) | ⚠️ Session-level (Macro) | ⚠️ Epoch-level (ML only) |
+| **Live Grid API** | ✅ Electricity Maps (Zero-config) | ✅ ElectricityMaps (Requires token) | ❌ Static only |
+| **Process Isolation** | ✅ `psutil.Process()` (Isolated) | ❌ System-wide (Captures OS noise) | ❌ System-wide (Captures OS noise) |
+| **Continuous Sampling** | ✅ **50ms** daemon threads | ⚠️ 15s intervals | ❌ Point-in-time (Epoch) |
+| **AI Insights** | ✅ Gemini-powered recommendations| ❌ | ❌ |
+| **Crash-Proof** | ✅ Graceful fallback (Always returns)| ❌ Hard crashes / Exceptions | ❌ Hard crashes / Exceptions |
 | **Auto-Update** | ✅ Interactive PyPI check | ❌ | ❌ |
-| **Async Support** | ✅ Auto-detected | ❌ | ❌ |
-| **Continuous Sampling** | ✅ 50ms daemon threads | ❌ Point-in-time | ❌ Point-in-time |
+| **Async Support** | ✅ Auto-detected (`asyncio`) | ❌ | ❌ |
 | **GPU Support** | ✅ NVIDIA + AMD + Intel | ⚠️ NVIDIA only | ⚠️ NVIDIA only |
-| **Process Isolation** | ✅ `psutil.Process()` | ❌ System-wide | ❌ System-wide |
-| **PDF Reports** | ✅ Built-in with charts | ❌ | ❌ |
-| **AI Insights** | ✅ Gemini-powered | ❌ | ❌ |
-| **Function Comparison** | ✅ `eco.compare()` | ❌ | ❌ |
-| **CPU TDP Database** | ✅ 1,800+ models (Boavizta) | ⚠️ ~1,000 models | ❌ Manual config |
-| **Crash-Proof** | ✅ Result always returned | ❌ Raises exceptions | ❌ Raises exceptions |
+| **PDF Reports** | ✅ Built-in with charts | ❌ CSV / External dashboards | ❌ Local logs |
+| **Function Comparison** | ✅ `eco.compare(f1, f2)` | ❌ | ❌ |
+| **CPU TDP Database** | ✅ 1,800+ models (Boavizta) | ⚠️ ~1,200 models | ❌ Manual config |
 | **Zero Config** | ✅ Full auto-detection | ⚠️ Config required | ⚠️ Config required |
+
+### 🎯 Key Differentiators
+
+*   **System Noise Filtration (Process Isolation):** CodeCarbon and CarbonTracker read system-wide hardware sensors (RAPL). If your operating system runs a background update or a browser is open while your Python script executes, they attribute that carbon to your code. EcoTrace isolates down to the exact `psutil.Process()` and its children, strictly measuring your code's real footprint.
+*   **True Function-Level Granularity:** CodeCarbon defaults to 15-second tracking intervals, and CarbonTracker measures per heavy ML epoch. EcoTrace's **continuous 50ms micro-sampling** allows it to accurately track bursty web server requests, async I/O waits, and GIL contention that other tools completely miss.
+*   **Fail-Safe Architecture:** Carbon tools are for observability—they should never crash your product. While missing permissions, VMs, or missing hardware drivers cause other trackers to throw fatal execution-halting exceptions, EcoTrace gracefully falls back to static rule-based estimations and guarantees your application keeps running.
+*   **Actionable AI Assistant:** Instead of just outputting a CSV file and leaving you guessing, EcoTrace directly feeds the metrics to Google Gemini. It acts as a Green-Coding Assistant, offering hardware-specific optimization advice (e.g., *"Switch this 12-second CPU-bound loop to a vectorized NumPy array to save 15% energy"*).
 
 ---
 
