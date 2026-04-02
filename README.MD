@@ -3,8 +3,9 @@
 # 🌱 EcoTrace — Sustainability OS for Python
 
 ### The Carbon Intelligence Engine Your Code Deserves
+**EcoTrace is a high-precision instrumentation engine built for engineers who demand real hardware data, not heuristics.**
 
-*Real-time carbon tracking · 38-country live grid data · AI-powered insights · Zero-config deployment*
+*Real-time carbon tracking · 50+ Global Zones · AI-powered hardware insights · Zero-config deployment*
 
 <br>
 
@@ -56,11 +57,26 @@ graph LR
 
 ---
 
-## 🚀 Quick Start
+## 📜 The EcoTrace Manifesto
+
+Most carbon tracking tools are built for researchers, not engineers. They rely on coarse-grained 15-second sampling, system-wide sensor noise, and generic country averages. **Your code deserves better.**
+
+EcoTrace was born from a simple frustration: *Why is it so hard to know the exact carbon footprint of a single Python function?*
+
+We didn't just build a wrapper; we built a **Continuous Measurement Engine**. By sampling at 50ms intervals and isolating your process from the OS noise, we provide an audit-ready trace that you can actually trust. Because at the end of the day, you can't optimize what you can't measure accurately.
+
+---
+
+## ⚡ Quick Install
 
 ```bash
 pip install ecotrace
 ```
+
+---
+
+## 🚀 Get Started in 60 Seconds
+
 
 ```python
 from ecotrace import EcoTrace
@@ -292,18 +308,20 @@ eco.generate_pdf_report("quarterly_carbon_audit.pdf")
 
 EcoTrace v0.6.0 fetches **real-time carbon intensity** from the Electricity Maps API, replacing static constants with live grid data:
 
+```mermaid
+graph TD
+    A["Cache Check (1-Hour)"] -->|Hit| B["Return Cached Data"]
+    A -->|Miss| C["Electricity Maps API Fetch"]
+    C -->|Success| D["Update Cache & Return Live Data"]
+    C -->|Failure / No Network| E["Constants.json (Static Fallback)"]
+    
+    style A fill:#f8f9fa,stroke:#ced4da,color:#212529,stroke-width:1px,rx:4px,ry:4px
+    style B fill:#e6f4ea,stroke:#ceead6,color:#0d652d,stroke-width:1px,rx:4px,ry:4px
+    style C fill:#e8f0fe,stroke:#d2e3fc,color:#1967d2,stroke-width:1px,rx:4px,ry:4px
+    style D fill:#e6f4ea,stroke:#ceead6,color:#0d652d,stroke-width:1px,rx:4px,ry:4px
+    style E fill:#fce8e6,stroke:#fad2cf,color:#c5221f,stroke-width:1px,rx:4px,ry:4px
 ```
-┌─────────────────────────────────────────────────┐
-│ Tier 1: Memory Cache                            │
-│   → Valid cached value within 1 hour? → Use it  │
-├─────────────────────────────────────────────────┤
-│ Tier 2: Live API Fetch                          │
-│   → Query Electricity Maps → Success? → Cache   │
-├─────────────────────────────────────────────────┤
-│ Tier 3: Static Fallback                         │
-│   → constants.json → Always works               │
-└─────────────────────────────────────────────────┘
-```
+
 
 ```python
 # Option 1: Pass key directly
@@ -418,9 +436,9 @@ EcoTrace is engineered for **enterprise-grade production deployment** with a foc
 
 ---
 
-## 🗺️ Global Coverage — 38 Countries
+## 🗺️ Global Coverage — 50+ Countries
 
-EcoTrace supports **38 countries** with both static carbon intensity values and live Electricity Maps zone mappings:
+EcoTrace supports **50+ countries** with both static carbon intensity values and live Electricity Maps zone mappings:
 
 ![EcoTrace Global Coverage](assets/world_map.png)
 
@@ -448,8 +466,13 @@ EcoTrace supports **38 countries** with both static carbon intensity values and 
 | PH | Philippines | 558 | | MY | Malaysia | 585 |
 | PL | Poland | 635 | | IN | India | 708 |
 | ID | Indonesia | 761 | | ZA | South Africa | 928 |
+| KE | Kenya | 110 | | UA | Ukraine | 150 |
+| CO | Colombia | 155 | | IE | Ireland | 275 |
+| CL | Chile | 300 | | GR | Greece | 300 |
+| AE | United Arab Emirates | 385 | | IL | Israel | 400 |
+| TW | Taiwan | 494 | | GLOBAL | Worldwide Average | 475 |
 
-*Static values from IEA 2022 global averages. With Live Grid API enabled, values update in real-time.*
+*Static values from IEA 2024 global averages. With Live Grid API enabled, values update in real-time.*
 
 </details>
 

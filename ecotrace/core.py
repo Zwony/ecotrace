@@ -1,3 +1,5 @@
+# 🌿 EcoTrace — The Continuous Carbon Instrumentation Engine
+# "You can't optimize what you can't measure accurately."
 import os
 import json
 import re
@@ -7,13 +9,18 @@ import cpuinfo
 import csv
 from contextlib import contextmanager
 from datetime import datetime
-from .config import load_constants, validate_region_code, resolve_carbon_intensity, load_gpu_tdp_defaults
+from .config import (load_constants, validate_region_code, resolve_carbon_intensity,
+                      load_gpu_tdp_defaults, fetch_live_carbon_intensity, GRID_CACHE_TTL_S,
+                      identify_user_region)
 import functools
 import asyncio
 import inspect
 import threading
 from collections import deque
 import tempfile
+
+from .logger import logger
+from .exceptions import EcoTraceConfigurationError
 
 from .ram import get_ram_info, RAM_WATT_FACTORS
 from .cpu import get_cpu_info, load_tdp_database
@@ -42,6 +49,12 @@ class EcoTrace:
             devices are present. Validated to be a non-negative integer.
         api_key: Optional Google Gemini API key. If not provided, it will
             check the GEMINI_API_KEY environment variable.
+        grid_api_key: Optional Electricity Maps API key for real-time carbon
+            intensity data. If not provided, checks the ECOTRACE_GRID_API_KEY
+            environment variable. Falls back to static data if unavailable.
+        check_updates: If True (default), checks PyPI for newer versions at
+            startup and prompts the user interactively. Set to False in CI/CD
+            or non-interactive environments.
 
     Raises:
         TypeError: If gpu_index is not an integer or carbon_limit is not numeric.
@@ -58,21 +71,35 @@ class EcoTrace:
     SECONDS_PER_HOUR = 3600
     WATTS_PER_KILOWATT = 1000
 
-    def __init__(self, region_code="TR", carbon_limit=None, gpu_index=0, api_key=None):
+    def __init__(self, region_code="GLOBAL", carbon_limit=None, gpu_index=0,
+                 api_key=None, grid_api_key=None, check_updates=True, quiet=False):
+        # --- Auto-Update Check (v6.0) ----------------------------------------
+        # Runs FIRST so the user sees the update prompt before initialization.
+        # Completely fail-safe — errors are silently swallowed.
+        if check_updates:
+            try:
+                from .updater import check_for_updates
+                from . import __version__
+                check_for_updates(__version__)
+            except Exception:
+                pass  # Update check must never block initialization
+
         # --- Input validation -----------------------------------------------
         if not isinstance(gpu_index, int) or gpu_index < 0:
-            print(f"[EcoTrace] WARNING: Invalid gpu_index={gpu_index!r}, defaulting to 0.")
+            logger.warning(f"Invalid gpu_index={gpu_index!r}, defaulting to 0.")
             gpu_index = 0
 
         if carbon_limit is not None:
             if not isinstance(carbon_limit, (int, float)) or carbon_limit <= 0:
-                print(f"[EcoTrace] WARNING: Invalid carbon_limit={carbon_limit!r}, disabling limit.")
+                logger.warning(f"Invalid carbon_limit={carbon_limit!r}, disabling limit.")
                 carbon_limit = None
 
         self.carbon_limit = carbon_limit
         self.total_carbon = 0.0
         self.gpu_index = gpu_index
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        self.grid_api_key = grid_api_key or os.environ.get("ECOTRACE_GRID_API_KEY")
+        self.quiet = quiet
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(self.base_dir, "constants.json")
@@ -81,8 +108,28 @@ class EcoTrace:
         # Load data sources before validating region_code
         self._constants_data = load_constants(self.json_path)
         self.tdp_db = load_tdp_database(self.csv_path)
-        self.region_code = validate_region_code(region_code, self._constants_data)
-        self.carbon_intensity = resolve_carbon_intensity(self.region_code, self._constants_data)
+        # --- Region Selection & Auto-Detection (v6.0) ------------------------
+        # If default region "GLOBAL" is present, attempt IP-based auto-detection first.
+        final_region = region_code
+        if region_code == "GLOBAL":
+            detected = identify_user_region()
+            if detected:
+                final_region = detected
+                logger.info(f"📍 Auto-detected region: {final_region}")
+            else:
+                logger.info(f"🌐 Falling back to default region: {DEFAULT_REGION}")
+
+        self.region_code = validate_region_code(final_region, self._constants_data)
+
+        # --- Live Grid API Integration (v6.0) --------------------------------
+        # Attempts to fetch real-time carbon intensity from Electricity Maps.
+        # Falls back to static constants.json data if API is unavailable.
+        self._grid_cache_timestamp = 0.0  # Epoch time of last successful fetch
+        self._grid_cached_intensity = None  # Cached live value
+        self._intensity_source = "static"  # Tracks data source for banner
+
+        self.carbon_intensity = self._resolve_intensity_with_live_fallback()
+
         self.gpu_tdp_defaults = load_gpu_tdp_defaults(self._constants_data)
         self.cpu_info = get_cpu_info(self.tdp_db, self._constants_data)
         self.gpu_info = get_gpu_info(self.gpu_index, self.gpu_tdp_defaults)
@@ -100,20 +147,85 @@ class EcoTrace:
         self._cpu_samples = deque(maxlen=self.SAMPLE_BUFFER_SIZE)
         self._cpu_sample_lock = threading.Lock()
         self._cpu_monitor_ref_count = 0  # Support for nested monitoring
-        self._gpu_monitor_ref_count = 0 
+        self._gpu_monitor_ref_count = 0
+        # --- High-Resolution Monitoring State ---
+        # 50ms (0.05) is the engineering sweet spot. Higher frequency hits CPU
+        # overhead; lower frequency (like 15s) misses bursty micro-code.
+        self.MONITOR_INTERVAL_S = 0.05
         self._monitor_interval = self.MONITOR_INTERVAL_S
         self._current_process = psutil.Process()
 
-        print("\n--- EcoTrace Initialized ---")
-        print(f"Region  : {self.region_code} ({self.carbon_intensity} gCO2/kWh)")
-        print(f"CPU     : {self.cpu_info['brand']}")
-        print(f"Cores   : {self.cpu_info['cores']}")
-        print(f"TDP     : {self.cpu_info['tdp']}W")
-        print(f"RAM     : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']} @ {self.ram_info['speed_mhz']}MHz")
-        if self.gpu_info:
-            print(f"GPU     : {self.gpu_info['brand']}")
-            print(f"GPU TDP : {self.gpu_info['tdp']}W")
-        print("----------------------------\n")
+        # --- Initialization Banner (Premium UI v6.0) -------------------------
+        if not self.quiet:
+            intensity_label = f"{self.carbon_intensity} gCO2/kWh"
+            if self._intensity_source == "live":
+                intensity_label += " 🟢 LIVE"
+            else:
+                intensity_label += " 📋 Static"
+
+            logger.info(f"\n[EcoTrace] 🌱 Sustainability OS v0.6.0 Initialized")
+            logger.info("-----------------------------------------------------")
+            logger.info(f"📍 Region  : {self.region_code} ({intensity_label})")
+            logger.info(f"🖥️ Hardware: {self.cpu_info['brand']} ({self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W)")
+            logger.info(f"🧠 Memory  : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']} @ {self.ram_info['speed_mhz']}MHz")
+            if self.gpu_info:
+                logger.info(f"🎮 GPU     : {self.gpu_info['brand']} ({self.gpu_info['tdp']}W)")
+            logger.info("-----------------------------------------------------")
+            logger.info("✨ Crafted with 💚 for a sustainable future.\n")
+
+        # NOTE: Calculating idle baseline to subtract system noise. 
+        # We don't want to attribute OS background updates to YOUR code.
+        self._idle_baseline_w = self._measure_idle_baseline()
+
+    # ========================================================================
+    # Live Grid API — Intensity Resolution (v6.0)
+    # ========================================================================
+
+    def _resolve_intensity_with_live_fallback(self):
+        """Resolves carbon intensity using live API data with static fallback.
+
+        Implements a three-tier resolution strategy:
+        1. **Cache Hit**: If a valid cached value exists and is within the
+           GRID_CACHE_TTL_S window (1 hour), returns it immediately.
+        2. **Live Fetch**: Queries the Electricity Maps API for real-time
+           carbon intensity data for the configured region.
+        3. **Static Fallback**: If both cache and live fetch fail, falls back
+           to the static ``CARBON_INTENSITY_MAP`` from ``constants.json``.
+
+        This method is called during ``__init__`` and can be called again
+        at any time to refresh the intensity value.
+
+        Returns:
+            float: Carbon intensity in gCO2/kWh from the best available
+            source (live API preferred, static data as fallback).
+        """
+        import time as _time
+
+        # Tier 1: Check memory cache validity (1-hour TTL)
+        now = _time.time()
+        if (self._grid_cached_intensity is not None
+                and (now - self._grid_cache_timestamp) < GRID_CACHE_TTL_S):
+            self._intensity_source = "live"
+            return self._grid_cached_intensity
+
+        # Tier 2: Attempt live API fetch
+        if self.grid_api_key:
+            live_intensity = fetch_live_carbon_intensity(
+                self.region_code, self.grid_api_key
+            )
+            if live_intensity is not None:
+                # Update cache with fresh value
+                self._grid_cached_intensity = live_intensity
+                self._grid_cache_timestamp = now
+                self._intensity_source = "live"
+                logger.info(f"🌍 Live grid data: {live_intensity} gCO2/kWh")
+                return live_intensity
+            else:
+                logger.warning("⚠️ Live grid API unavailable, using static data.")
+
+        # Tier 3: Static fallback from constants.json
+        self._intensity_source = "static"
+        return resolve_carbon_intensity(self.region_code, self._constants_data)
 
     # ========================================================================
     # Carbon calculation helpers
@@ -420,7 +532,7 @@ class EcoTrace:
                 avg_cpu_str = f"{avg_cpu:.2f}" if avg_cpu is not None else "N/A"
                 writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), func_name, f"{duration:.4f}", f"{carbon:.8f}", self.region_code, avg_cpu_str])
         except Exception as e:
-            print(f"[EcoTrace] WARNING: CSV logging failed: {e}")
+            logger.warning(f"CSV logging failed: {e}")
 
     # ========================================================================
     # Public measurement API
@@ -467,7 +579,7 @@ class EcoTrace:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if self.gpu_info is None:
-                print(f"\n[EcoTrace] WARNING: No GPU detected, executing '{func.__name__}' without measurement.")
+                logger.warning(f"No GPU detected, executing '{func.__name__}' without measurement.")
                 return func(*args, **kwargs)
 
             start_time = time.perf_counter()
@@ -483,12 +595,12 @@ class EcoTrace:
                     carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration)
 
                     self._accumulate_carbon(carbon_emitted, func.__name__, duration)
-                    print(f"\n[EcoTrace] GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
-                    print(f"[EcoTrace] Duration     : {duration:.4f} sec")
-                    print(f"[EcoTrace] GPU Usage    : {avg_gpu_util:.1f}%")
-                    print(f"[EcoTrace] CO2          : {carbon_emitted:.8f} gCO2")
+                    logger.info(f"GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
+                    logger.info(f"Duration     : {duration:.4f} sec")
+                    logger.info(f"GPU Usage    : {avg_gpu_util:.1f}%")
+                    logger.info(f"CO2          : {carbon_emitted:.8f} gCO2")
                 except Exception as e:
-                    print(f"[EcoTrace] WARNING: GPU measurement failed for '{func.__name__}': {e}")
+                    logger.error(f"GPU measurement failed for '{func.__name__}': {e}")
         return wrapper
 
     def measure(self, func, *args, **kwargs):
@@ -541,7 +653,7 @@ class EcoTrace:
                         "result": result_data
                     }
             except Exception as e:
-                print(f"[EcoTrace] WARNING: Measurement failed for '{func.__name__}': {e}")
+                logger.error(f"Measurement failed for '{func.__name__}': {e}")
                 if func_success:
                     return {
                         "func_name": func.__name__,
@@ -610,7 +722,7 @@ class EcoTrace:
                         "result": result_data
                     }
             except Exception as e:
-                print(f"[EcoTrace] WARNING: Async measurement failed for '{func.__name__}': {e}")
+                logger.error(f"Async measurement failed for '{func.__name__}': {e}")
                 if func_success:
                     return {
                         "func_name": func.__name__,
@@ -634,9 +746,9 @@ class EcoTrace:
         """
         result1 = self.measure(func1)
         result2 = self.measure(func2)
-        print(f"\n[EcoTrace] Comparison Results:")
-        print(f"Function 1: {result1['func_name']} - Duration: {result1['duration']:.4f} sec - CO2: {result1['carbon']:.8f} gCO2")
-        print(f"Function 2: {result2['func_name']} - Duration: {result2['duration']:.4f} sec - CO2: {result2['carbon']:.8f} gCO2")
+        logger.info(f"Comparison Results:")
+        logger.info(f"Function 1: {result1['func_name']} - Duration: {result1['duration']:.4f} sec - CO2: {result1['carbon']:.8f} gCO2")
+        logger.info(f"Function 2: {result2['func_name']} - Duration: {result2['duration']:.4f} sec - CO2: {result2['carbon']:.8f} gCO2")
         return {"func1": result1, "func2": result2}
 
     # ========================================================================
@@ -721,9 +833,9 @@ class EcoTrace:
                 carbon_emitted = cpu_carbon + gpu_carbon
                 self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
                 
-                print(f"[EcoTrace] Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
+                logger.info(f"Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
             except Exception as e:
-                print(f"[EcoTrace] WARNING: Block measurement failed for '{block_name}': {e}")
+                logger.error(f"Block measurement failed for '{block_name}': {e}")
 
     def __del__(self):
         """Ensures all background monitoring threads are stopped and resources released."""
@@ -732,5 +844,5 @@ class EcoTrace:
         try:
             import nvidia_ml_py as pynvml
             pynvml.nvmlShutdown()
-        except (ImportError, Exception):
-            pass
+        except (ImportError, Exception) as e:
+            logger.debug(f"nvmlShutdown bypassed or failed: {e}")

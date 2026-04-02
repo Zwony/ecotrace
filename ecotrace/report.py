@@ -4,6 +4,8 @@ import tempfile
 from fpdf import FPDF
 import matplotlib.pyplot as plt
 import google.generativeai as genai
+from .logger import logger
+from .exceptions import ReportGenerationError
 
 def sanitize_for_pdf(text):
     """Strips non-ASCII characters for safe PDF rendering.
@@ -53,7 +55,7 @@ def create_cpu_usage_chart(samples_data, core_count=1):
         return temp_file.name
 
     except Exception as e:
-        print(f"[EcoTrace] CPU Chart generation failed: {e}")
+        logger.error(f"CPU Chart generation failed: {e}")
         return None
 
 def create_gpu_usage_chart(samples_data):
@@ -89,7 +91,7 @@ def create_gpu_usage_chart(samples_data):
         return temp_file.name
 
     except Exception as e:
-        print(f"[EcoTrace] GPU Chart generation failed: {e}")
+        logger.error(f"GPU Chart generation failed: {e}")
         return None
 
 def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):
@@ -357,7 +359,9 @@ def generate_pdf_report(
                     pdf.cell(40, 8, f"{avg_cpu:.1f}%", border=1)
                     pdf.cell(40, 8, f"{duration:.2f}s", border=1)
                     pdf.cell(50, 8, recommendation, border=1, ln=True)
-                except: continue
+                except Exception as e:
+                    logger.debug(f"Row {row} formatting skipped: {e}")
+                    continue
 
         if api_key and history:
             ai_text = get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code)
@@ -374,7 +378,8 @@ def generate_pdf_report(
                 pdf.multi_cell(0, 8, txt=sanitize_for_pdf(clean_ai_text), border=1, fill=True)
 
         pdf.output(filename)
-        print(f"\n[EcoTrace] Report saved: {filename}")
+        logger.info(f"Report saved: {filename}")
 
     except Exception as e:
-        print(f"\n[EcoTrace] PDF Error: {e}")
+        logger.error(f"PDF Error: {e}")
+        raise ReportGenerationError(f"Failed to generate PDF: {e}") from e
