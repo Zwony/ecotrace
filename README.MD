@@ -19,7 +19,7 @@
 
 [![Carbon Aware](https://img.shields.io/badge/🌍_Carbon-Aware-2E8B57?style=flat-square)](https://github.com/Zwony/ecotrace)
 [![Live Grid API](https://img.shields.io/badge/⚡_Live_Grid-API_Powered-FF6B35?style=flat-square)](https://www.electricitymaps.com/)
-[![38 Countries](https://img.shields.io/badge/🗺️_Coverage-38_Countries-4169E1?style=flat-square)](https://github.com/Zwony/ecotrace)
+[![50+ Countries](https://img.shields.io/badge/🗺️_Coverage-50+_Countries-4169E1?style=flat-square)](https://github.com/Zwony/ecotrace)
 [![1800+ CPUs](https://img.shields.io/badge/🔬_TDP_Database-1800+_CPUs-8B4513?style=flat-square)](https://github.com/Boavizta/cpu-spec)
 [![Auto Update](https://img.shields.io/badge/🌱_Auto-Update-9B59B6?style=flat-square)](https://pypi.org/project/ecotrace/)
 
@@ -28,6 +28,9 @@
 [![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Community&logo=discord&style=for-the-badge&color=5865F2)](https://discord.gg/hs58XXb3Uq)
 
 *🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
+
+> [!IMPORTANT]
+> **📢 v0.6.0 Out Now:** Introducing **Live Grid API** integration, **IP-Based Auto-Detection**, and **Expanded Global Coverage (50+ Zones)**. EcoTrace is now officially a Sustainability Operating System.
 
 <br>
 
