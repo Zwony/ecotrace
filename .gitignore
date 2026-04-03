@@ -6,3 +6,10 @@ __pycache__/
 ecotrace_log.csv
 *.pdf
 .env
+
+# VS Code Extension
+node_modules/
+out/
+.vscode-test/
+*.vsix
+.vsce/

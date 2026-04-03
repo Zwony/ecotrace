@@ -4,6 +4,8 @@ fpdf
 matplotlib
 nvidia-ml-py
 google-generativeai
+requests
+packaging
 
 [:sys_platform == "win32"]
 wmi

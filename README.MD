@@ -14,6 +14,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=for-the-badge&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![GitHub stars](https://img.shields.io/github/stars/Zwony/ecotrace?style=for-the-badge&logo=github)](https://github.com/Zwony/ecotrace/stargazers)
+[![VS Code Extension](https://img.shields.io/badge/VS_Code-EcoTrace-007ACC?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
+
+<br>
+
+> [!TIP]
+> **🚀 VS Code User?** Monitor your code's carbon footprint in real-time as you write! [Download the EcoTrace VS Code extension](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
+
+<br>
 
 <br>
 
@@ -524,9 +532,9 @@ EcoTrace is building toward a **complete sustainability intelligence platform**:
 
 | Version | Feature | Status |
 |---|---|---|
-| **v0.6.0** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | 🔨 In Progress |
-| **v0.6.0** | 🌱 Auto-Update — Interactive PyPI version check | 🔨 In Progress |
-| **v0.6.1** | 📉 Carbon-Aware Scheduling — Optimal run-time suggestions based on grid | 🔜 Planned |
+| **v0.6.0** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | ✅ Released |
+| **v0.6.0** | 🌱 Auto-Update — Interactive PyPI version check | ✅ Released |
+| **v0.7.0** | 🖥️ VS Code Extension — Live IDE monitoring status bar | ✅ Released |
 | **v0.6.1** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔜 Planned |
 | **v0.7.0** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
 | **v0.7.0** | 📊 Automated ESG Reports — CSRD and GHG Protocol-compliant exports | 🔜 Planned |

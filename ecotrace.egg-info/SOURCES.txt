@@ -9,9 +9,12 @@ ecotrace/constants.json
 ecotrace/core.py
 ecotrace/cpu.py
 ecotrace/cpu_data.csv
+ecotrace/exceptions.py
 ecotrace/gpu.py
+ecotrace/logger.py
 ecotrace/ram.py
 ecotrace/report.py
+ecotrace/updater.py
 ecotrace.egg-info/PKG-INFO
 ecotrace.egg-info/SOURCES.txt
 ecotrace.egg-info/dependency_links.txt
@@ -93,3 +96,4 @@ ecotrace/cpu_spec.csv/tests/data/fixtures/cloud/incomplete_usage.json
 ecotrace/cpu_spec.csv/tests/data/fixtures/server/completed_server_with_dellr740.json
 ecotrace/cpu_spec.csv/tests/data/fixtures/server/dellR740.json
 ecotrace/cpu_spec.csv/tests/data/fixtures/server/incomplete.json
+tests/test_v6_features.py

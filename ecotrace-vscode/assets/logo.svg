@@ -1,0 +1,12 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark Background Hexagon -->
+  <path d="M64 4L116 34V94L64 124L12 94V34L64 4Z" fill="#1e1e1e" stroke="#2E8B57" stroke-width="4"/>
+  
+  <!-- Stylized Green Leaf -->
+  <path d="M64 30C64 30 90 45 90 75C90 95 78 105 64 110C50 105 38 95 38 75C38 45 64 30 64 30Z" fill="#2E8B57"/>
+  <path d="M64 30V110" stroke="#1e1e1e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M64 50L80 60" stroke="#1e1e1e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M64 70L80 80" stroke="#1e1e1e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M64 60L48 70" stroke="#1e1e1e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M64 80L48 90" stroke="#1e1e1e" stroke-width="2" stroke-linecap="round"/>
+</svg>
