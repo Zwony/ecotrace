@@ -15,6 +15,7 @@
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=for-the-badge&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![GitHub stars](https://img.shields.io/github/stars/Zwony/ecotrace?style=for-the-badge&logo=github)](https://github.com/Zwony/ecotrace/stargazers)
 [![VS Code Extension](https://img.shields.io/badge/VS_Code-EcoTrace-007ACC?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/ecotrace-team.ecotrace-monitor?style=for-the-badge&color=blue&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
 
 <br>
 
