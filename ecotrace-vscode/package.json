@@ -2,7 +2,7 @@
   "name": "ecotrace-monitor",
   "displayName": "EcoTrace: Python Carbon Monitor",
   "description": "Real-time carbon footprint monitoring for your Python code.",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "publisher": "ecotrace-team",
   "icon": "assets/logo.png",
   "galleryBanner": {
