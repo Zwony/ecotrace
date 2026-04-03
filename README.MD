@@ -3,7 +3,7 @@
 # 🌱 EcoTrace — Sustainability OS for Python
 
 ### The Carbon Intelligence Engine Your Code Deserves
-**EcoTrace is a high-precision instrumentation engine built for engineers who demand real hardware data, not heuristics.**
+**EcoTrace is a high-precision instrumentation engine built for engineers who demand high-fidelity hardware specifications, not generic averages.**
 
 *Real-time carbon tracking · 50+ Global Zones · AI-powered hardware insights · Zero-config deployment*
 
@@ -69,13 +69,7 @@ graph LR
 
 ---
 
-## 📜 The EcoTrace Manifesto
-
-Most carbon tracking tools are built for researchers, not engineers. They rely on coarse-grained 15-second sampling, system-wide sensor noise, and generic country averages. **Your code deserves better.**
-
-EcoTrace was born from a simple frustration: *Why is it so hard to know the exact carbon footprint of a single Python function?*
-
-We didn't just build a wrapper; we built a **Continuous Measurement Engine**. By sampling at 50ms intervals and isolating your process from the OS noise, we provide an audit-ready trace that you can actually trust. Because at the end of the day, you can't optimize what you can't measure accurately.
+We didn't just build a wrapper; we built a **Continuous Measurement Engine**. By sampling at 50ms intervals and isolating your process from the OS noise, we provide an audit-ready trace anchored in verified hardware specifications. Because at the end of the day, you can't optimize what you can't measure with precision.
 
 ---
 
@@ -180,7 +174,7 @@ Modern software teams face increasing pressure to quantify their carbon footprin
 <td width="33%" valign="top">
 
 ### 🔬 Scientifically Grounded
-TDP-based energy estimation powered by **Boavizta's database of 1,800+ CPU models**. Every measurement traces back to real hardware specs — not heuristics.
+TDP-based energy estimation powered by **Boavizta's database of 1,800+ CPU models**. Every measurement traces back to verified manufacturer specifications — eliminating broad category-level guesswork.
 
 </td>
 <td width="33%" valign="top">
@@ -221,7 +215,7 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ### 🎯 Key Differentiators
 
-*   **System Noise Filtration (Process Isolation):** CodeCarbon and CarbonTracker read system-wide hardware sensors (RAPL). If your operating system runs a background update or a browser is open while your Python script executes, they attribute that carbon to your code. EcoTrace isolates down to the exact `psutil.Process()` and its children, strictly measuring your code's real footprint.
+*   **System Noise Filtration (Process Isolation):** Tools that rely on system-wide RAPL sensors capture background OS noise (Windows updates, browsers, etc.). EcoTrace isolates down to the exact `psutil.Process()` and its children, providing a calculated footprint isolated to your code's specific execution.
 *   **True Function-Level Granularity:** CodeCarbon defaults to 15-second tracking intervals, and CarbonTracker measures per heavy ML epoch. EcoTrace's **continuous 50ms micro-sampling** allows it to accurately track bursty web server requests, async I/O waits, and GIL contention that other tools completely miss.
 *   **Fail-Safe Architecture:** Carbon tools are for observability—they should never crash your product. While missing permissions, VMs, or missing hardware drivers cause other trackers to throw fatal execution-halting exceptions, EcoTrace gracefully falls back to static rule-based estimations and guarantees your application keeps running.
 *   **Actionable AI Assistant:** Instead of just outputting a CSV file and leaving you guessing, EcoTrace directly feeds the metrics to Google Gemini. It acts as a Green-Coding Assistant, offering hardware-specific optimization advice (e.g., *"Switch this 12-second CPU-bound loop to a vectorized NumPy array to save 15% energy"*).
