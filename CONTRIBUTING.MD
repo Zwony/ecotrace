@@ -19,7 +19,7 @@ Thank you for taking the time to contribute! EcoTrace is an open-source project 
 
 ## Code of Conduct
 
-By participating in this project, you agree to be respectful, inclusive, and constructive. We are all here to learn and build something meaningful together.
+By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.MD). We are dedicated to providing a respectful, inclusive, and constructive environment for everyone.
 
 ---
 

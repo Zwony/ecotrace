@@ -381,5 +381,5 @@ def generate_pdf_report(
         logger.info(f"Report saved: {filename}")
 
     except Exception as e:
-        logger.error(f"PDF Error: {e}")
-        raise ReportGenerationError(f"Failed to generate PDF: {e}") from e
+        logger.error(f"PDF Error during generation and saving: {str(e)}")
+        raise ReportGenerationError(f"Failed to generate PDF: {str(e)}") from e

@@ -36,8 +36,11 @@ def _fetch_latest_version():
         timeout, malformed response, etc.).
     """
     try:
-        import requests
-        response = requests.get(PYPI_JSON_URL, timeout=PYPI_REQUEST_TIMEOUT_S)
+        response = requests.get(
+            PYPI_JSON_URL, 
+            headers={"User-Agent": f"EcoTrace/{PYPI_PACKAGE_NAME}"}, 
+            timeout=PYPI_REQUEST_TIMEOUT_S
+        )
         response.raise_for_status()
 
         data = response.json()

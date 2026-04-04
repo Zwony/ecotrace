@@ -1,8 +1,8 @@
 Metadata-Version: 2.4
 Name: ecotrace
-Version: 0.6.0
+Version: 0.6.1
 Summary: EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting.
-Author-email: Emre Ozkal <emreozkal03@gmail.com>
+Author-email: Emre Ozkal <ecotraceteam@gmail.com>
 Project-URL: Homepage, https://github.com/Zwony/ecotrace
 Project-URL: Repository, https://github.com/Zwony/ecotrace
 Keywords: carbon-footprint,energy-efficiency,green-computing,sustainability,metrics,cpu-monitoring,gpu-monitoring
@@ -33,7 +33,7 @@ Dynamic: license-file
 # 🌱 EcoTrace — Sustainability OS for Python
 
 ### The Carbon Intelligence Engine Your Code Deserves
-**EcoTrace is a high-precision instrumentation engine built for engineers who demand real hardware data, not heuristics.**
+**EcoTrace is a high-precision instrumentation engine built for engineers who demand high-fidelity hardware specifications, not generic averages.**
 
 *Real-time carbon tracking · 50+ Global Zones · AI-powered hardware insights · Zero-config deployment*
 
@@ -44,12 +44,21 @@ Dynamic: license-file
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=for-the-badge&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![GitHub stars](https://img.shields.io/github/stars/Zwony/ecotrace?style=for-the-badge&logo=github)](https://github.com/Zwony/ecotrace/stargazers)
+[![VS Code Extension](https://img.shields.io/badge/VS_Code-EcoTrace-007ACC?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/ecotrace-team.ecotrace-monitor?style=for-the-badge&color=blue&logo=visual-studio-code&label=Installs(Plugin))](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
+
+<br>
+
+> [!TIP]
+> **🚀 VS Code User?** Monitor your code's carbon footprint in real-time as you write! [Download the EcoTrace VS Code extension](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
+
+<br>
 
 <br>
 
 [![Carbon Aware](https://img.shields.io/badge/🌍_Carbon-Aware-2E8B57?style=flat-square)](https://github.com/Zwony/ecotrace)
 [![Live Grid API](https://img.shields.io/badge/⚡_Live_Grid-API_Powered-FF6B35?style=flat-square)](https://www.electricitymaps.com/)
-[![38 Countries](https://img.shields.io/badge/🗺️_Coverage-38_Countries-4169E1?style=flat-square)](https://github.com/Zwony/ecotrace)
+[![50+ Countries](https://img.shields.io/badge/🗺️_Coverage-50+_Countries-4169E1?style=flat-square)](https://github.com/Zwony/ecotrace)
 [![1800+ CPUs](https://img.shields.io/badge/🔬_TDP_Database-1800+_CPUs-8B4513?style=flat-square)](https://github.com/Boavizta/cpu-spec)
 [![Auto Update](https://img.shields.io/badge/🌱_Auto-Update-9B59B6?style=flat-square)](https://pypi.org/project/ecotrace/)
 
@@ -58,6 +67,9 @@ Dynamic: license-file
 [![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Community&logo=discord&style=for-the-badge&color=5865F2)](https://discord.gg/hs58XXb3Uq)
 
 *🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
+
+> [!IMPORTANT]
+> **📢 v0.6.0 Out Now:** Introducing **Live Grid API** integration, **IP-Based Auto-Detection**, and **Expanded Global Coverage (50+ Zones)**. EcoTrace is now officially a Sustainability Operating System.
 
 <br>
 
@@ -87,13 +99,7 @@ graph LR
 
 ---
 
-## 📜 The EcoTrace Manifesto
-
-Most carbon tracking tools are built for researchers, not engineers. They rely on coarse-grained 15-second sampling, system-wide sensor noise, and generic country averages. **Your code deserves better.**
-
-EcoTrace was born from a simple frustration: *Why is it so hard to know the exact carbon footprint of a single Python function?*
-
-We didn't just build a wrapper; we built a **Continuous Measurement Engine**. By sampling at 50ms intervals and isolating your process from the OS noise, we provide an audit-ready trace that you can actually trust. Because at the end of the day, you can't optimize what you can't measure accurately.
+We didn't just build a wrapper; we built a **Continuous Measurement Engine**. By sampling at 50ms intervals and isolating your process from the OS noise, we provide an audit-ready trace anchored in verified hardware specifications. Because at the end of the day, you can't optimize what you can't measure with precision.
 
 ---
 
@@ -198,7 +204,7 @@ Modern software teams face increasing pressure to quantify their carbon footprin
 <td width="33%" valign="top">
 
 ### 🔬 Scientifically Grounded
-TDP-based energy estimation powered by **Boavizta's database of 1,800+ CPU models**. Every measurement traces back to real hardware specs — not heuristics.
+TDP-based energy estimation powered by **Boavizta's database of 1,800+ CPU models**. Every measurement traces back to verified manufacturer specifications — eliminating broad category-level guesswork.
 
 </td>
 <td width="33%" valign="top">
@@ -239,7 +245,7 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ### 🎯 Key Differentiators
 
-*   **System Noise Filtration (Process Isolation):** CodeCarbon and CarbonTracker read system-wide hardware sensors (RAPL). If your operating system runs a background update or a browser is open while your Python script executes, they attribute that carbon to your code. EcoTrace isolates down to the exact `psutil.Process()` and its children, strictly measuring your code's real footprint.
+*   **System Noise Filtration (Process Isolation):** Tools that rely on system-wide RAPL sensors capture background OS noise (Windows updates, browsers, etc.). EcoTrace isolates down to the exact `psutil.Process()` and its children, providing a calculated footprint isolated to your code's specific execution.
 *   **True Function-Level Granularity:** CodeCarbon defaults to 15-second tracking intervals, and CarbonTracker measures per heavy ML epoch. EcoTrace's **continuous 50ms micro-sampling** allows it to accurately track bursty web server requests, async I/O waits, and GIL contention that other tools completely miss.
 *   **Fail-Safe Architecture:** Carbon tools are for observability—they should never crash your product. While missing permissions, VMs, or missing hardware drivers cause other trackers to throw fatal execution-halting exceptions, EcoTrace gracefully falls back to static rule-based estimations and guarantees your application keeps running.
 *   **Actionable AI Assistant:** Instead of just outputting a CSV file and leaving you guessing, EcoTrace directly feeds the metrics to Google Gemini. It acts as a Green-Coding Assistant, offering hardware-specific optimization advice (e.g., *"Switch this 12-second CPU-bound loop to a vectorized NumPy array to save 15% energy"*).
@@ -551,9 +557,9 @@ EcoTrace is building toward a **complete sustainability intelligence platform**:
 
 | Version | Feature | Status |
 |---|---|---|
-| **v0.6.0** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | 🔨 In Progress |
-| **v0.6.0** | 🌱 Auto-Update — Interactive PyPI version check | 🔨 In Progress |
-| **v0.6.1** | 📉 Carbon-Aware Scheduling — Optimal run-time suggestions based on grid | 🔜 Planned |
+| **v0.6.0** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | ✅ Released |
+| **v0.6.0** | 🌱 Auto-Update — Interactive PyPI version check | ✅ Released |
+| **v0.7.0** | 🖥️ VS Code Extension — Live IDE monitoring status bar | ✅ Released |
 | **v0.6.1** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔜 Planned |
 | **v0.7.0** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
 | **v0.7.0** | 📊 Automated ESG Reports — CSRD and GHG Protocol-compliant exports | 🔜 Planned |
@@ -597,7 +603,7 @@ We welcome contributions from the community! See [CONTRIBUTING.MD](CONTRIBUTING.
 
 ## 👤 Author
 
-**Emre Özkal** — [emreozkal03@gmail.com](mailto:emreozkal03@gmail.com)
+**Emre Özkal** — [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com)
 
 ---
 

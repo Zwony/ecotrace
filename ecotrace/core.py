@@ -163,7 +163,7 @@ class EcoTrace:
             else:
                 intensity_label += " 📋 Static"
 
-            logger.info(f"\n[EcoTrace] 🌱 Sustainability OS v0.6.0 Initialized")
+            logger.info(f"\n[EcoTrace] 🌱 Sustainability OS v0.6.1 Initialized")
             logger.info("-----------------------------------------------------")
             logger.info(f"📍 Region  : {self.region_code} ({intensity_label})")
             logger.info(f"🖥️ Hardware: {self.cpu_info['brand']} ({self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W)")

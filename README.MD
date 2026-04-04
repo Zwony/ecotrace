@@ -39,7 +39,7 @@
 *🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
 
 > [!IMPORTANT]
-> **📢 v0.6.0 Out Now:** Introducing **Live Grid API** integration, **IP-Based Auto-Detection**, and **Expanded Global Coverage (50+ Zones)**. EcoTrace is now officially a Sustainability Operating System.
+> **📢 v0.6.1 Out Now:** Introducing **Live Grid API** integration, **IP-Based Auto-Detection**, and **Expanded Global Coverage (50+ Zones)**. EcoTrace is now officially a Sustainability Operating System.
 
 <br>
 
@@ -57,7 +57,7 @@ graph LR
     style E fill:#fce4ec,stroke:#c62828,color:#000
 ```
 
-*EcoTrace v0.6.0 — Sustainability OS Pipeline*
+*EcoTrace v0.6.1 — Sustainability OS Pipeline*
 
 <br>
 
@@ -102,7 +102,7 @@ eco.generate_pdf_report("carbon_audit.pdf")
 ```
 
 ```
---- EcoTrace v0.6.0 Initialized ---
+--- EcoTrace v0.6.1 Initialized ---
 Region  : TR (482 gCO2/kWh 🟢 LIVE)
 CPU     : 13th Gen Intel Core i7-13700H
 Cores   : 20
@@ -116,9 +116,9 @@ GPU     : Intel Iris Xe Graphics
 
 ---
 
-## 🆕 What's New in v0.6.0 — Sustainability OS
+## 🆕 What's New in v0.6.1 — Sustainability OS
 
-EcoTrace v0.6.0 transforms from a measurement tool into a **Sustainability Operating System** with two game-changing features:
+EcoTrace v0.6.1 transforms from a measurement tool into a **Sustainability Operating System** with two game-changing features:
 
 <table>
 <tr>
@@ -148,7 +148,7 @@ eco = EcoTrace(
 EcoTrace now checks for updates automatically at startup and asks politely:
 
 ```
-[EcoTrace] 🌱 A new version is available! (v0.5.2 → v0.6.0)
+[EcoTrace] 🌱 A new version is available! (v0.5.2 → v0.6.1)
 [EcoTrace] Would you like to update? (y/n):
 ```
 
@@ -196,7 +196,7 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ## 🆚 How EcoTrace Compares
 
-| Feature | **EcoTrace v0.6.0** | CodeCarbon | CarbonTracker |
+| Feature | **EcoTrace v0.6.1** | CodeCarbon | CarbonTracker |
 |---|:---:|:---:|:---:|
 | **API Style** | ✅ One-line `@track` decorator | ✅ Decorator + Context | ❌ Manual start/stop |
 | **Granularity** | ✅ Per-function (Micro-workloads) | ⚠️ Session-level (Macro) | ⚠️ Epoch-level (ML only) |
@@ -312,7 +312,7 @@ eco.generate_pdf_report("quarterly_carbon_audit.pdf")
 
 ## 🌍 Live Grid API — Electricity Maps Integration
 
-EcoTrace v0.6.0 fetches **real-time carbon intensity** from the Electricity Maps API, replacing static constants with live grid data:
+EcoTrace v0.6.1 fetches **real-time carbon intensity** from the Electricity Maps API, replacing static constants with live grid data:
 
 ```mermaid
 graph TD
@@ -527,8 +527,8 @@ EcoTrace is building toward a **complete sustainability intelligence platform**:
 
 | Version | Feature | Status |
 |---|---|---|
-| **v0.6.0** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | ✅ Released |
-| **v0.6.0** | 🌱 Auto-Update — Interactive PyPI version check | ✅ Released |
+| **v0.6.1** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | ✅ Released |
+| **v0.6.1** | 🌱 Auto-Update — Interactive PyPI version check | ✅ Released |
 | **v0.7.0** | 🖥️ VS Code Extension — Live IDE monitoring status bar | ✅ Released |
 | **v0.6.1** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔜 Planned |
 | **v0.7.0** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
@@ -573,7 +573,7 @@ We welcome contributions from the community! See [CONTRIBUTING.MD](CONTRIBUTING.
 
 ## 👤 Author
 
-**Emre Özkal** — [emreozkal03@gmail.com](mailto:emreozkal03@gmail.com)
+**Emre Özkal** — [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com)
 
 ---
 

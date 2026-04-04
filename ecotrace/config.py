@@ -1,4 +1,3 @@
-from asyncio import exceptions
 import os
 import json
 
@@ -7,6 +6,7 @@ DEFAULT_GPU_TDP_AMD_W = 75.0
 DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
 DEFAULT_CARBON_INTENSITY = 475
 DEFAULT_REGION = "GLOBAL"
+USER_AGENT = "EcoTrace/0.6.1"
 
 def load_constants(json_path):
     """Loads constants from the JSON configuration file.
@@ -154,7 +154,7 @@ def fetch_live_carbon_intensity(region_code, grid_api_key):
         import requests
         response = requests.get(
             ELECTRICITY_MAPS_API_URL,
-            headers={"auth-token": grid_api_key},
+            headers={"auth-token": grid_api_key, "User-Agent": USER_AGENT},
             params={"zone": zone},
             timeout=GRID_API_REQUEST_TIMEOUT_S,
         )
@@ -178,7 +178,7 @@ def identify_user_region():
     try:
         import requests
         api_url = "http://ip-api.com/json/?fields=countryCode"
-        response = requests.get(api_url, timeout=2)
+        response = requests.get(api_url, headers={"User-Agent": USER_AGENT}, timeout=2)
         response.raise_for_status()
         data = response.json()
         return data.get("countryCode")
