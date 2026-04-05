@@ -25,7 +25,7 @@ class TestWuElectricityFactors:
         factor = get_electrical_impact_factor(country_code, "wu")
         assert factor["value"] == expected_value
         assert factor["unit"] == "m3/kWh"
-        assert "wri.org" in factor["source"]
+        assert factor["source"] == "wri.org"
 
     def test_wu_factor_not_available_for_countries_without_data(self):
         with pytest.raises(NotImplementedError):
