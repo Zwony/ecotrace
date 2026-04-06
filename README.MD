@@ -39,7 +39,14 @@
 *🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
 
 > [!IMPORTANT]
-> **📢 v0.6.1 Out Now:** Introducing **Live Grid API** integration, **IP-Based Auto-Detection**, and **Expanded Global Coverage (50+ Zones)**. EcoTrace is now officially a Sustainability Operating System.
+> **🚀 Coming Soon: v0.7.0 — The Ecosystem Update**
+> 
+> EcoTrace is expanding from a local script tracker into a full backend **Observability platform**. The upcoming update brings zero-config tools to measure the carbon footprint of your entire architecture:
+> - **🧪 Pytest Integration:** Run `pytest --ecotrace` to automatically calculate the energy cost of your test suites and rank the most consuming unit tests.
+> - **🌐 Web Middleware:** Plug-and-play extensions for **FastAPI, Starlette, and Flask** that seamlessly track HTTP requests and inject `X-Eco-Carbon-Emitted` response headers.
+> - **🏗️ Enterprise CI/CD:** Hardened codebase featuring full GitHub Actions testing matrices, strict `mypy` typing, and `ruff` formatting.
+> 
+> *📅 Estimated Release Date: April 9, 2026*
 
 <br>
 
@@ -530,9 +537,11 @@ EcoTrace is building toward a **complete sustainability intelligence platform**:
 | **v0.6.1** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | ✅ Released |
 | **v0.6.1** | 🌱 Auto-Update — Interactive PyPI version check | ✅ Released |
 | **v0.7.0** | 🖥️ VS Code Extension — Live IDE monitoring status bar | ✅ Released |
-| **v0.6.1** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔜 Planned |
-| **v0.7.0** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
-| **v0.7.0** | 📊 Automated ESG Reports — CSRD and GHG Protocol-compliant exports | 🔜 Planned |
+| **v0.7.0** | 🧪 Pytest Plugin — Automated CI/CD test suite energy tracking | 🚧 April 9 |
+| **v0.7.0** | 🌐 Web Middleware — FastAPI & Flask request-level tracking | 🚧 April 9 |
+| **v0.7.x** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔜 Planned |
+| **v0.7.x** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
+| **v0.7.x** | 📊 Automated ESG Reports — CSRD and GHG Protocol-compliant exports | 🔜 Planned |
 | **v0.7.x** | 🔗 AWS / Azure / GCP — Cloud resource carbon attribution | 🔜 Planned |
 | **v0.8.0** | 🏢 Team Carbon Budgets — Multi-project rollup with alerting | 🔜 Planned |
 
