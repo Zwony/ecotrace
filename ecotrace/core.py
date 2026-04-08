@@ -155,23 +155,23 @@ class EcoTrace:
         self._monitor_interval = self.MONITOR_INTERVAL_S
         self._current_process = psutil.Process()
 
-        # --- Initialization Banner (Premium UI v6.0) -------------------------
+        # --- Initialization Banner (Production-Grade v0.7.0) -----------------
         if not self.quiet:
             intensity_label = f"{self.carbon_intensity} gCO2/kWh"
             if self._intensity_source == "live":
-                intensity_label += " 🟢 LIVE"
+                intensity_label += " LIVE"
             else:
-                intensity_label += " 📋 Static"
+                intensity_label += " Static"
 
-            logger.info(f"\n[EcoTrace] 🌱 Sustainability OS v0.6.1 Initialized")
+            logger.info("\n[EcoTrace] Sustainability Engine Initialized")
             logger.info("-----------------------------------------------------")
-            logger.info(f"📍 Region  : {self.region_code} ({intensity_label})")
-            logger.info(f"🖥️ Hardware: {self.cpu_info['brand']} ({self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W)")
-            logger.info(f"🧠 Memory  : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']} @ {self.ram_info['speed_mhz']}MHz")
+            logger.info(f"Region  : {self.region_code} ({intensity_label})")
+            logger.info(f"Hardware: {self.cpu_info['brand']} ({self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W)")
+            logger.info(f"Memory  : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']} @ {self.ram_info['speed_mhz']}MHz")
             if self.gpu_info:
-                logger.info(f"🎮 GPU     : {self.gpu_info['brand']} ({self.gpu_info['tdp']}W)")
+                logger.info(f"GPU     : {self.gpu_info['brand']} ({self.gpu_info['tdp']}W)")
             logger.info("-----------------------------------------------------")
-            logger.info("✨ Crafted with 💚 for a sustainable future.\n")
+            logger.info("Scientific instrumentation for sustainable computing.\n")
 
         # NOTE: Calculating idle baseline to subtract system noise. 
         # We don't want to attribute OS background updates to YOUR code.

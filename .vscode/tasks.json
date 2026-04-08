@@ -19,6 +19,58 @@
         "$tsc"
       ],
       "detail": "tsc -p ./"
+    },
+    {
+      "label": "Local-Python-Dependency-Check",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Write-Host '--- 🐍 Python Outdated Dependencies (Excluding EcoTrace) ---'; try { pip list --outdated | Select-String -NotMatch 'ecotrace' } catch { Write-Warning 'pip is not available.' }; Write-Host '--- 🔒 Python Security Audit ---'; try { safety check } catch { Write-Warning 'safety is not installed. Run: pip install safety' }"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Local-JS-Dependency-Check",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Write-Host '--- 📦 JS Outdated Dependencies ---'; try { npm outdated } catch { Write-Warning 'npm is not available.' }; Write-Host '--- 🛡️ JS Security Audit ---'; try { npm audit } catch { Write-Warning 'npm audit failed.' }"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/ecotrace-vscode"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Local-Dependency-Check",
+      "dependsOn": [
+        "Local-Python-Dependency-Check",
+        "Local-JS-Dependency-Check"
+      ],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Development-Setup",
+      "dependsOn": [
+        "npm: compile",
+        "Local-Dependency-Check"
+      ],
+      "problemMatcher": [],
+      "group": "none"
     }
   ]
+
 }

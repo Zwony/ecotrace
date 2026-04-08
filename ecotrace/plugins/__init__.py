@@ -1,0 +1,1 @@
+# EcoTrace Pytest Plugin

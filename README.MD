@@ -1,11 +1,11 @@
 <div align="center">
 
-# 🌱 EcoTrace — Sustainability OS for Python
+# EcoTrace — Sustainability Engine for Python
 
-### The Carbon Intelligence Engine Your Code Deserves
-**EcoTrace is a high-precision instrumentation engine built for engineers who demand high-fidelity hardware specifications, not generic averages.**
+### High-precision carbon tracking for production systems
+**EcoTrace is a continuous instrumentation engine designed for engineers who require accurate hardware specifications and process-isolated metrics.**
 
-*Real-time carbon tracking · 50+ Global Zones · AI-powered hardware insights · Zero-config deployment*
+*Real-time carbon tracking · Global Grid Coverage · Hardware Intelligence · Zero-config Deployment*
 
 <br>
 
@@ -39,14 +39,12 @@
 *🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
 
 > [!IMPORTANT]
-> **🚀 Coming Soon: v0.7.0 — The Ecosystem Update**
+> **EcoTrace v0.7.0 — The Ecosystem Update**
 > 
-> EcoTrace is expanding from a local script tracker into a full backend **Observability platform**. The upcoming update brings zero-config tools to measure the carbon footprint of your entire architecture:
-> - **🧪 Pytest Integration:** Run `pytest --ecotrace` to automatically calculate the energy cost of your test suites and rank the most consuming unit tests.
-> - **🌐 Web Middleware:** Plug-and-play extensions for **FastAPI, Starlette, and Flask** that seamlessly track HTTP requests and inject `X-Eco-Carbon-Emitted` response headers.
-> - **🏗️ Enterprise CI/CD:** Hardened codebase featuring full GitHub Actions testing matrices, strict `mypy` typing, and `ruff` formatting.
-> 
-> *📅 Estimated Release Date: April 9, 2026*
+> EcoTrace is evolving from a local utility into a comprehensive observability platform. This update introduces specialized tools for architecture-wide carbon monitoring:
+> - **Pytest Integration:** Automated energy cost analysis for test suites with hotspot identification.
+> - **Web Middleware:** Plug-and-play extensions for FastAPI, Starlette, and Flask with request-level tracking and header injection.
+> - **Production Readiness:** Hardened codebase with enhanced error recovery and standardized hardware normalization.
 
 <br>
 
@@ -203,22 +201,17 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ## 🆚 How EcoTrace Compares
 
-| Feature | **EcoTrace v0.6.1** | CodeCarbon | CarbonTracker |
-|---|:---:|:---:|:---:|
-| **API Style** | ✅ One-line `@track` decorator | ✅ Decorator + Context | ❌ Manual start/stop |
-| **Granularity** | ✅ Per-function (Micro-workloads) | ⚠️ Session-level (Macro) | ⚠️ Epoch-level (ML only) |
-| **Live Grid API** | ✅ Electricity Maps (Zero-config) | ✅ ElectricityMaps (Requires token) | ❌ Static only |
-| **Process Isolation** | ✅ `psutil.Process()` (Isolated) | ❌ System-wide (Captures OS noise) | ❌ System-wide (Captures OS noise) |
-| **Continuous Sampling** | ✅ **50ms** daemon threads | ⚠️ 15s intervals | ❌ Point-in-time (Epoch) |
-| **AI Insights** | ✅ Gemini-powered recommendations| ❌ | ❌ |
-| **Crash-Proof** | ✅ Graceful fallback (Always returns)| ❌ Hard crashes / Exceptions | ❌ Hard crashes / Exceptions |
-| **Auto-Update** | ✅ Interactive PyPI check | ❌ | ❌ |
-| **Async Support** | ✅ Auto-detected (`asyncio`) | ❌ | ❌ |
-| **GPU Support** | ✅ NVIDIA + AMD + Intel | ⚠️ NVIDIA only | ⚠️ NVIDIA only |
-| **PDF Reports** | ✅ Built-in with charts | ❌ CSV / External dashboards | ❌ Local logs |
-| **Function Comparison** | ✅ `eco.compare(f1, f2)` | ❌ | ❌ |
-| **CPU TDP Database** | ✅ 1,800+ models (Boavizta) | ⚠️ ~1,200 models | ❌ Manual config |
-| **Zero Config** | ✅ Full auto-detection | ⚠️ Config required | ⚠️ Config required |
+| Feature | **EcoTrace v0.7.0** | Industry Alternatives |
+|---|:---:|:---:|
+| **Instrumentation** | One-line `@track` decorator | Manual sessions |
+| **Granularity** | **50ms** Continuous Sampling | 15s - 30s intervals |
+| **Process Isolation** | `psutil` Process-Scoped | System-wide (includes OS noise) |
+| **Grid Accuracy** | Live Electricity Maps API | Static averages |
+| **Hardware Data** | 1,800+ CPU Models (Boavizta) | Generic TDP categories |
+| **Reporting** | Audit-ready PDF & AI Insights | CSV only |
+
+> [!NOTE]
+> **Carbon Metrics Disclaimer:** Carbon intensity and energy estimation are evolving fields. EcoTrace provides high-fidelity estimations based on manufacturer TDP and live grid data, which should be used for relative optimization and internal auditing. For regulatory compliance, cross-reference with direct hardware power meters where available.
 
 ### 🎯 Key Differentiators
 
@@ -528,24 +521,20 @@ EcoTrace supports **50+ countries** with both static carbon intensity values and
 
 ---
 
-## 🗺️ Roadmap
+## Release Roadmap
 
-EcoTrace is building toward a **complete sustainability intelligence platform**:
+EcoTrace is developing into a comprehensive sustainability intelligence platform.
 
 | Version | Feature | Status |
 |---|---|---|
-| **v0.6.1** | 🌍 Live Grid API — Real-time carbon intensity (Electricity Maps) | ✅ Released |
-| **v0.6.1** | 🌱 Auto-Update — Interactive PyPI version check | ✅ Released |
-| **v0.7.0** | 🖥️ VS Code Extension — Live IDE monitoring status bar | ✅ Released |
-| **v0.7.0** | 🧪 Pytest Plugin — Automated CI/CD test suite energy tracking | 🚧 April 9 |
-| **v0.7.0** | 🌐 Web Middleware — FastAPI & Flask request-level tracking | 🚧 April 9 |
-| **v0.7.x** | 🛡️ CI/CD Carbon Gates — GitHub Actions integration for green thresholds | 🔜 Planned |
-| **v0.7.x** | ☁️ Cloud Dashboard — Real-time emissions visualization web UI | 🔜 Planned |
-| **v0.7.x** | 📊 Automated ESG Reports — CSRD and GHG Protocol-compliant exports | 🔜 Planned |
-| **v0.7.x** | 🔗 AWS / Azure / GCP — Cloud resource carbon attribution | 🔜 Planned |
-| **v0.8.0** | 🏢 Team Carbon Budgets — Multi-project rollup with alerting | 🔜 Planned |
+| **v0.7.0** | **VS Code Extension** | Released |
+| **v0.7.0** | **Pytest Plugin** | Release Candidate |
+| **v0.7.0** | **Web Middleware** | Release Candidate |
+| **v0.7.x** | **CI/CD Carbon Gates** | Scheduled |
+| **v0.7.x** | **Cloud Resource Mapping** | Scheduled |
+| **v0.8.0** | **Enterprise Carbon Budgets** | Research Phase |
 
-> **Shape the roadmap:** [Open an issue](https://github.com/Zwony/ecotrace/issues) or join our [Discord](https://discord.gg/hs58XXb3Uq) to suggest features.
+> **Note on Metrics:** EcoTrace provides estimates based on TDP and utilization. These figures are intended for optimization guidance and comparative analysis, not for formal regulatory carbon reporting.
 
 ---
 
