@@ -1,20 +1,17 @@
 # EcoTrace: Continuous Carbon Instrumentation Engine
 # Established accuracy for scalable carbon observability.
 import os
-import json
-import re
 import time
 import psutil
-import cpuinfo
 import csv
+import inspect
 from contextlib import contextmanager
 from datetime import datetime
 from .config import (load_constants, validate_region_code, resolve_carbon_intensity,
                       load_gpu_tdp_defaults, fetch_live_carbon_intensity, GRID_CACHE_TTL_S,
-                      identify_user_region)
+                      identify_user_region, DEFAULT_REGION)
 import functools
 import asyncio
-import inspect
 import threading
 from collections import deque
 import tempfile
@@ -115,9 +112,9 @@ class EcoTrace:
             detected = identify_user_region()
             if detected:
                 final_region = detected
-                logger.info(f"📍 Auto-detected region: {final_region}")
+                logger.debug(f"Detected region: {final_region}")
             else:
-                logger.info(f"🌐 Falling back to default region: {DEFAULT_REGION}")
+                logger.info(f"Using default region: {DEFAULT_REGION}")
 
         self.region_code = validate_region_code(final_region, self._constants_data)
 
