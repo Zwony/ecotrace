@@ -1,5 +1,5 @@
 import time
-import pytest
+import pytest  # type: ignore
 import threading
 from typing import Dict, Any
 

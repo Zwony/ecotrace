@@ -36,6 +36,7 @@ def _fetch_latest_version():
         timeout, malformed response, etc.).
     """
     try:
+        import requests  # type: ignore
         response = requests.get(
             PYPI_JSON_URL, 
             headers={"User-Agent": f"EcoTrace/{PYPI_PACKAGE_NAME}"}, 
@@ -66,7 +67,7 @@ def _is_newer_version(current, latest):
         False otherwise or if parsing fails.
     """
     try:
-        from packaging.version import parse
+        from packaging.version import parse  # type: ignore
         return parse(latest) > parse(current)
     except Exception as e:
         # If packaging is unavailable, fall back to simple string comparison

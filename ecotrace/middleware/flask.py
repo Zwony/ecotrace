@@ -6,7 +6,7 @@ from typing import Optional
 logger = logging.getLogger("ecotrace.middleware")
 
 try:
-    from flask import request, Response
+    from flask import request, Response  # type: ignore
 except ImportError:
     request = None
     Response = None

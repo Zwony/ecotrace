@@ -153,7 +153,7 @@ def fetch_live_carbon_intensity(region_code, grid_api_key):
     zone = ZONE_MAPPING.get(region_code.upper(), region_code.upper())
 
     try:
-        import requests
+        import requests  # type: ignore
         response = requests.get(
             ELECTRICITY_MAPS_API_URL,
             headers={"auth-token": grid_api_key, "User-Agent": USER_AGENT},
@@ -178,7 +178,7 @@ def fetch_live_carbon_intensity(region_code, grid_api_key):
 def identify_user_region():
     """Attempts to auto-detect the user's current region via IP address."""
     try:
-        import requests
+        import requests  # type: ignore
         api_url = "http://ip-api.com/json/?fields=countryCode"
         response = requests.get(api_url, headers={"User-Agent": USER_AGENT}, timeout=2)
         response.raise_for_status()
