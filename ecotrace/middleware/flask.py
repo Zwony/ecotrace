@@ -2,7 +2,7 @@ import time
 import logging
 from typing import Optional
 
-# Setup local logger for middleware-specific warnings
+# Diagnostic logging facility for middleware-level events.
 logger = logging.getLogger("ecotrace.middleware")
 
 try:
@@ -47,12 +47,12 @@ class EcoTraceFlask:
         app.after_request(self._after_request)
 
     def _before_request(self):
-        """Pre-request hook to start monitoring."""
+        """Pre-request instrumentation hook to initialize monitoring state."""
         request.environ['ecotrace_start_time'] = time.perf_counter()
         self.ecotrace._start_cpu_monitor()
 
     def _after_request(self, response: Response) -> Response:
-        """Post-request hook to stop monitoring and calculate emissions."""
+        """Post-request teardown hook to snapshot and resolve carbon metrics."""
         self.ecotrace._stop_cpu_monitor()
         
         start_time = request.environ.get('ecotrace_start_time')

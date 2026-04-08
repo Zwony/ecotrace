@@ -55,7 +55,7 @@ def create_cpu_usage_chart(samples_data, core_count=1):
         return temp_file.name
 
     except Exception as e:
-        logger.error(f"CPU Chart generation failed: {e}")
+        logger.error(f"[ERROR] CPU usage chart generation failure: {e}")
         return None
 
 def create_gpu_usage_chart(samples_data):
@@ -91,7 +91,7 @@ def create_gpu_usage_chart(samples_data):
         return temp_file.name
 
     except Exception as e:
-        logger.error(f"GPU Chart generation failed: {e}")
+        logger.error(f"[ERROR] GPU utilization chart generation failure: {e}")
         return None
 
 def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):

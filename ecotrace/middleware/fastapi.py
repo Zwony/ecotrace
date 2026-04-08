@@ -2,7 +2,7 @@ import time
 import logging
 from typing import Optional
 
-# Setup local logger for middleware-specific warnings
+# Diagnostic logging facility for middleware-level events.
 logger = logging.getLogger("ecotrace.middleware")
 
 try:
@@ -41,7 +41,7 @@ class EcoTraceMiddleware(BaseHTTPMiddleware):
         """Instruments a single HTTP request for carbon monitoring."""
         start_time = time.perf_counter()
         
-        # Continuous background sampling starts here
+        # Establish background process-scoped monitoring context for the current request.
         with self.ecotrace.cpu_monitor():
             response = await call_next(request)
             

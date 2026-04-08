@@ -5,12 +5,12 @@ from typing import Dict, Any
 
 from ecotrace.core import EcoTrace
 
-# --- Thread Safety & Limitation Note ---
-# EcoTrace monitors at a process-level. While the results dictionary below 
-# is thread-safe via Lock, running tests in parallel (e.g., pytest-xdist) 
-# may lead to overlapping carbon measurements as multiple tests will 
-# contribute to the same process-level CPU load.
-# ---------------------------------------
+# --- Concurrency Limitations ---
+# EcoTrace monitors at the process level. While internal registries are 
+# thread-safe, parallel test execution (e.g., via pytest-xdist) will 
+# lead to aggregated carbon metrics as concurrent tests share the 
+# same process-scoped CPU resources.
+# -------------------------------
 
 def pytest_addoption(parser):
     """Add command-line flag to enable EcoTrace during tests."""
@@ -36,10 +36,10 @@ def pytest_configure(config):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_protocol(item, nextitem):
-    """Wrap test execution and measure carbon if enabled.
+    """Wrap test execution for carbon metric resolution.
     
-    Uses EcoTrace's internal measurement logic to snapshot CPU load
-    around the execution of each pytest item.
+    Snapshots process-scoped CPU utilization across the execution 
+    lifecycle of each pytest item.
     """
     global ecotrace_instance
     if not ecotrace_instance:
@@ -80,7 +80,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     if not config.getoption("--ecotrace") or not test_emissions:
         return
 
-    terminalreporter.section("EcoTrace Carbon Report", sep="=", bold=True, green=True)
+    terminalreporter.section("EcoTrace: Carbon Infrastructure Audit", sep="=", bold=True)
     
     with emissions_lock:
         total_carbon = sum(data["carbon"] for data in test_emissions.values())

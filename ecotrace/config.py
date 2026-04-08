@@ -36,14 +36,16 @@ def validate_region_code(region_code, constants_data):
         str: Validated uppercase region code, or DEFAULT_REGION if invalid.
     """
     if not isinstance(region_code, str) or not region_code.strip():
-        print(f"[EcoTrace] WARNING: Invalid region_code={region_code!r}, defaulting to '{DEFAULT_REGION}'.")
+        from .logger import logger
+        logger.warning(f"Invalid region code provided ({region_code!r}). Defaulting to {DEFAULT_REGION}.")
         return DEFAULT_REGION
 
     code = region_code.strip().upper()
     intensity_map = constants_data.get("CARBON_INTENSITY_MAP", {})
 
     if code not in intensity_map:
-        print(f"[EcoTrace] WARNING: Unknown region '{code}', defaulting to '{DEFAULT_REGION}'.")
+        from .logger import logger
+        logger.warning(f"Unmapped region code '{code}'. Defaulting to {DEFAULT_REGION}.")
         return DEFAULT_REGION
     return code
 
