@@ -3,7 +3,10 @@ import csv
 import tempfile
 from fpdf import FPDF
 import matplotlib.pyplot as plt
-import google.generativeai as genai
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+    import google.generativeai as genai
 from .logger import logger
 from .exceptions import ReportGenerationError
 

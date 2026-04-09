@@ -19,7 +19,7 @@ def heavy_computation(duration):
 def beast_stress_test():
     """The 'Beast' Stress Test - Maximize all 20 cores of i7-13700H.
     
-    Purpose: Demonstrate v0.5.0 core normalization engine
+    Purpose: Demonstrate v0.7.0 core normalization engine
     keeping graphs within 0-100% range under extreme multi-core load.
     """
     print(f"[BEAST TEST] Starting extreme stress on {multiprocessing.cpu_count()} cores...")
@@ -49,7 +49,7 @@ def main():
     beast_stress_test()
     
     # Generate comprehensive PDF report
-    report_name = "v5_Stress_Report.pdf"
+    report_name = "v7_Stress_Report.pdf"
     print(f"\n[Report] Generating {report_name}...")
     
     # Get all CPU samples for chart generation
@@ -64,7 +64,7 @@ def main():
     print("=" * 60)
     print("BEAST MODE COMPLETED!")
     print(f"Check '{report_name}' for normalized CPU graphs.")
-    print("The graph proves v0.5.0 keeps usage within 0-100% range.")
+    print("The graph proves v0.7.0 keeps usage within 0-100% range.")
     print("=" * 60)
 
 if __name__ == "__main__":

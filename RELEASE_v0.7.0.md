@@ -1,6 +1,6 @@
 # 🌱 EcoTrace v0.7.0 — The VS Code Intelligence Update
 
-**Release Date:** 03.04.2026
+**Release Date:** 09.04.2026
 **Ecosystem Version:** v0.7.0  
 **Extension Version:** v0.7.0 (Official Launch)  
 **Focus:** Official VS Code Extension & Real-time IDE Monitoring
