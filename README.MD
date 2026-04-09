@@ -1,12 +1,12 @@
 <div align="center">
 
-# EcoTrace — Carbon Measurement for Python
+# 🌱 EcoTrace — Carbon Measurement for Python
 
 ### High-Precision Energy & Emissions Instrumentation
 
-**EcoTrace is a lightweight instrumentation library that measures the carbon footprint of your Python code at function level, using verified hardware specifications instead of generic averages.**
+**EcoTrace is a lightweight instrumentation library designed for granular carbon footprint measurement of Python applications. It utilizes validated hardware specifications to provide high-fidelity reporting at the function level.**
 
-*Real-time carbon tracking · 50+ Global Zones · AI-powered insights · Zero-config deployment*
+*Real-time monitoring · 50+ Global Zones · AI-powered insights · Zero-configuration deployment*
 
 <br>
 
@@ -23,7 +23,7 @@
 <br>
 
 > [!TIP]
-> **VS Code User?** Monitor your code's carbon footprint in real-time as you write. [Download the EcoTrace VS Code extension](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
+> **VS Code Extension:** Monitor application carbon footprint in real-time during development. [Download the EcoTrace VS Code extension](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
 
 <br>
 
@@ -100,7 +100,7 @@ eco.generate_pdf_report("carbon_audit.pdf")
 
 ```
 --- EcoTrace v0.7.0 Initialized ---
-Region  : TR (482 gCO2/kWh 🟢 LIVE)
+Region  : TR (482 gCO2/kWh LIVE)
 CPU     : 13th Gen Intel Core i7-13700H
 Cores   : 20
 TDP     : 45.0W
@@ -109,7 +109,7 @@ GPU     : Intel Iris Xe Graphics
 ---------------------------------
 ```
 
-> **One decorator. Real carbon data. No configuration files, no background services, no cloud dependencies.**
+> **Automated hardware detection and live grid transparency. No configuration files or background services required.**
 
 ---
 
@@ -129,14 +129,14 @@ Real-time carbon intensity data from **Electricity Maps API** replaces static re
 
 - **38 country zones** with automatic mapping
 - **1-hour intelligent caching** (respects API limits)
-- **Silent fallback**: No API key? No internet? Static data kicks in automatically
+- **Silent fallback**: In the absence of an API key or network connectivity, EcoTrace utilizes internal static emission factors.
 
 ```python
 eco = EcoTrace(
     region_code="TR",
     grid_api_key="YOUR_KEY"
 )
-# Region: TR (482 gCO2/kWh 🟢 LIVE)
+# Region: TR (482 gCO2/kWh LIVE)
 ```
 
 </td>
@@ -147,7 +147,7 @@ eco = EcoTrace(
 EcoTrace checks for updates automatically at startup and prompts the user:
 
 ```
-[EcoTrace] A new version is available! (v0.6.1 → v0.7.0)
+[EcoTrace] A new version is available! (v0.7.0 → v0.7.1)
 [EcoTrace] Would you like to update? (y/n):
 ```
 
@@ -172,20 +172,20 @@ Modern software teams face increasing pressure to quantify their carbon footprin
 <tr>
 <td width="33%" valign="top">
 
-### Scientifically Grounded
-TDP-based energy estimation powered by **Boavizta's database of 1,800+ CPU models**. Every measurement traces back to verified manufacturer specifications.
+### Scientific Foundation
+TDP-based energy estimation powered by the Boavizta database of 1,800+ CPU models. All measurements are derived from verified manufacturer specifications.
 
 </td>
 <td width="33%" valign="top">
 
-### Minimal Overhead
-**50ms daemon-thread sampling** with process-scoped isolation. Zero interference with your hot paths. Designed for production use.
+### Operational Performance
+50ms daemon-thread sampling with process-scoped isolation. Negligible overhead for production environments.
 
 </td>
 <td width="33%" valign="top">
 
-### Compliance-Ready
-Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Compatible with **ESG, GHG Protocol, and EU CSRD** documentation requirements.
+### Regulatory Alignment
+Per-function gCO₂ audit trails with timestamped logs and PDF reports. Compatible with ESG, GHG Protocol, and EU CSRD reporting standards.
 
 </td>
 </tr>
@@ -303,11 +303,11 @@ eco.generate_pdf_report("quarterly_carbon_audit.pdf")
 
 **Report includes:**
 - Hardware profile (CPU model, TDP, cores, GPU, region)
-- CPU & GPU usage-over-time charts (matplotlib rendered)
-- Timestamped function-by-function emission history
-- Side-by-side comparison tables
-- AI-powered optimization insights (requires Gemini API key)
-- Total cumulative CO₂ emissions
+- CPU & GPU utilization metrics (Matplotlib-rendered charts)
+- Timestamped transactional emission history
+- Comparative analysis tables
+- AI-driven optimization recommendations (requires Google Gemini API key)
+- Aggregate cumulative emissions summary
 
 ---
 
@@ -339,10 +339,10 @@ eco = EcoTrace(region_code="DE")
 
 # Output:
 # [EcoTrace] Live grid data: 312 gCO2/kWh
-# Region: DE (312 gCO2/kWh 🟢 LIVE)
+# Region: DE (312 gCO2/kWh LIVE)
 ```
 
-> **No API key?** EcoTrace works fully with static data. Live grid is an opt-in upgrade for higher measurement precision.
+> **Integration Note:** The Live Grid API is an optional enhancement for increased measurement precision. EcoTrace maintains full functionality using the static internal database.
 
 ---
 
@@ -362,7 +362,7 @@ eco.generate_pdf_report("smart_audit.pdf")
 - **Architecture Tuning:** "This function is I/O bound; switching to `asyncio` could reduce idle CPU carbon by 20%."
 - **Library Swaps:** "Consider `lxml` instead of `xml.etree` for this workload to improve efficiency."
 
-> **Opt-in feature:** Only activated when a valid `GEMINI_API_KEY` is provided. EcoTrace operates with full local monitoring and rule-based insights without it.
+> **Module Activation:** AI insights are only generated when a valid `GEMINI_API_KEY` is provided. The library maintains local monitoring and rule-based insights without external dependencies.
 
 ---
 
@@ -482,8 +482,8 @@ EcoTrace will log a warning if NVIDIA Management Library or Windows Management I
 
 <details>
 <summary><strong>API Key Validation</strong></summary>
-If <code>GEMINI_API_KEY</code> or <code>ECOTRACE_GRID_API_KEY</code> is missing:
-<strong>Behavior:</strong> AI insights are skipped and carbon intensity falls back to the static <code>constants.json</code> database.
+If `GEMINI_API_KEY` or `ECOTRACE_GRID_API_KEY` is absent:
+<strong>Behavior:</strong> AI insights are bypassed and carbon intensity defaults to the static <code>constants.json</code> database.
 </details>
 
 <details>
@@ -676,8 +676,8 @@ MIT License — use it however you like.
 
 <div align="center">
 
-*Built with care for a sustainable software future.*
+*Developed for sustainable software development practices.*
 
-**[Documentation](https://github.com/Zwony/ecotrace)** · **[PyPI](https://pypi.org/project/ecotrace/)** · **[Discord](https://discord.gg/hs58XXb3Uq)** · **[Issues](https://github.com/Zwony/ecotrace/issues)**
+**[Technical Documentation](https://github.com/Zwony/ecotrace)** · **[PyPI Repository](https://pypi.org/project/ecotrace/)** · **[Discord Community](https://discord.gg/hs58XXb3Uq)** · **[Issue Tracker](https://github.com/Zwony/ecotrace/issues)**
 
 </div>
