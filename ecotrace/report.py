@@ -3,7 +3,10 @@ import csv
 import tempfile
 from fpdf import FPDF
 import matplotlib.pyplot as plt
-import google.generativeai as genai
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+    import google.generativeai as genai
 from .logger import logger
 from .exceptions import ReportGenerationError
 
@@ -55,7 +58,7 @@ def create_cpu_usage_chart(samples_data, core_count=1):
         return temp_file.name
 
     except Exception as e:
-        logger.error(f"CPU Chart generation failed: {e}")
+        logger.error(f"[ERROR] CPU usage chart generation failure: {e}")
         return None
 
 def create_gpu_usage_chart(samples_data):
@@ -91,7 +94,7 @@ def create_gpu_usage_chart(samples_data):
         return temp_file.name
 
     except Exception as e:
-        logger.error(f"GPU Chart generation failed: {e}")
+        logger.error(f"[ERROR] GPU utilization chart generation failure: {e}")
         return None
 
 def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):

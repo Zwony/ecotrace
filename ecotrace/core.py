@@ -1,20 +1,17 @@
-# 🌿 EcoTrace — The Continuous Carbon Instrumentation Engine
-# "You can't optimize what you can't measure accurately."
+# EcoTrace: Continuous Carbon Instrumentation Engine
+# Established accuracy for scalable carbon observability.
 import os
-import json
-import re
 import time
 import psutil
-import cpuinfo
 import csv
+import inspect
 from contextlib import contextmanager
 from datetime import datetime
 from .config import (load_constants, validate_region_code, resolve_carbon_intensity,
                       load_gpu_tdp_defaults, fetch_live_carbon_intensity, GRID_CACHE_TTL_S,
-                      identify_user_region)
+                      identify_user_region, DEFAULT_REGION)
 import functools
 import asyncio
-import inspect
 import threading
 from collections import deque
 import tempfile
@@ -115,9 +112,9 @@ class EcoTrace:
             detected = identify_user_region()
             if detected:
                 final_region = detected
-                logger.info(f"📍 Auto-detected region: {final_region}")
+                logger.debug(f"Detected region: {final_region}")
             else:
-                logger.info(f"🌐 Falling back to default region: {DEFAULT_REGION}")
+                logger.info(f"Using default region: {DEFAULT_REGION}")
 
         self.region_code = validate_region_code(final_region, self._constants_data)
 
@@ -155,23 +152,26 @@ class EcoTrace:
         self._monitor_interval = self.MONITOR_INTERVAL_S
         self._current_process = psutil.Process()
 
-        # --- Initialization Banner (Premium UI v6.0) -------------------------
+        # --- Initialization Sequence (v0.7.0) -------------------------------
         if not self.quiet:
-            intensity_label = f"{self.carbon_intensity} gCO2/kWh"
-            if self._intensity_source == "live":
-                intensity_label += " 🟢 LIVE"
-            else:
-                intensity_label += " 📋 Static"
-
-            logger.info(f"\n[EcoTrace] 🌱 Sustainability OS v0.6.1 Initialized")
-            logger.info("-----------------------------------------------------")
-            logger.info(f"📍 Region  : {self.region_code} ({intensity_label})")
-            logger.info(f"🖥️ Hardware: {self.cpu_info['brand']} ({self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W)")
-            logger.info(f"🧠 Memory  : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']} @ {self.ram_info['speed_mhz']}MHz")
+            # Metadata for emission intensity resolution
+            intensity_metadata = f"{self.carbon_intensity} gCO2/kWh"
+            source_label = "LIVE" if self._intensity_source == "live" else "STATIC"
+            
+            logger.info(f"[INFO] EcoTrace instrumentation session initialized ({source_label}).")
+            logger.info("-" * 53)
+            logger.info(f"Region        : {self.region_code} ({intensity_metadata})")
+            logger.info(f"Hardware Logic: {self.cpu_info['brand']}")
+            logger.info(f"Specifications: {self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W TDP")
+            
+            if self.ram_info:
+                logger.info(f"Memory Config : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']}")
+                
             if self.gpu_info:
-                logger.info(f"🎮 GPU     : {self.gpu_info['brand']} ({self.gpu_info['tdp']}W)")
-            logger.info("-----------------------------------------------------")
-            logger.info("✨ Crafted with 💚 for a sustainable future.\n")
+                logger.info(f"GPU Accelerator: {self.gpu_info['brand']} ({self.gpu_info['tdp']}W TDP)")
+            
+            logger.info("-" * 53)
+            logger.info("[INFO] Instrumentation sequence finalized.\n")
 
         # NOTE: Calculating idle baseline to subtract system noise. 
         # We don't want to attribute OS background updates to YOUR code.
@@ -378,7 +378,7 @@ class EcoTrace:
             return
 
         try:
-            import nvidia_ml_py as pynvml
+            import nvidia_ml_py as pynvml  # type: ignore
         except ImportError:
             return
 
@@ -842,7 +842,7 @@ class EcoTrace:
         self._stop_cpu_monitor()
         self._stop_gpu_monitor()
         try:
-            import nvidia_ml_py as pynvml
+            import nvidia_ml_py as pynvml  # type: ignore
             pynvml.nvmlShutdown()
         except (ImportError, Exception) as e:
             logger.debug(f"nvmlShutdown bypassed or failed: {e}")

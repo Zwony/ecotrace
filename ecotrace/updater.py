@@ -36,6 +36,7 @@ def _fetch_latest_version():
         timeout, malformed response, etc.).
     """
     try:
+        import requests  # type: ignore
         response = requests.get(
             PYPI_JSON_URL, 
             headers={"User-Agent": f"EcoTrace/{PYPI_PACKAGE_NAME}"}, 
@@ -66,7 +67,7 @@ def _is_newer_version(current, latest):
         False otherwise or if parsing fails.
     """
     try:
-        from packaging.version import parse
+        from packaging.version import parse  # type: ignore
         return parse(latest) > parse(current)
     except Exception as e:
         # If packaging is unavailable, fall back to simple string comparison
@@ -134,26 +135,25 @@ def check_for_updates(current_version):
 
         from .logger import logger
 
-        # Display a friendly, non-intrusive update prompt
-        logger.info(f"🌱 A new version is available! (v{current_version} → v{latest_version})")
+        # Display a formal update notification
+        logger.info(f"Update available: v{current_version} -> v{latest_version}")
         try:
-            answer = input("[EcoTrace] Would you like to update? (y/n): ").strip().lower()
+            answer = input("[PROMPT] Authorize EcoTrace package upgrade? (y/n): ").strip().lower()
         except (EOFError, KeyboardInterrupt):
-            # Non-interactive environment (e.g. piped stdin) — skip gracefully
-            logger.info("Update skipped (non-interactive environment).")
+            # Non-interactive environment: exit gracefully
+            logger.info("Upgrade sequence bypassed (non-interactive session).")
             return
 
         if answer == "y":
-            logger.info("Starting update...")
+            logger.info("[INFO] Initiating automated upgrade sequence...")
             if _run_pip_upgrade():
-                logger.info(f"✅ EcoTrace v{latest_version} installed successfully!")
-                logger.info("Please restart your application to apply the changes.")
+                logger.info(f"[SUCCESS] v{latest_version} installed. Please restart session.")
             else:
                 from .exceptions import EcoTraceUpdateError
-                logger.warning("⚠️ Update failed. Please try manually:")
+                logger.warning("[ERROR] Automated upgrade failed. Manual intervention required:")
                 logger.warning(f"  pip install --upgrade {PYPI_PACKAGE_NAME}")
         else:
-            logger.info("Update skipped.")
+            logger.info("Upgrade bypassed by operator.")
 
     except Exception as e:
         # Ultimate safety net — update check must NEVER crash the application

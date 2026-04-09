@@ -6,7 +6,7 @@ DEFAULT_GPU_TDP_AMD_W = 75.0
 DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
 DEFAULT_CARBON_INTENSITY = 475
 DEFAULT_REGION = "GLOBAL"
-USER_AGENT = "EcoTrace/0.6.1"
+USER_AGENT = "EcoTrace/0.7.0"
 
 def load_constants(json_path):
     """Loads constants from the JSON configuration file.
@@ -36,14 +36,16 @@ def validate_region_code(region_code, constants_data):
         str: Validated uppercase region code, or DEFAULT_REGION if invalid.
     """
     if not isinstance(region_code, str) or not region_code.strip():
-        print(f"[EcoTrace] WARNING: Invalid region_code={region_code!r}, defaulting to '{DEFAULT_REGION}'.")
+        from .logger import logger
+        logger.warning(f"Invalid region code provided ({region_code!r}). Defaulting to {DEFAULT_REGION}.")
         return DEFAULT_REGION
 
     code = region_code.strip().upper()
     intensity_map = constants_data.get("CARBON_INTENSITY_MAP", {})
 
     if code not in intensity_map:
-        print(f"[EcoTrace] WARNING: Unknown region '{code}', defaulting to '{DEFAULT_REGION}'.")
+        from .logger import logger
+        logger.warning(f"Unmapped region code '{code}'. Defaulting to {DEFAULT_REGION}.")
         return DEFAULT_REGION
     return code
 
@@ -151,7 +153,7 @@ def fetch_live_carbon_intensity(region_code, grid_api_key):
     zone = ZONE_MAPPING.get(region_code.upper(), region_code.upper())
 
     try:
-        import requests
+        import requests  # type: ignore
         response = requests.get(
             ELECTRICITY_MAPS_API_URL,
             headers={"auth-token": grid_api_key, "User-Agent": USER_AGENT},
@@ -176,7 +178,7 @@ def fetch_live_carbon_intensity(region_code, grid_api_key):
 def identify_user_region():
     """Attempts to auto-detect the user's current region via IP address."""
     try:
-        import requests
+        import requests  # type: ignore
         api_url = "http://ip-api.com/json/?fields=countryCode"
         response = requests.get(api_url, headers={"User-Agent": USER_AGENT}, timeout=2)
         response.raise_for_status()

@@ -1,6 +1,8 @@
 {
   "version": "0.2.0",
   "configurations": [
+    
+
     {
       "name": "Launch EcoTrace Extension",
       "type": "extensionHost",
@@ -12,7 +14,7 @@
       "outFiles": [
         "${workspaceFolder}/ecotrace-vscode/out/**/*.js"
       ],
-      "preLaunchTask": "npm: compile",
+      "preLaunchTask": "Development-Setup",
       "cwd": "${workspaceFolder}/ecotrace-vscode"
     }
   ]
