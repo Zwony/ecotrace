@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌱 EcoTrace — Carbon Measurement for Python
+# EcoTrace — Carbon Measurement for Python
 
 ### High-Precision Energy & Emissions Instrumentation
 
@@ -602,8 +602,8 @@ EcoTrace supports **50+ countries** with both static carbon intensity values and
 |---|---|---|
 | **v0.7.0** | Stable Core — Production-ready instrumentation engine | Released |
 | **v0.7.0** | VS Code Extension — Live IDE monitoring status bar | Released |
-| **v0.7.1** | Pytest Plugin — Automated CI/CD test suite energy tracking | In progress (est. April 9, 2026) |
-| **v0.7.x** | Web Middleware — FastAPI & Flask request-level tracking | In progress (est. April 9, 2026) |
+| **v0.7.1** | Pytest Plugin — Automated CI/CD test suite energy tracking | In Progress |
+| **v0.7.x** | Web Middleware — FastAPI & Flask request-level tracking | In Progress |
 | **v0.8.x** | CI/CD Carbon Gates — GitHub Actions integration for green thresholds | Planned |
 | **v0.8.x** | Cloud Ecosystem — AWS, Azure, and GCP carbon attribution | Planned |
 | **v0.9.x** | Eco Dashboard — Real-time emissions visualization web UI | Planned |
@@ -649,7 +649,7 @@ Contributions are welcome. See [CONTRIBUTING.MD](CONTRIBUTING.MD) for guidelines
 
 **Emre Özkal** — [GitHub](https://github.com/Zwony) · [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com)
 
-*Note: I personally review every community issue and PR within 48 hours.*
+> Issues and pull requests are reviewed on a regular basis. For time-sensitive matters, please use the [Discord community](https://discord.gg/hs58XXb3Uq).
 
 ### Citation
 
