@@ -292,7 +292,7 @@ class EcoTrace:
         
         return (total_power_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
 
-    def _accumulate_carbon(self, carbon_emitted, func_name, duration, avg_cpu=None):
+    def _accumulate_carbon(self, carbon_emitted, func_name, duration, avg_cpu=None, file_path=None, line_number=None):
         """Thread-safe accumulation of carbon emissions with CSV logging.
 
         Args:
@@ -300,10 +300,12 @@ class EcoTrace:
             func_name: Name of the measured function for the audit log.
             duration: Execution duration in seconds.
             avg_cpu: Average CPU usage percentage (optional).
+            file_path: Absolute path to the source file.
+            line_number: Line number where the function is defined.
         """
         with self._carbon_lock:
             self.total_carbon += carbon_emitted
-            self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu)
+            self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu, file_path, line_number)
 
     # ========================================================================
     # Monitoring infrastructure
@@ -512,7 +514,7 @@ class EcoTrace:
     # Logging
     # ========================================================================
 
-    def _log_to_csv(self, func_name, duration, carbon, avg_cpu=None):
+    def _log_to_csv(self, func_name, duration, carbon, avg_cpu=None, file_path=None, line_number=None):
         """Appends a single measurement row to the CSV audit log.
 
         Creates ``ecotrace_log.csv`` with headers if it doesn't exist.
@@ -522,17 +524,30 @@ class EcoTrace:
             duration: Execution time in seconds.
             carbon: Estimated carbon emissions in gCO2.
             avg_cpu: Average CPU usage percentage (optional).
+            file_path: Source file path.
+            line_number: Source line number.
         """
         try:
             file_exists = os.path.isfile("ecotrace_log.csv")
             with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region", "AvgCPU(%)"])
+                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region", "AvgCPU(%)", "FilePath", "Line"])
                 avg_cpu_str = f"{avg_cpu:.2f}" if avg_cpu is not None else "N/A"
-                writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), func_name, f"{duration:.4f}", f"{carbon:.8f}", self.region_code, avg_cpu_str])
+                writer.writerow([
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+                    func_name, 
+                    f"{duration:.4f}", 
+                    f"{carbon:.8f}", 
+                    self.region_code, 
+                    avg_cpu_str,
+                    file_path or "N/A",
+                    line_number or "N/A"
+                ])
         except Exception as e:
-            logger.warning(f"CSV logging failed: {e}")
+            # We must never crash the user's application solely because logging failed.
+            # Usually occurs due to file contention (locks) during high-frequency execution.
+            logger.warning(f"EcoTrace CSV logging failed: {e}")
 
     # ========================================================================
     # Public measurement API
@@ -582,6 +597,17 @@ class EcoTrace:
                 logger.warning(f"No GPU detected, executing '{func.__name__}' without measurement.")
                 return func(*args, **kwargs)
 
+            # --- VS Code IDE Integration ---
+            # We capture the absolute source location to enable 'Hotspot' markers.
+            # This allows developers to see emissions data directly in their editor gutter.
+            try:
+                # Capture the original location of the tracked function
+                file_path = os.path.abspath(inspect.getfile(func))
+                line_number = inspect.getsourcelines(func)[1]
+            except Exception:
+                # Fallback: Capturing location must not interrupt the measurement lifecycle
+                file_path, line_number = None, None
+
             start_time = time.perf_counter()
             try:
                 with self.gpu_monitor():
@@ -594,7 +620,7 @@ class EcoTrace:
                     avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time)
                     carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration)
 
-                    self._accumulate_carbon(carbon_emitted, func.__name__, duration)
+                    self._accumulate_carbon(carbon_emitted, func.__name__, duration, file_path=file_path, line_number=line_number)
                     logger.info(f"GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
                     logger.info(f"Duration     : {duration:.4f} sec")
                     logger.info(f"GPU Usage    : {avg_gpu_util:.1f}%")
@@ -640,8 +666,15 @@ class EcoTrace:
                 with self._cpu_sample_lock:
                     measurement_samples = list(self._cpu_samples)
 
+                # Capture location info
+                try:
+                    file_path = os.path.abspath(inspect.getfile(func))
+                    line_number = inspect.getsourcelines(func)[1]
+                except Exception:
+                    file_path, line_number = None, None
+
                 carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-                self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
+                self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu, file_path=file_path, line_number=line_number)
 
                 if func_success:
                     return {

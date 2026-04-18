@@ -2,7 +2,7 @@
   "name": "ecotrace-monitor",
   "displayName": "EcoTrace: Python Carbon Monitor",
   "description": "Real-time carbon footprint monitoring for your Python code.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publisher": "ecotrace-team",
   "icon": "assets/logo.png",
   "galleryBanner": {
@@ -18,10 +18,31 @@
     "Visualization"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:ecotrace-sidebar"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ecotrace-explorer",
+          "title": "EcoTrace",
+          "icon": "assets/logo.png"
+        }
+      ]
+    },
+    "views": {
+      "ecotrace-explorer": [
+        {
+          "type": "webview",
+          "id": "ecotrace-sidebar",
+          "name": "Sustainability Monitor",
+          "icon": "assets/logo.png",
+          "visibility": "visible"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "ecotrace.openFullReport",

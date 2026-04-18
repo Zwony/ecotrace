@@ -5,6 +5,18 @@ All notable changes to the EcoTrace project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-04-18
+
+### Added
+- **VS Code Sidebar Dashboard:** Integrated control panel for real-time visualization of aggregate carbon usage and high-impact functions.
+- **IDE Editor Hotspots:** Automatic gutter markers with carbon consumption tooltips directly within the code editor.
+- **Source Location Capture:** Automated tracking of function source locations (file/line) to enable IDE cross-referencing.
+- **Professional Linguistic Polish:** Refined all internal documentation and code comments for clarity and technical precision.
+
+### Updated
+- Optimized CSV logging performance to ensure stability during high-throughput monitoring.
+- Scaled up the versioning for both the core library (0.7.1) and VS Code extension (0.8.0).
+
 ## [0.7.0] - 2026-04-09
 
 ### Added
