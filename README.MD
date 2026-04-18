@@ -604,15 +604,13 @@ EcoTrace supports **50+ countries** with both static carbon intensity values and
 
 | Version | Feature | Status |
 |---|---|---|
-| **v0.7.0** | Stable Core — Production-ready instrumentation engine | Released |
-| **v0.7.0** | VS Code Extension — Live IDE monitoring status bar | Released |
-| **v0.7.1** | Pytest Plugin — Automated CI/CD test suite energy tracking | In Progress |
-| **v0.7.x** | Web Middleware — FastAPI & Flask request-level tracking | In Progress |
-| **v0.8.x** | CI/CD Carbon Gates — GitHub Actions integration for green thresholds | Planned |
-| **v0.8.x** | Cloud Ecosystem — AWS, Azure, and GCP carbon attribution | Planned |
-| **v0.9.x** | Eco Dashboard — Real-time emissions visualization web UI | Planned |
-| **v0.9.x** | Automated ESG Reports — CSRD and GHG Protocol-compliant exports | Planned |
-| **v1.0.0** | Team Carbon Budgets — Multi-project rollup with alerting | Planned |
+| **v0.7.1** | Core: IDE Intelligence & Source Data Bridging | Released |
+| **v0.8.0** | IDE: Sidebar Dashboard & Editor Hotspots | Released |
+| **v0.8.1** | Pytest Plugin — Automated CI/CD energy tracking | In Progress |
+| **v0.8.x** | Web Middleware — FastAPI & Flask request-level tracking | In Progress |
+| **v0.9.x** | CI/CD Carbon Gates — GitHub Actions integration | Planned |
+| **v0.9.x** | Cloud Ecosystem — AWS, Azure, and GCP attribution | Planned |
+| **v1.0.0** | Team Carbon Budgets — Multi-project rollup | Planned |
 
 > **Shape the roadmap:** [Open an issue](https://github.com/Zwony/ecotrace/issues) or join our [Discord](https://discord.gg/hs58XXb3Uq) to suggest features.
 
