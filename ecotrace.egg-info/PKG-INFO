@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ecotrace
-Version: 0.7.0
+Version: 0.7.1
 Summary: EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting.
 Author-email: Emre Ozkal <ecotraceteam@gmail.com>
 Project-URL: Homepage, https://github.com/Zwony/ecotrace
@@ -30,12 +30,13 @@ Dynamic: license-file
 
 <div align="center">
 
-# EcoTrace — Sustainability Engine for Python
+# 🌱 EcoTrace — Carbon Measurement for Python
 
-### High-precision carbon tracking for production systems
-**EcoTrace is a continuous instrumentation engine designed for engineers who require accurate hardware specifications and process-isolated metrics.**
+### High-Precision Energy & Emissions Instrumentation
 
-*Real-time carbon tracking · Global Grid Coverage · Hardware Intelligence · Zero-config Deployment*
+**EcoTrace is a lightweight instrumentation library designed for granular carbon footprint measurement of Python applications. It utilizes validated hardware specifications to provide high-fidelity reporting at the function level.**
+
+*Real-time monitoring · 50+ Global Zones · AI-powered insights · Zero-configuration deployment*
 
 <br>
 
@@ -44,46 +45,38 @@ Dynamic: license-file
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=for-the-badge&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![GitHub stars](https://img.shields.io/github/stars/Zwony/ecotrace?style=for-the-badge&logo=github)](https://github.com/Zwony/ecotrace/stargazers)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](https://github.com/Zwony/ecotrace/pulls)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Zwony/ecotrace/ci.yml?style=for-the-badge&label=CI)](https://github.com/Zwony/ecotrace/actions)
 [![VS Code Extension](https://img.shields.io/badge/VS_Code-EcoTrace-007ACC?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/ecotrace-team.ecotrace-monitor?style=for-the-badge&color=blue&logo=visual-studio-code&label=Installs(Plugin))](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
 
 <br>
 
 > [!TIP]
-> **🚀 VS Code User?** Monitor your code's carbon footprint in real-time as you write! [Download the EcoTrace VS Code extension](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
+> **VS Code Extension:** Monitor application carbon footprint in real-time during development. [Download the EcoTrace VS Code extension](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
 
 <br>
 
-<br>
-
-[![Carbon Aware](https://img.shields.io/badge/🌍_Carbon-Aware-2E8B57?style=flat-square)](https://github.com/Zwony/ecotrace)
-[![Live Grid API](https://img.shields.io/badge/⚡_Live_Grid-API_Powered-FF6B35?style=flat-square)](https://www.electricitymaps.com/)
-[![50+ Countries](https://img.shields.io/badge/🗺️_Coverage-50+_Countries-4169E1?style=flat-square)](https://github.com/Zwony/ecotrace)
-[![1800+ CPUs](https://img.shields.io/badge/🔬_TDP_Database-1800+_CPUs-8B4513?style=flat-square)](https://github.com/Boavizta/cpu-spec)
-[![Auto Update](https://img.shields.io/badge/🌱_Auto-Update-9B59B6?style=flat-square)](https://pypi.org/project/ecotrace/)
+[![Carbon Aware](https://img.shields.io/badge/Carbon-Aware-2E8B57?style=flat-square)](https://github.com/Zwony/ecotrace)
+[![Live Grid API](https://img.shields.io/badge/Live_Grid-API_Powered-FF6B35?style=flat-square)](https://www.electricitymaps.com/)
+[![50+ Countries](https://img.shields.io/badge/Coverage-50+_Countries-4169E1?style=flat-square)](https://github.com/Zwony/ecotrace)
+[![1800+ CPUs](https://img.shields.io/badge/TDP_Database-1800+_CPUs-8B4513?style=flat-square)](https://github.com/Boavizta/cpu-spec)
+[![Auto Update](https://img.shields.io/badge/Auto-Update-9B59B6?style=flat-square)](https://pypi.org/project/ecotrace/)
 
 <br>
 
 [![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Community&logo=discord&style=for-the-badge&color=5865F2)](https://discord.gg/hs58XXb3Uq)
 
-*🐛 Report bugs · 💡 Suggest features · 💻 Contribute TDP data · 🛠️ Get support*
-
-> [!IMPORTANT]
-> **EcoTrace v0.7.0 — The Ecosystem Update**
-> 
-> EcoTrace is evolving from a local utility into a comprehensive observability platform. This update introduces specialized tools for architecture-wide carbon monitoring:
-> - **Pytest Integration:** Automated energy cost analysis for test suites with hotspot identification.
-> - **Web Middleware:** Plug-and-play extensions for FastAPI, Starlette, and Flask with request-level tracking and header injection.
-> - **Production Readiness:** Hardened codebase with enhanced error recovery and standardized hardware normalization.
+*Report bugs · Suggest features · Contribute TDP data · Get support*
 
 <br>
 
 ```mermaid
 graph LR
-    A["🔍 Hardware<br/>Auto-Detection"] --> B["⚡ EcoTrace<br/>Engine"]
-    B --> C["🌍 Live Grid<br/>API"]
-    B --> D["📊 50ms<br/>Sampling"]
-    C --> E["📋 PDF Report<br/>& AI Insights"]
+    A["Hardware<br/>Auto-Detection"] --> B["EcoTrace<br/>Engine"]
+    B --> C["Live Grid<br/>API"]
+    B --> D["50ms<br/>Sampling"]
+    C --> E["PDF Report<br/>& AI Insights"]
     D --> E
     style A fill:#e1f5fe,stroke:#0288d1,color:#000
     style B fill:#f3e5f5,stroke:#7b1fa2,color:#000
@@ -92,23 +85,23 @@ graph LR
     style E fill:#fce4ec,stroke:#c62828,color:#000
 ```
 
-*EcoTrace v0.6.1 — Sustainability OS Pipeline*
+*EcoTrace v0.7.0 — Measurement Pipeline*
 
 <br>
 
 ![EcoTrace Demo](demo.gif)
 
-*EcoTrace in Action — Function-level carbon measurement with real-time monitoring*
+*Function-level carbon measurement with real-time monitoring*
 
 </div>
 
 ---
 
-We didn't just build a wrapper; we built a **Continuous Measurement Engine**. By sampling at 50ms intervals and isolating your process from the OS noise, we provide an audit-ready trace anchored in verified hardware specifications. Because at the end of the day, you can't optimize what you can't measure with precision.
+EcoTrace samples CPU utilization at 50ms intervals, isolating your process from OS-level noise and anchoring every measurement in verified manufacturer TDP specifications. The result is an audit-ready carbon trace you can act on.
 
 ---
 
-## ⚡ Quick Install
+## Quick Install
 
 ```bash
 pip install ecotrace
@@ -116,8 +109,7 @@ pip install ecotrace
 
 ---
 
-## 🚀 Get Started in 60 Seconds
-
+## Get Started in 60 Seconds
 
 ```python
 from ecotrace import EcoTrace
@@ -125,7 +117,7 @@ from ecotrace import EcoTrace
 # Initialize — hardware auto-detected, live grid data fetched
 eco = EcoTrace(region_code="TR")
 
-# One decorator. Real carbon data. That's it.
+# One decorator. Real carbon data.
 @eco.track
 def train_model():
     return sum(i * i for i in range(10**6))
@@ -137,8 +129,8 @@ eco.generate_pdf_report("carbon_audit.pdf")
 ```
 
 ```
---- EcoTrace v0.6.1 Initialized ---
-Region  : TR (482 gCO2/kWh 🟢 LIVE)
+--- EcoTrace v0.7.0 Initialized ---
+Region  : TR (482 gCO2/kWh LIVE)
 CPU     : 13th Gen Intel Core i7-13700H
 Cores   : 20
 TDP     : 45.0W
@@ -147,43 +139,45 @@ GPU     : Intel Iris Xe Graphics
 ---------------------------------
 ```
 
-> **One decorator. Real carbon data. No configuration files, no background services, no cloud dependencies.**
+> **Automated hardware detection and live grid transparency. No configuration files or background services required.**
 
 ---
 
-## 🆕 What's New in v0.6.1 — Sustainability OS
+## EcoTrace Core v0.7.0 — Production-Ready & Stable
 
-EcoTrace v0.6.1 transforms from a measurement tool into a **Sustainability Operating System** with two game-changing features:
+For a complete history of changes and version releases, see [CHANGELOG.md](CHANGELOG.md).
+
+EcoTrace v0.7.0 represents the most mature and stable state of the core instrumentation engine to date. This release focuses on high-resolution precision and production-scale reliability. While the core continues to evolve, future expansion will increasingly focus on the broader EcoTrace Ecosystem through modular extensions.
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### 🌍 Live Grid API Integration
+### Live Grid API Integration
 
 Real-time carbon intensity data from **Electricity Maps API** replaces static regional constants. Your measurements now reflect the *actual* grid mix at the moment of execution.
 
 - **38 country zones** with automatic mapping
 - **1-hour intelligent caching** (respects API limits)
-- **Zero-impact fallback**: No API key? No internet? Static data kicks in silently
+- **Silent fallback**: In the absence of an API key or network connectivity, EcoTrace utilizes internal static emission factors.
 
 ```python
 eco = EcoTrace(
     region_code="TR",
     grid_api_key="YOUR_KEY"
 )
-# Region: TR (482 gCO2/kWh 🟢 LIVE)
+# Region: TR (482 gCO2/kWh LIVE)
 ```
 
 </td>
 <td width="50%" valign="top">
 
-### 🌱 Auto-Update System
+### Auto-Update System
 
-EcoTrace now checks for updates automatically at startup and asks politely:
+EcoTrace checks for updates automatically at startup and prompts the user:
 
 ```
-[EcoTrace] 🌱 A new version is available! (v0.5.2 → v0.6.1)
+[EcoTrace] A new version is available! (v0.7.0 → v0.7.1)
 [EcoTrace] Would you like to update? (y/n):
 ```
 
@@ -198,30 +192,30 @@ EcoTrace now checks for updates automatically at startup and asks politely:
 
 ---
 
-## 💡 Why EcoTrace?
+## Why EcoTrace?
 
-Modern software teams face increasing pressure to quantify their carbon footprint — from **EU CSRD mandates** to internal ESG commitments. Most carbon tools bolt on heavy instrumentation that distorts the workloads they measure.
+Modern software teams face increasing pressure to quantify their carbon footprint — from **EU CSRD mandates** to internal ESG commitments. Most carbon tools rely on system-wide sensors that capture background OS noise, and measure at coarse intervals that miss bursty or async workloads.
 
-**EcoTrace takes a fundamentally different approach.**
+**EcoTrace addresses this with process-scoped isolation and continuous 50ms sampling**, providing measurements that trace back to verified hardware specifications rather than broad category-level estimates.
 
 <table>
 <tr>
 <td width="33%" valign="top">
 
-### 🔬 Scientifically Grounded
-TDP-based energy estimation powered by **Boavizta's database of 1,800+ CPU models**. Every measurement traces back to verified manufacturer specifications — eliminating broad category-level guesswork.
+### Scientific Foundation
+TDP-based energy estimation powered by the Boavizta database of 1,800+ CPU models. All measurements are derived from verified manufacturer specifications.
 
 </td>
 <td width="33%" valign="top">
 
-### 🪶 Minimal Overhead
-**50 ms daemon-thread sampling** with process-scoped isolation. Zero interference with your hot paths. Designed for production, not just benchmarks.
+### Operational Performance
+50ms daemon-thread sampling with process-scoped isolation. Negligible overhead for production environments.
 
 </td>
 <td width="33%" valign="top">
 
-### 📋 Compliance-Ready
-Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready for **ESG, GHG Protocol, and EU CSRD** documentation.
+### Regulatory Alignment
+Per-function gCO₂ audit trails with timestamped logs and PDF reports. Compatible with ESG, GHG Protocol, and EU CSRD reporting standards.
 
 </td>
 </tr>
@@ -229,30 +223,37 @@ Per-function gCO₂ audit trail with timestamped CSV logs and PDF reports. Ready
 
 ---
 
-## 🆚 How EcoTrace Compares
+## How EcoTrace Compares
 
-| Feature | **EcoTrace v0.7.0** | Industry Alternatives |
-|---|:---:|:---:|
-| **Instrumentation** | One-line `@track` decorator | Manual sessions |
-| **Granularity** | **50ms** Continuous Sampling | 15s - 30s intervals |
-| **Process Isolation** | `psutil` Process-Scoped | System-wide (includes OS noise) |
-| **Grid Accuracy** | Live Electricity Maps API | Static averages |
-| **Hardware Data** | 1,800+ CPU Models (Boavizta) | Generic TDP categories |
-| **Reporting** | Audit-ready PDF & AI Insights | CSV only |
+> **Note:** This comparison reflects the feature sets as of the versions tested. CodeCarbon and CarbonTracker are mature, well-adopted tools with different design goals — CodeCarbon is particularly strong for ML experiment tracking at scale.
 
-> [!NOTE]
-> **Carbon Metrics Disclaimer:** Carbon intensity and energy estimation are evolving fields. EcoTrace provides high-fidelity estimations based on manufacturer TDP and live grid data, which should be used for relative optimization and internal auditing. For regulatory compliance, cross-reference with direct hardware power meters where available.
+| **Feature** | **EcoTrace v0.7.0** | CodeCarbon | CarbonTracker |
+|---|:---:|:---:|:---:|
+| **API Style** | ✅ One-line `@track` decorator | ✅ Decorator + Context | ❌ Manual start/stop |
+| **Granularity** | ✅ Per-function (micro-workloads) | ⚠️ Session-level (macro) | ⚠️ Epoch-level (ML only) |
+| **Live Grid API** | ✅ Electricity Maps (zero-config) | ✅ ElectricityMaps (requires token) | ❌ Static only |
+| **Process Isolation** | ✅ `psutil.Process()` (isolated) | ❌ System-wide | ❌ System-wide |
+| **Continuous Sampling** | ✅ **50ms** daemon threads | ⚠️ 15s intervals | ❌ Point-in-time (epoch) |
+| **AI Insights** | ✅ Gemini-powered recommendations | ❌ | ❌ |
+| **Crash-Proof** | ✅ Graceful fallback (always returns) | ❌ May raise exceptions | ❌ May raise exceptions |
+| **Auto-Update** | ✅ Interactive PyPI check | ❌ | ❌ |
+| **Async Support** | ✅ Auto-detected (`asyncio`) | ❌ | ❌ |
+| **GPU Support** | ✅ NVIDIA + AMD + Intel | ⚠️ NVIDIA only | ⚠️ NVIDIA only |
+| **PDF Reports** | ✅ Built-in with charts | ❌ CSV / external dashboards | ❌ Local logs |
+| **Function Comparison** | ✅ `eco.compare(f1, f2)` | ❌ | ❌ |
+| **CPU TDP Database** | ✅ 1,800+ models (Boavizta) | ⚠️ ~1,200 models | ❌ Manual config |
+| **Zero Config** | ✅ Full auto-detection | ⚠️ Config required | ⚠️ Config required |
 
-### 🎯 Key Differentiators
+### Key Differentiators
 
-*   **System Noise Filtration (Process Isolation):** Tools that rely on system-wide RAPL sensors capture background OS noise (Windows updates, browsers, etc.). EcoTrace isolates down to the exact `psutil.Process()` and its children, providing a calculated footprint isolated to your code's specific execution.
-*   **True Function-Level Granularity:** CodeCarbon defaults to 15-second tracking intervals, and CarbonTracker measures per heavy ML epoch. EcoTrace's **continuous 50ms micro-sampling** allows it to accurately track bursty web server requests, async I/O waits, and GIL contention that other tools completely miss.
-*   **Fail-Safe Architecture:** Carbon tools are for observability—they should never crash your product. While missing permissions, VMs, or missing hardware drivers cause other trackers to throw fatal execution-halting exceptions, EcoTrace gracefully falls back to static rule-based estimations and guarantees your application keeps running.
-*   **Actionable AI Assistant:** Instead of just outputting a CSV file and leaving you guessing, EcoTrace directly feeds the metrics to Google Gemini. It acts as a Green-Coding Assistant, offering hardware-specific optimization advice (e.g., *"Switch this 12-second CPU-bound loop to a vectorized NumPy array to save 15% energy"*).
+*   **System Noise Filtration:** Tools that rely on system-wide RAPL sensors capture background OS activity (system services, browsers, etc.). EcoTrace isolates to the exact `psutil.Process()` and its children, reporting only your code's incremental carbon footprint.
+*   **True Function-Level Granularity:** CodeCarbon defaults to 15-second intervals; CarbonTracker measures per ML epoch. EcoTrace's **continuous 50ms micro-sampling** accurately captures bursty web server requests, async I/O waits, and GIL contention.
+*   **Fail-Safe Architecture:** Carbon tools are for observability — they should never crash your application. When permissions are missing, hardware drivers are absent, or the environment is virtualized, EcoTrace gracefully falls back to static rule-based estimations and guarantees execution continues.
+*   **Actionable AI Insights:** Instead of outputting a raw CSV, EcoTrace feeds the collected metrics to Google Gemini to generate hardware-specific optimization advice (e.g., *"Switch this 12-second CPU-bound loop to a vectorized NumPy array to save 15% energy"*).
 
 ---
 
-## 📦 Core API
+## Core API
 
 ### `@eco.track` — CPU Carbon Measurement
 
@@ -269,7 +270,7 @@ async def fetch_data():
     return await api.get("/data")
 ```
 
-**Under the hood:** A background daemon thread samples process-level CPU utilization every **50 ms**, ensuring measurements are scoped to *your* process — not polluted by system-wide activity.
+**Under the hood:** A background daemon thread samples process-level CPU utilization every **50ms**, ensuring measurements are scoped to *your* process and not polluted by system-wide activity.
 
 ---
 
@@ -290,7 +291,7 @@ def gpu_inference():
 # [EcoTrace] GPU Usage    : 74.3%
 ```
 
-**Graceful degradation:** No GPU detected? Function executes normally. Drivers missing? A notice is logged. **It never crashes your application.**
+**Graceful degradation:** No GPU detected? Function executes normally. Drivers missing? A notice is logged. The application is never interrupted.
 
 ---
 
@@ -331,18 +332,18 @@ eco.generate_pdf_report("quarterly_carbon_audit.pdf")
 ```
 
 **Report includes:**
-- 🖥️ Hardware profile (CPU model, TDP, cores, GPU, region)
-- 📊 CPU & GPU usage-over-time charts (matplotlib rendered)
-- 📋 Timestamped function-by-function emission history
-- 🆚 Side-by-side comparison tables
-- 🤖 AI-powered optimization insights (with Gemini API key)
-- 📈 Total cumulative CO₂ emissions
+- Hardware profile (CPU model, TDP, cores, GPU, region)
+- CPU & GPU utilization metrics (Matplotlib-rendered charts)
+- Timestamped transactional emission history
+- Comparative analysis tables
+- AI-driven optimization recommendations (requires Google Gemini API key)
+- Aggregate cumulative emissions summary
 
 ---
 
-## 🌍 Live Grid API — Electricity Maps Integration
+## Live Grid API — Electricity Maps Integration
 
-EcoTrace v0.6.1 fetches **real-time carbon intensity** from the Electricity Maps API, replacing static constants with live grid data:
+EcoTrace v0.7.0 fetches **real-time carbon intensity** from the Electricity Maps API, replacing static constants with live grid data:
 
 ```mermaid
 graph TD
@@ -358,7 +359,6 @@ graph TD
     style E fill:#fce8e6,stroke:#fad2cf,color:#c5221f,stroke-width:1px,rx:4px,ry:4px
 ```
 
-
 ```python
 # Option 1: Pass key directly
 eco = EcoTrace(region_code="DE", grid_api_key="YOUR_KEY")
@@ -368,15 +368,15 @@ eco = EcoTrace(region_code="DE", grid_api_key="YOUR_KEY")
 eco = EcoTrace(region_code="DE")
 
 # Output:
-# [EcoTrace] 🌍 Live grid data: 312 gCO2/kWh
-# Region: DE (312 gCO2/kWh 🟢 LIVE)
+# [EcoTrace] Live grid data: 312 gCO2/kWh
+# Region: DE (312 gCO2/kWh LIVE)
 ```
 
-> **No API key?** EcoTrace works perfectly with static data. Live grid is an opt-in upgrade for scientific precision.
+> **Integration Note:** The Live Grid API is an optional enhancement for increased measurement precision. EcoTrace maintains full functionality using the static internal database.
 
 ---
 
-## 🤖 Gemini AI Insights — Green Coding Assistant
+## Gemini AI Insights — Green Coding Assistant
 
 EcoTrace integrates **Google Gemini AI** to transform raw metrics into actionable optimization advice:
 
@@ -387,47 +387,50 @@ eco = EcoTrace(api_key="YOUR_GEMINI_API_KEY")
 eco.generate_pdf_report("smart_audit.pdf")
 ```
 
-**AI-Powered Insights include:**
+**AI-powered insights include:**
 - **Vectorization:** "Your i7-13700H supports AVX-512; use NumPy for this loop to save 15% energy."
 - **Architecture Tuning:** "This function is I/O bound; switching to `asyncio` could reduce idle CPU carbon by 20%."
 - **Library Swaps:** "Consider `lxml` instead of `xml.etree` for this workload to improve efficiency."
 
-> **Opt-in Feature:** Only activated when a valid `GEMINI_API_KEY` is provided. No key? EcoTrace operates with full local monitoring and rule-based insights.
+> **Module Activation:** AI insights are only generated when a valid `GEMINI_API_KEY` is provided. The library maintains local monitoring and rule-based insights without external dependencies.
 
 ---
 
-## 📊 Concrete Evidence: EcoTrace in Action
+## Benchmarks: EcoTrace in Action
 
-To demonstrate EcoTrace's low overhead and high precision capabilities across different workload spectrums, we ran both minimal and maximum stress tests, alongside Gemini AI's actionable insights.
+To demonstrate measurement accuracy across different workload profiles, we ran lightweight and heavyweight stress tests with Gemini AI insights enabled.
 
-### 🍃 1. Lightweight Workload (Single-Thread Intensive)
-We ran a simple, single-threaded mathematical task (`lightweight_test_v5.py`) to show how EcoTrace gently handles micro-measurements entirely in daemon threads without polluting the main process.
+### 1. Lightweight Workload (Single-Thread)
+
+A simple, single-threaded mathematical task (`lightweight_test_v5.py`) to verify that EcoTrace's daemon threads introduce negligible overhead on micro-measurements.
 
 - **Function Name:** `light_task`
 - **Execution Time:** `2.00 s`
-- **CPU Utilization:** `4.8%` (Process-isolated average)
+- **CPU Utilization:** `4.8%` (process-isolated average)
 - **Carbon Footprint:** `0.000574 gCO₂`
 
 ![Lightweight Test Graph](assets/light_graph.png)
 
-### 🔥 2. Heavyweight Workload (Global Multi-Core Saturation)
-We ran the "Beast" stress test (`beast_stress_test.py`), pushing all 20 cores of an `i7-13700H` processor to their absolute limits. This proves that the core normalization engine correctly scales usage percentages to 100% capacity and maintains system stability under extreme stress.
+### 2. Heavyweight Workload (Global Multi-Core Saturation)
+
+A full-core stress test (`beast_stress_test.py`) pushing all 20 cores of an `i7-13700H` to maximum load. This validates that the core normalization engine correctly scales multi-core utilization percentages and maintains stability under sustained stress.
 
 - **Function Name:** `beast_stress_test`
 - **Execution Time:** `14.50 s`
-- **CPU Utilization:** `77.0%` (Average sustained global multi-core saturation)
+- **CPU Utilization:** `77.0%` (average sustained global multi-core saturation)
 - **Carbon Footprint:** `0.414649 gCO₂`
 
 ![Heavyweight Test Graph](assets/heavy_graph.png)
 
-### 💡 3. AI Performance Insights (Öneriler)
-Using the built-in Gemini AI integration, EcoTrace analyzes these metrics and provides actionable green-coding recommendations, dynamically detecting anomalies like single-thread bottlenecks or over-utilized loops.
+### 3. AI Performance Insights
+
+With Gemini AI integration enabled, EcoTrace analyzes collected metrics and generates actionable green-coding recommendations, including detection of single-thread bottlenecks and over-utilized loops.
 
 ![Performance Insights](assets/insights.png)
 
 ---
 
-## 🔬 The Science Behind EcoTrace
+## The Science Behind EcoTrace
 
 EcoTrace implements a **TDP-based energy estimation model**, the industry-standard approach for software-level carbon measurement:
 
@@ -438,14 +441,14 @@ Carbon (gCO₂) = Energy (kWh) × Carbon Intensity (gCO₂/kWh)
 
 | Component | Source | Detail |
 |---|---|---|
-| **TDP** | [Boavizta CPU Specs](https://github.com/Boavizta/cpu-spec) | **1,800+ CPU models** with manufacturer-reported TDP values |
-| **CPU Utilization** | `psutil.Process().cpu_percent()` | Process-scoped, **50 ms continuous sampling** via daemon threads |
+| **TDP** | [Boavizta CPU Specs](https://github.com/Boavizta/cpu-spec) | 1,800+ CPU models with manufacturer-reported TDP values |
+| **CPU Utilization** | `psutil.Process().cpu_percent()` | Process-scoped, 50ms continuous sampling via daemon threads |
 | **Duration** | `time.perf_counter()` | High-resolution monotonic clock, immune to NTP drift |
-| **Carbon Intensity** | Electricity Maps API + IEA | **38 countries** with live or static grid emission factors |
+| **Carbon Intensity** | Electricity Maps API + IEA | 38 countries with live or static grid emission factors |
 
-### Why 50 ms Continuous Sampling?
+### Why 50ms Continuous Sampling?
 
-Most carbon trackers take a **single CPU reading** at the start and end. They miss bursty workloads, GIL contention, and I/O waits entirely.
+Most carbon trackers take a **single CPU reading** at the start and end of execution. This approach misses bursty workloads, GIL contention, and I/O waits.
 
 ```
 Traditional:  ──■─────────────────────■──  (2 data points)
@@ -456,23 +459,95 @@ EcoTrace:     ──■──■──■──■──■──■──■─
 
 ---
 
-## 🧪 Engineering Excellence & Robustness
+## Engineering Notes
 
-EcoTrace is engineered for **enterprise-grade production deployment** with a focus on precision, safety, and zero-impact monitoring:
+EcoTrace is designed for production deployment with a focus on precision, safety, and zero-impact monitoring:
 
 | Strategy | Technical Implementation |
 |---|---|
-| **Smart Core Normalization** | Automatically scales multi-core CPU usage (e.g., 800% on 8 cores) down to a normalized **0-100% range** for intuitive analysis. |
-| **Process Tree Intelligence** | Uses recursive process tracking to capture carbon/RAM from all **child processes** in complex multi-processing applications. |
-| **Crash-Proof Diagnostics** | Replaces silent fail blocks with **descriptive error logging**. If measurement fails, the result is still returned, but the *reason* is clearly logged. |
-| **Idle Baseline Subtraction** | Conducts a **100ms system baseline measurement** to subtract background noise, reporting only your code's incremental carbon footprint. |
-| **Universal Async Support** | Zero-config `@track` decorator automatically detects and handles **asyncio** coroutines vs synchronous functions. |
+| **Smart Core Normalization** | Automatically scales multi-core CPU usage (e.g., 800% on 8 cores) to a normalized 0–100% range. |
+| **Process Tree Intelligence** | Recursive process tracking captures carbon and RAM usage from all child processes in multi-processing applications. |
+| **Descriptive Error Logging** | Replaces silent fail blocks with descriptive error messages. If measurement fails, the result is still returned and the reason is logged. |
+| **Idle Baseline Subtraction** | Conducts a 100ms system baseline measurement to subtract background noise, reporting only incremental carbon from your code. |
+| **Universal Async Support** | The `@track` decorator automatically detects and handles `asyncio` coroutines alongside synchronous functions. |
 | **GPU Fallback Chain** | NVIDIA (`pynvml`) → AMD/Intel (`WMI`) → graceful `None`. Measurement never crashes your app if drivers are missing. |
 | **Thread-Safe Sampling** | All buffers are protected by `threading.Lock` and `deque(maxlen)` to prevent memory leaks and race conditions during high-frequency sampling. |
 
 ---
 
-## 🗺️ Global Coverage — 50+ Countries
+## Methodology & Limitations
+
+### Energy Calculation Formula
+EcoTrace uses a standardized TDP-based model to estimate energy consumption when hardware sensors (like RAPL) are unavailable or process-isolation is required:
+
+$$E_{total} = E_{cpu} + E_{ram}$$
+
+*   **CPU Energy ($E_{cpu}$):** `TDP (W) * (Utilization% / 100) * Duration (s) / 3600`
+*   **RAM Energy ($E_{ram}$):** `RAM_Factor (W/GB) * Memory_Usage (GB) * Duration (s) / 3600`
+*   **Carbon ($gCO_2$):** `(E_{total} / 1000) * Carbon_Intensity (gCO_2/kWh)`
+
+### Technical Realities & Limitations
+*   **Multi-Core Normalization:** CPU utilization is core-normalized (`raw_util / logical_cores`). On a 10-core system, a single-threaded process at 100% capacity is reported as 10% global utilization.
+*   **Virtualization (VM/Docker):** In virtualized environments, EcoTrace relies on the CPU string reported by the guest OS. If host hardware info is masked, it falls back to a safe default TDP (65W for x86).
+*   **Turbo Boost / Clock Scaling:** Calculations assume the manufacturer's rated static TDP. Real-time frequency scaling (Turbo Boost) or undervolting is not currently factored into the power curve.
+*   **Process Isolation:** EcoTrace captures the footprint of the target process and its recursive child tree. It does not include system-wide idle energy or background OS tasks.
+
+---
+
+## Troubleshooting
+
+Common issues and internal error handling:
+
+<details>
+<summary><strong>Permission Denied (psutil.AccessDenied)</strong></summary>
+Occurs when EcoTrace attempts to monitor a process or child process with higher privileges.
+<strong>Resolution:</strong> Run your script with appropriate permissions or ignore warnings if child process tracking is not required.
+</details>
+
+<details>
+<summary><strong>Missing Driver (nvidia-ml-py / WMI)</strong></summary>
+EcoTrace will log a warning if NVIDIA Management Library or Windows Management Instrumentation (for AMD/Intel GPUs) is unavailable.
+<strong>Behavior:</strong> The computation continues using CPU-only monitoring to prevent application crashes.
+</details>
+
+<details>
+<summary><strong>API Key Validation</strong></summary>
+If `GEMINI_API_KEY` or `ECOTRACE_GRID_API_KEY` is absent:
+<strong>Behavior:</strong> AI insights are bypassed and carbon intensity defaults to the static <code>constants.json</code> database.
+</details>
+
+<details>
+<summary><strong>NoSuchProcess Error</strong></summary>
+Caught internally when a short-lived process terminates during a sampling window.
+<strong>Behavior:</strong> The sample is safely discarded and the final average is computed from remaining valid samples.
+</details>
+
+---
+
+## Data & Privacy
+
+EcoTrace is designed with a "local-first" philosophy. Data is only sent to external APIs when specific features are enabled:
+
+| Service | Data Sent | Purpose | Trigger |
+| :--- | :--- | :--- | :--- |
+| **Electricity Maps** | `auth-token`, ISO Region Code | Live Grid Intensity | Providing `grid_api_key` |
+| **Google Gemini** | Hardware Specs, ISO Region, Execution History (Last 5) | AI Optimization Insights | Providing `api_key` |
+| **PyPI** | Package Name (`ecotrace`) | Version Update Check | `check_updates=True` (Default) |
+| **ip-api.com** | Client IP (Standard HTTP Request) | Region Auto-detection | `region_code="GLOBAL"` |
+
+---
+
+## Security
+
+EcoTrace prioritizes the integrity of your production environment.
+
+*   **Vulnerability Reporting:** Please report security issues directly to [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com).
+*   **Dependency Audits:** We maintain a minimal dependency footprint. All third-party libraries (like `psutil` and `fpdf`) are audited for stability.
+*   **Non-Blocking Logic:** All external network calls (Update checks, Live APIs) are wrapped in fail-safe try-except blocks with strictly enforced timeouts (3s) to ensure your application code never hangs.
+
+---
+
+## Global Coverage — 50+ Countries
 
 EcoTrace supports **50+ countries** with both static carbon intensity values and live Electricity Maps zone mappings:
 
@@ -518,7 +593,7 @@ EcoTrace supports **50+ countries** with both static carbon intensity values and
 <tr>
 <td width="33%" valign="top">
 
-**🖥️ CPU**
+**CPU**
 | Vendor | Families |
 |---|---|
 | Intel | Core i3/i5/i7/i9, Xeon, Atom |
@@ -528,7 +603,7 @@ EcoTrace supports **50+ countries** with both static carbon intensity values and
 </td>
 <td width="33%" valign="top">
 
-**🎮 GPU**
+**GPU**
 | Vendor | Method |
 |---|---|
 | NVIDIA | `pynvml` (NVML) |
@@ -538,7 +613,7 @@ EcoTrace supports **50+ countries** with both static carbon intensity values and
 </td>
 <td width="33%" valign="top">
 
-**🧠 RAM**
+**RAM**
 | Type | Watt Factor |
 |---|---|
 | DDR4 | 0.375 W/GB |
@@ -551,24 +626,25 @@ EcoTrace supports **50+ countries** with both static carbon intensity values and
 
 ---
 
-## Release Roadmap
-
-EcoTrace is developing into a comprehensive sustainability intelligence platform.
+## Ecosystem & Extensions Roadmap
 
 | Version | Feature | Status |
 |---|---|---|
-| **v0.7.0** | **VS Code Extension** | Released |
-| **v0.7.0** | **Pytest Plugin** | Release Candidate |
-| **v0.7.0** | **Web Middleware** | Release Candidate |
-| **v0.7.x** | **CI/CD Carbon Gates** | Scheduled |
-| **v0.7.x** | **Cloud Resource Mapping** | Scheduled |
-| **v0.8.0** | **Enterprise Carbon Budgets** | Research Phase |
+| **v0.7.0** | Stable Core — Production-ready instrumentation engine | Released |
+| **v0.7.0** | VS Code Extension — Live IDE monitoring status bar | Released |
+| **v0.7.1** | Pytest Plugin — Automated CI/CD test suite energy tracking | In progress (est. April 9, 2026) |
+| **v0.7.x** | Web Middleware — FastAPI & Flask request-level tracking | In progress (est. April 9, 2026) |
+| **v0.8.x** | CI/CD Carbon Gates — GitHub Actions integration for green thresholds | Planned |
+| **v0.8.x** | Cloud Ecosystem — AWS, Azure, and GCP carbon attribution | Planned |
+| **v0.9.x** | Eco Dashboard — Real-time emissions visualization web UI | Planned |
+| **v0.9.x** | Automated ESG Reports — CSRD and GHG Protocol-compliant exports | Planned |
+| **v1.0.0** | Team Carbon Budgets — Multi-project rollup with alerting | Planned |
 
-> **Note on Metrics:** EcoTrace provides estimates based on TDP and utilization. These figures are intended for optimization guidance and comparative analysis, not for formal regulatory carbon reporting.
+> **Shape the roadmap:** [Open an issue](https://github.com/Zwony/ecotrace/issues) or join our [Discord](https://discord.gg/hs58XXb3Uq) to suggest features.
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 ```
 psutil              — Process-level CPU & RAM monitoring
@@ -576,7 +652,7 @@ py-cpuinfo          — Hardware identification & CPU detection
 fpdf                — PDF report generation
 matplotlib          — CPU/GPU usage charting
 nvidia-ml-py        — NVIDIA GPU monitoring (optional at runtime)
-google-generativeai — Gemini AI Insights engine (optional)
+google-generativeai — Gemini AI insights engine (optional)
 requests            — Live Grid API communication (Electricity Maps)
 packaging           — PEP 440 semantic version comparison
 wmi                 — AMD/Intel GPU detection (Windows only)
@@ -586,26 +662,43 @@ wmi                 — AMD/Intel GPU detection (Windows only)
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-We welcome contributions from the community! See [CONTRIBUTING.MD](CONTRIBUTING.MD) for guidelines.
+Contributions are welcome. See [CONTRIBUTING.MD](CONTRIBUTING.MD) for guidelines. All contributors are expected to adhere to the [Code of Conduct](CODE_OF_CONDUCT.MD).
 
 **Ways to contribute:**
-- 🐛 Report bugs and issues
-- 💡 Suggest new features
-- 💻 Submit TDP data for unlisted CPUs
-- 📝 Improve documentation
-- 🌍 Add region/country support
+- Report bugs and issues
+- Suggest new features
+- Submit TDP data for unlisted CPUs
+- Improve documentation
+- Add region/country support
 
 ---
 
-## 👤 Author
+## Author
 
-**Emre Özkal** — [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com)
+**Emre Özkal** — [GitHub](https://github.com/Zwony) · [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com)
+
+*Note: I personally review every community issue and PR within 48 hours.*
+
+### Citation
+
+If you use EcoTrace in your research or project, please cite it:
+
+```bibtex
+@software{ecotrace2026,
+  author = {Ozkal, Emre},
+  title = {EcoTrace: Continuous Carbon Instrumentation Engine},
+  year = {2026},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/Zwony/ecotrace}}
+}
+```
 
 ---
 
-## 📄 License
+## License
 
 MIT License — use it however you like.
 
@@ -613,8 +706,8 @@ MIT License — use it however you like.
 
 <div align="center">
 
-*Built with 💚 for a sustainable software future.*
+*Developed for sustainable software development practices.*
 
-**[Documentation](https://github.com/Zwony/ecotrace)** · **[PyPI](https://pypi.org/project/ecotrace/)** · **[Discord](https://discord.gg/hs58XXb3Uq)** · **[Issues](https://github.com/Zwony/ecotrace/issues)**
+**[Technical Documentation](https://github.com/Zwony/ecotrace)** · **[PyPI Repository](https://pypi.org/project/ecotrace/)** · **[Discord Community](https://discord.gg/hs58XXb3Uq)** · **[Issue Tracker](https://github.com/Zwony/ecotrace/issues)**
 
 </div>

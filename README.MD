@@ -55,7 +55,7 @@ graph LR
     style E fill:#fce4ec,stroke:#c62828,color:#000
 ```
 
-*EcoTrace v0.7.0 — Measurement Pipeline*
+*EcoTrace v0.7.1 — Measurement Pipeline*
 
 <br>
 
@@ -99,7 +99,7 @@ eco.generate_pdf_report("carbon_audit.pdf")
 ```
 
 ```
---- EcoTrace v0.7.0 Initialized ---
+--- EcoTrace v0.7.1 Initialized ---
 Region  : TR (482 gCO2/kWh LIVE)
 CPU     : 13th Gen Intel Core i7-13700H
 Cores   : 20
@@ -113,7 +113,7 @@ GPU     : Intel Iris Xe Graphics
 
 ---
 
-## EcoTrace Core v0.7.0 — Production-Ready & Stable
+## EcoTrace Core v0.7.1 — IDE Intelligence & Real-time Monitoring
 
 For a complete history of changes and version releases, see [CHANGELOG.md](CHANGELOG.md).
 
@@ -147,7 +147,7 @@ eco = EcoTrace(
 EcoTrace checks for updates automatically at startup and prompts the user:
 
 ```
-[EcoTrace] A new version is available! (v0.7.0 → v0.7.1)
+[EcoTrace] A new version is available! (v0.7.1 → v0.7.2)
 [EcoTrace] Would you like to update? (y/n):
 ```
 
@@ -197,7 +197,7 @@ Per-function gCO₂ audit trails with timestamped logs and PDF reports. Compatib
 
 > **Note:** This comparison reflects the feature sets as of the versions tested. CodeCarbon and CarbonTracker are mature, well-adopted tools with different design goals — CodeCarbon is particularly strong for ML experiment tracking at scale.
 
-| **Feature** | **EcoTrace v0.7.0** | CodeCarbon | CarbonTracker |
+| **Feature** | **EcoTrace v0.7.1** | CodeCarbon | CarbonTracker |
 |---|:---:|:---:|:---:|
 | **API Style** | ✅ One-line `@track` decorator | ✅ Decorator + Context | ❌ Manual start/stop |
 | **Granularity** | ✅ Per-function (micro-workloads) | ⚠️ Session-level (macro) | ⚠️ Epoch-level (ML only) |
@@ -286,6 +286,10 @@ result = eco.compare(bubble_sort, quick_sort)
 
 ```python
 with eco.track_block("data_pipeline"):
+    # Code block execution
+    process_data()
+# [EcoTrace] Block 'data_pipeline' Carbon: 0.00005412 gCO2
+```
     df = load_data()
     df = transform(df)
     save_results(df)
