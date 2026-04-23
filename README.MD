@@ -65,6 +65,10 @@ def my_function():
     pass
 
 my_function()
+
+# Export audit-ready reports or check cumulative totals
+eco.generate_pdf_report("carbon_audit.pdf")
+print(f"Total Carbon Emitted: {eco.total_carbon} gCO2")
 ```
 
 ### Expected Output
@@ -91,9 +95,9 @@ Monitoring: Active (50ms sampling)
 | **Dependencies** | **Zero (Core)** | 10+ (Pandas, etc.) | 5+ |
 | **Async Support** | **Native** | Limited | No |
 
-- **Continuous 50ms Sampling:** Captures bursts that 15-second trackers miss.
-- **Process Isolation:** Only measures your code, filtered from OS background noise.
-- **Zero Dependencies:** The core engine is dependency-free; optional features (PDF, AI) use audited libraries.
+- **Deep Transparency:** Derived from verified manufacturer TDP specifications rather than category averages.
+- **Fail-Safe Architecture:** Guaranteed application continuity even if hardware drivers or API keys are missing.
+- **Actionable AI:** Integrates with Google Gemini to provide specific code optimization advice (optional).
 
 ---
 
