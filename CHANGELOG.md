@@ -5,6 +5,20 @@ All notable changes to the EcoTrace project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-04-23
+
+### Added
+- **CLI Profiler (`ecotrace run`):** Run any Python script under full carbon monitoring without modifying source code. Uses `runpy.run_path` for same-process isolation.
+- **CLI Analysis (`ecotrace analyze`):** Parse existing `ecotrace_log.csv` and display a ranked carbon summary table in the terminal.
+- **CLI Export (`ecotrace export --json`):** Export hardware metadata, measurement history, and aggregate statistics to a structured JSON file.
+- **CLI Benchmark (`ecotrace benchmark`):** Self-diagnostic tool that measures EcoTrace's own CPU overhead as a percentage of total execution time.
+- **JSON Export API (`eco.export_json()`):** New method on the `EcoTrace` class for programmatic JSON export — serves as the data bridge for the VS Code extension.
+- **`python -m ecotrace` Support:** Package-level `__main__.py` module for direct module invocation.
+
+### Updated
+- Bumped version to 0.8.0 across `pyproject.toml`, `__init__.py`, and `config.py`.
+- Added `[project.scripts]` entry point for system-wide `ecotrace` command availability after `pip install`.
+
 ## [0.7.1] - 2026-04-18
 
 ### Added
