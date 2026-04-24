@@ -4,6 +4,8 @@ README.md
 pyproject.toml
 setup.py
 ecotrace/__init__.py
+ecotrace/__main__.py
+ecotrace/cli.py
 ecotrace/config.py
 ecotrace/constants.json
 ecotrace/core.py
@@ -18,6 +20,7 @@ ecotrace/updater.py
 ecotrace.egg-info/PKG-INFO
 ecotrace.egg-info/SOURCES.txt
 ecotrace.egg-info/dependency_links.txt
+ecotrace.egg-info/entry_points.txt
 ecotrace.egg-info/requires.txt
 ecotrace.egg-info/top_level.txt
 ecotrace/cpu_spec.csv/package-lock.json
@@ -96,4 +99,8 @@ ecotrace/cpu_spec.csv/tests/data/fixtures/cloud/incomplete_usage.json
 ecotrace/cpu_spec.csv/tests/data/fixtures/server/completed_server_with_dellr740.json
 ecotrace/cpu_spec.csv/tests/data/fixtures/server/dellR740.json
 ecotrace/cpu_spec.csv/tests/data/fixtures/server/incomplete.json
+tests/test_cli.py
+tests/test_core.py
+tests/test_hardware.py
+tests/test_middleware.py
 tests/test_v6_features.py

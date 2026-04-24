@@ -19,7 +19,7 @@ def get_gpu_info(gpu_index, gpu_tdp_defaults):
     """
     WATTS_PER_KILOWATT = 1000
     try:
-        import nvidia_ml_py as pynvml
+        import nvidia_ml_py as pynvml  # type: ignore
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
         name = pynvml.nvmlDeviceGetName(handle)

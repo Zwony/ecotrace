@@ -318,7 +318,7 @@ class EcoTrace:
         storing ``(timestamp, cpu_percent)`` tuples in a thread-safe deque.
         Exits gracefully if the process is no longer accessible.
         """
-        self._current_process.cpu_percent()  # Discard first call
+        # self._current_process.cpu_percent()  # Priming is already handled in __init__ baseline
         child_cache = {}  # pid -> psutil.Process object
         next_sample_time = time.perf_counter()
         while self._cpu_monitor_active:
@@ -822,6 +822,153 @@ class EcoTrace:
             gpu_samples=final_gpu_samples,
             api_key=self.api_key
         )
+
+    # ========================================================================
+    # JSON Export (v0.8.0)
+    # ========================================================================
+    # Data bridge between the core engine and external consumers (VS Code
+    # extension, CI/CD pipelines, custom dashboards). Produces a structured
+    # JSON file that is far easier to parse than raw CSV.
+
+    def export_json(self, filename="ecotrace_report.json", csv_path="ecotrace_log.csv"):
+        """Exports session data to a structured JSON file.
+
+        Combines hardware metadata, measurement history from the CSV audit
+        log, and aggregate statistics into a single machine-readable document.
+        This output is designed for consumption by the VS Code extension
+        sidebar, CI/CD carbon gates, and third-party analytics tools.
+
+        The JSON schema contains three top-level keys:
+
+        - ``meta``: Hardware profile, region, version, and export timestamp.
+        - ``measurements``: Array of per-function measurement records from
+          the CSV audit log.
+        - ``summary``: Aggregate statistics (total carbon, total duration,
+          measurement count, top emitters).
+
+        Args:
+            filename: Output path for the JSON file. Defaults to
+                ``ecotrace_report.json`` in the current working directory.
+            csv_path: Path to the CSV audit log to read measurements from.
+                Defaults to ``ecotrace_log.csv``.
+
+        Raises:
+            IOError: If the output file cannot be written.
+
+        Example::
+
+            eco = EcoTrace(region_code="TR")
+
+            @eco.track
+            def my_function():
+                pass
+
+            my_function()
+            eco.export_json("report.json")
+        """
+        import json as _json
+        from . import __version__
+
+        # --- Build metadata block ---
+        # Captures the full hardware profile so the JSON is self-contained.
+        # Consumers don't need to re-detect hardware to interpret the data.
+        meta = {
+            "version": __version__,
+            "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "region_code": self.region_code,
+            "carbon_intensity": self.carbon_intensity,
+            "intensity_source": self._intensity_source,
+            "cpu": {
+                "brand": self.cpu_info["brand"],
+                "cores": self.cpu_info["cores"],
+                "tdp_w": self.cpu_info["tdp"]
+            },
+            "ram": None,
+            "gpu": None
+        }
+
+        if self.ram_info:
+            meta["ram"] = {
+                "total_gb": round(self.ram_info["total_gb"], 2),
+                "type": self.ram_info["type"]
+            }
+
+        if self.gpu_info:
+            meta["gpu"] = {
+                "brand": self.gpu_info["brand"],
+                "tdp_w": self.gpu_info["tdp"],
+                "type": self.gpu_info["type"]
+            }
+
+        # --- Parse CSV audit log ---
+        # Read the existing measurement history. If the CSV doesn't exist yet,
+        # we still export the metadata — an empty measurements array is valid.
+        measurements = []
+        total_carbon = 0.0
+        total_duration = 0.0
+        func_carbon_map = {}
+
+        if os.path.isfile(csv_path):
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        try:
+                            carbon_val = float(row.get("Carbon(gCO2)", 0))
+                            duration_val = float(row.get("Duration(s)", 0))
+                        except (ValueError, TypeError):
+                            continue
+
+                        record = {
+                            "date": row.get("Date", ""),
+                            "function": row.get("Function", "unknown"),
+                            "duration_s": duration_val,
+                            "carbon_gco2": carbon_val,
+                            "region": row.get("Region", ""),
+                            "avg_cpu_pct": row.get("AvgCPU(%)", "N/A"),
+                            "file_path": row.get("FilePath", "N/A"),
+                            "line": row.get("Line", "N/A")
+                        }
+                        measurements.append(record)
+
+                        total_carbon += carbon_val
+                        total_duration += duration_val
+
+                        # Aggregate per-function totals for the top emitters list
+                        fname = record["function"]
+                        if fname not in func_carbon_map:
+                            func_carbon_map[fname] = 0.0
+                        func_carbon_map[fname] += carbon_val
+
+            except Exception as e:
+                logger.warning(f"CSV read error, exporting metadata only: {e}")
+
+        # --- Build summary block ---
+        # Top 5 most carbon-heavy functions for quick overview
+        top_emitters = sorted(func_carbon_map.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        summary = {
+            "total_carbon_gco2": round(total_carbon, 8),
+            "total_duration_s": round(total_duration, 4),
+            "measurement_count": len(measurements),
+            "session_carbon_gco2": round(self.total_carbon, 8),
+            "top_emitters": [
+                {"function": name, "carbon_gco2": round(carbon, 8)}
+                for name, carbon in top_emitters
+            ]
+        }
+
+        # --- Write JSON output ---
+        report = {
+            "meta": meta,
+            "measurements": measurements,
+            "summary": summary
+        }
+
+        with open(filename, "w", encoding="utf-8") as f:
+            _json.dump(report, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"JSON rapor yazıldı: {filename} ({len(measurements)} kayıt)")
 
     # ========================================================================
     # Lifecycle
