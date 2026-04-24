@@ -47,3 +47,6 @@ packages = ["ecotrace"]
 
 [tool.setuptools.package-data]
 ecotrace = ["*.json", "*.csv", "cpu_spec.csv/**/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

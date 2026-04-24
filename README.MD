@@ -20,11 +20,6 @@ Real-time monitoring · 50+ Global Zones · AI-powered insights · Zero-configur
 
 <br>
 
-> [!IMPORTANT]
-> **Upcoming Release (April 24, 2026):** EcoTrace v0.8.0 "Ecosystem Release" is arriving tomorrow. This major update introduces the new EcoTrace CLI, structured JSON export capabilities, and zero-configuration profiling for any Python script.
-
-<br>
-
 > [!TIP]
 > **VS Code Extension:** Monitor application carbon footprint in real-time during development. [Download here](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
 
@@ -61,6 +56,7 @@ Decorate functions for granular instrumentation:
 ```python
 from ecotrace import EcoTrace
 
+# region_code: Use ISO 3166-1 alpha-2 (e.g., US, TR, DE). See docs/SUPPORT.md for full list.
 eco = EcoTrace(region_code="US")
 
 @eco.track
@@ -69,23 +65,43 @@ def my_function():
     pass
 
 my_function()
-eco.generate_pdf_report("report.pdf")
+
+# Export audit-ready reports or check cumulative totals
+eco.generate_pdf_report("carbon_audit.pdf")
+print(f"Total Carbon Emitted: {eco.total_carbon} gCO2")
+```
+
+### Expected Output
+When initialized, EcoTrace performs automated hardware detection:
+
+```text
+---------------------------------
+--- EcoTrace v0.8.0 Initialized ---
+Region  : US (367 gCO2/kWh)
+CPU     : 13th Gen Intel Core i9-13900K
+TDP     : 125.0W
+Monitoring: Active (50ms sampling)
+---------------------------------
 ```
 
 ---
 
 ## Why EcoTrace?
 
-*   **Continuous 50ms Sampling:** Captures bursts that 15-second trackers miss.
-*   **Process Isolation:** Only measures your code, filtered from OS background noise.
-*   **Zero Dependencies:** Core measurement engine uses only Python standard library.
-*   **Tri-Vendor GPU:** Real-time TDP tracking for NVIDIA, AMD, and Intel.
+| Feature | **EcoTrace** | CodeCarbon | CarbonTracker |
+|---|:---:|:---:|:---:|
+| **Sampling Interval** | **50ms** | 15s | Per Epoch |
+| **Isolation** | **Process-scoped** | System-wide | System-wide |
+| **Dependencies** | **Zero (Core)** | 10+ (Pandas, etc.) | 5+ |
+| **Async Support** | **Native** | Limited | No |
+
+- **Deep Transparency:** Derived from verified manufacturer TDP specifications rather than category averages.
+- **Fail-Safe Architecture:** Guaranteed application continuity even if hardware drivers or API keys are missing.
+- **Actionable AI:** Integrates with Google Gemini to provide specific code optimization advice (optional).
 
 ---
 
 ## Documentation
-
-Detailed information is available in the following guides:
 
 - [**Architecture and Science**](docs/ARCHITECTURE.md) — How the energy model and process isolation work.
 - [**Advanced Usage**](docs/USAGE.md) — GPU tracking, AI insights, benchmarks, and comparison tables.
@@ -93,11 +109,17 @@ Detailed information is available in the following guides:
 
 ---
 
+## Contributing
+
+We welcome contributions! Please see our [**CONTRIBUTING.MD**](CONTRIBUTING.MD) for guidelines on reporting bugs, suggesting features, or contributing hardware data.
+
+---
+
 ## Community
 
 [![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Community&logo=discord&style=for-the-badge&color=5865F2)](https://discord.gg/hs58XXb3Uq)
 
-Report bugs · Suggest features · Contribute TDP data · [CHANGELOG.md](CHANGELOG.md)
+[CHANGELOG.md](CHANGELOG.md) · [SECURITY.MD](SECURITY.MD)
 
 ---
 
