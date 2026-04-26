@@ -1,8 +1,8 @@
-﻿# EcoTrace â€” See the Carbon Cost of Every Function, Live in Your Editor.
+# EcoTrace — See the Carbon Cost of Every Function, Live in Your Editor.
 
 ![EcoTrace Preview](assets/ecotrace_preview.png)
 
-EcoTrace brings real-time carbon footprint monitoring directly into VS Code. As you run your Python code, you see exactly how much COâ‚‚ each function emitted â€” displayed above the function, in your status bar, and compiled into a full PDF report.
+EcoTrace brings real-time carbon footprint monitoring directly into VS Code. As you run your Python code, you see exactly how much CO₂ each function emitted — displayed above the function, in your status bar, and compiled into a full PDF report.
 
 No dashboards. No context switching. Just your code, and its real environmental cost.
 
@@ -11,7 +11,7 @@ No dashboards. No context switching. Just your code, and its real environmental 
 ## Features
 
 ### Smart Code Suggestions *(No library required)*
-EcoTrace statically analyzes your Python files and flags energy-inefficient patterns as you write â€” even without the Python library installed. For example, it detects `import json` and suggests switching to `ujson` or `orjson` for meaningfully lower CPU energy consumption.
+EcoTrace statically analyzes your Python files and flags energy-inefficient patterns as you write — even without the Python library installed. For example, it detects `import json` and suggests switching to `ujson` or `orjson` for meaningfully lower CPU energy consumption.
 
 These hints appear as inline diagnostics, the same way type errors or linting warnings do.
 
@@ -19,10 +19,10 @@ These hints appear as inline diagnostics, the same way type errors or linting wa
 Activate via the Command Palette (`EcoTrace: Enable Eco-Friendly Mode`) to reduce background indexing and non-essential processing during active development sessions.
 
 ### Function-Level Carbon Metrics *(Requires library)*
-Once the EcoTrace Python library is running in your project, carbon emissions appear directly above your functions via CodeLens â€” updated automatically on every run.
+Once the EcoTrace Python library is running in your project, carbon emissions appear directly above your functions via CodeLens — updated automatically on every run.
 
 ```python
-# 0.0032g COâ‚‚  â† appears here automatically
+# 0.0032g CO₂  ← appears here automatically
 def process_data(df):
     ...
 ```
@@ -35,7 +35,7 @@ $(graph) 0.0041g ! | Total: 0.0187g
 ```
 
 ### Session Carbon Budget *(Requires library)*
-Set a cumulative carbon threshold for your session via workspace settings. EcoTrace monitors your total emissions and warns you when you cross the limit â€” useful for catching energy regressions before they reach CI/CD.
+Set a cumulative carbon threshold for your session via workspace settings. EcoTrace monitors your total emissions and warns you when you cross the limit — useful for catching energy regressions before they reach CI/CD.
 
 ### Full PDF Report *(Requires library)*
 Click the status bar item or run `EcoTrace: Open Full Report` to view a detailed breakdown of all measured functions, timestamps, and emissions for the current session.
@@ -46,8 +46,8 @@ Click the status bar item or run `EcoTrace: Open Full Report` to view a detailed
 
 EcoTrace is two components in one repository:
 
-- **The VS Code Extension** â€” provides static analysis, visualizations, and real-time UI updates
-- **The Python Library** â€” instruments your code at runtime and generates the carbon measurements the extension reads
+- **The VS Code Extension** — provides static analysis, visualizations, and real-time UI updates
+- **The Python Library** — instruments your code at runtime and generates the carbon measurements the extension reads
 
 The extension works standalone for static analysis features. For live metrics (CodeLens, Status Bar, PDF Report), the Python library needs to be running in your project. Without it, the extension will remain in *"Waiting for data..."* mode.
 
@@ -55,13 +55,13 @@ The extension works standalone for static analysis features. For live metrics (C
 
 ## Getting Started
 
-### Step 1 â€” Install the Python library
+### Step 1 — Install the Python library
 
 ```bash
 pip install ecotrace
 ```
 
-### Step 2 â€” Instrument your functions
+### Step 2 — Instrument your functions
 
 ```python
 import ecotrace
@@ -72,7 +72,7 @@ def my_function():
     ...
 ```
 
-### Step 3 â€” Run your code
+### Step 3 — Run your code
 
 EcoTrace automatically detects the generated telemetry and visualizes it inside VS Code. No manual configuration needed.
 
@@ -82,10 +82,10 @@ EcoTrace automatically detects the generated telemetry and visualizes it inside 
 
 | Setting | Description | Default |
 |---|---|---|
-| `ecotrace.carbonBudget` | Session carbon threshold (gCOâ‚‚) before warning | `10.0` |
+| `ecotrace.carbonBudget` | Session carbon threshold (gCO₂) before warning | `10.0` |
 | `ecotrace.ecoFriendlyMode` | Tracks the status of Eco-Friendly operational mode | `false` |
 
-Settings are available via **File â†’ Preferences â†’ Settings â†’ EcoTrace**.
+Settings are available via **File → Preferences → Settings → EcoTrace**.
 
 ---
 
@@ -103,7 +103,7 @@ Settings are available via **File â†’ Preferences â†’ Settings â†�
 
 - VS Code `1.80.0` or higher
 - Python `3.8+` *(for live metrics)*
-- `ecotrace` Python library â€” `pip install ecotrace` *(for live metrics)*
+- `ecotrace` Python library — `pip install ecotrace` *(for live metrics)*
 
 ---
 
@@ -114,4 +114,4 @@ If you'd like to contribute, report a bug, or explore the source, visit the proj
 
 ---
 
-*EcoTrace â€” Carbon observability for developers who care about what their code actually costs.*
+*EcoTrace — Carbon observability for developers who care about what their code actually costs.*

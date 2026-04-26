@@ -81,3 +81,6 @@ class EcoTraceFlask:
             logger.debug(f"EcoTrace measurement failed: {e}")
             
         return response
+
+# /* --- Hybrid End of File / Dosya Sonu --- */ #
+# // EcoTrace Flask Middleware Integration // #
