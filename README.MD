@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v0.8.0 is now live!** Includes new CLI profiling, JSON export API, and enhanced hardware detection.
+**v0.9.0 is now live!** Includes high-precision hybrid energy tracking (RAPL + Boavizta).
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**

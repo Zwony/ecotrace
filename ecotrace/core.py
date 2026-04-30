@@ -22,6 +22,7 @@ from .exceptions import EcoTraceConfigurationError
 from .ram import get_ram_info, RAM_WATT_FACTORS
 from .cpu import get_cpu_info, load_tdp_database
 from .gpu import get_gpu_info
+from .hardware import HardwareMonitor
 
 # --- Energy Constants ---
 
@@ -131,6 +132,7 @@ class EcoTrace:
         self.cpu_info = get_cpu_info(self.tdp_db, self._constants_data)
         self.gpu_info = get_gpu_info(self.gpu_index, self.gpu_tdp_defaults)
         self.ram_info = get_ram_info()
+        self.hardware = HardwareMonitor()
 
         # --- Monitoring state -----------------------------------------------
         self._carbon_lock = threading.Lock()
@@ -164,6 +166,14 @@ class EcoTrace:
             logger.info(f"Hardware Logic: {self.cpu_info['brand']}")
             logger.info(f"Specifications: {self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W TDP")
             
+            if self.hardware.rapl_available:
+                logger.info("Energy Sensor : RAPL (Exact Hardware Mode Enabled)")
+            else:
+                logger.info("Energy Sensor : Boavizta Advanced Estimation")
+                import platform
+                if platform.system() == "Linux":
+                    logger.warning("RAPL access denied! Run with 'sudo' for 0% deviation exact CPU profiling.")
+                
             if self.ram_info:
                 logger.info(f"Memory Config : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']}")
                 
@@ -255,13 +265,15 @@ class EcoTrace:
         
         return sum(baseline_samples) / len(baseline_samples) if baseline_samples else 0.0
 
-    def _compute_carbon(self, tdp, utilization_pct, duration_s):
+    def _compute_carbon(self, tdp, utilization_pct, duration_s, energy_delta_j=None, is_gpu=False):
         """Computes carbon emissions from power parameters.
 
         Args:
             tdp: Thermal Design Power in watts.
             utilization_pct: Average utilization as a percentage (0–100).
             duration_s: Measurement duration in seconds.
+            energy_delta_j: Exact hardware energy delta in Joules (optional).
+            is_gpu: Flag to differentiate GPU vs CPU workloads.
 
         Returns:
             float: Estimated carbon emissions in gCO2.
@@ -269,8 +281,17 @@ class EcoTrace:
         # CPU utilization is already properly core-normalized by _get_avg_cpu_in_range
         normalized_utilization = min(max(utilization_pct, 0.0), 100.0)
         
-        # CPU energy calculation
-        cpu_power_wh = (tdp * normalized_utilization / 100) * duration_s / self.SECONDS_PER_HOUR
+        # Power calculation (Exact vs Estimated)
+        if energy_delta_j is not None:
+            # EXACT MODE: Hardware sensors isolate process footprint via utilization scaling
+            main_power_wh = (energy_delta_j / 3600.0) * (normalized_utilization / 100.0)
+        else:
+            # ESTIMATION MODE: Non-linear Boavizta modeling for CPU, standard linear for GPU
+            if not is_gpu and tdp == self.cpu_info.get('tdp'):
+                power_w = self.hardware.estimate_cpu_power_w(tdp, normalized_utilization)
+            else:
+                power_w = tdp * (normalized_utilization / 100.0)
+            main_power_wh = power_w * duration_s / self.SECONDS_PER_HOUR
         
         # RAM energy calculation - Recursive Process Tree (RSS) for accuracy
         try:
@@ -288,7 +309,7 @@ class EcoTrace:
         ram_power_wh = (ram_watt_factor * ram_usage_gb) * duration_s / self.SECONDS_PER_HOUR
         
         # Total energy consumption
-        total_power_wh = cpu_power_wh + ram_power_wh
+        total_power_wh = main_power_wh + ram_power_wh
         
         return (total_power_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
 
@@ -389,9 +410,10 @@ class EcoTrace:
             try:
                 util = pynvml.nvmlDeviceGetUtilizationRates(handle)
                 gpu_usage = util.gpu
+                power_mw = pynvml.nvmlDeviceGetPowerUsage(handle)
                 timestamp = time.perf_counter()
                 with self._gpu_sample_lock:
-                    self._gpu_samples.append((timestamp, gpu_usage))
+                    self._gpu_samples.append((timestamp, gpu_usage, power_mw / 1000.0))
                 time.sleep(self._monitor_interval)
             except Exception:
                 break
@@ -465,24 +487,31 @@ class EcoTrace:
             return raw_avg / core_count
 
     def _get_avg_gpu_in_range(self, start_time, end_time):
-        """Computes mean GPU utilization from samples within a time window.
+        """Computes mean GPU utilization and power from samples within a time window.
 
         Args:
             start_time: Window start as a ``time.perf_counter()`` value.
             end_time: Window end as a ``time.perf_counter()`` value.
 
         Returns:
-            float: Average GPU percentage, or FULL_UTILIZATION_PERCENT if no
-            samples were captured (conservative fallback).
+            tuple: (Average GPU percentage, Average Power in Watts).
+            Returns (FULL_UTILIZATION_PERCENT, None) if no samples were captured.
         """
         with self._gpu_sample_lock:
-            relevant_samples = [
-                gpu for ts, gpu in self._gpu_samples
-                if start_time <= ts <= end_time
-            ]
+            # Check length of sample to support backward compatibility if deque still has old (ts, util) items
+            relevant_samples = []
+            for item in self._gpu_samples:
+                if len(item) == 3:
+                    ts, gpu, pwr = item
+                    if start_time <= ts <= end_time:
+                        relevant_samples.append((gpu, pwr))
+                        
         if not relevant_samples:
-            return self.FULL_UTILIZATION_PERCENT
-        return sum(relevant_samples) / len(relevant_samples)
+            return self.FULL_UTILIZATION_PERCENT, None
+            
+        avg_gpu = sum(s[0] for s in relevant_samples) / len(relevant_samples)
+        avg_pwr = sum(s[1] for s in relevant_samples) / len(relevant_samples)
+        return avg_gpu, avg_pwr
 
     @contextmanager
     def cpu_monitor(self):
@@ -617,8 +646,15 @@ class EcoTrace:
                 end_time = time.perf_counter()
                 try:
                     duration = end_time - start_time
-                    avg_gpu_util = self._get_avg_gpu_in_range(start_time, end_time)
-                    carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration)
+                    avg_gpu_util, avg_gpu_pwr = self._get_avg_gpu_in_range(start_time, end_time)
+                    
+                    if avg_gpu_pwr is not None:
+                        # EXACT GPU MODE (NVML hardware reading)
+                        gpu_energy_wh = (avg_gpu_pwr * duration) / self.SECONDS_PER_HOUR
+                        carbon_emitted = (gpu_energy_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
+                    else:
+                        # ESTIMATION MODE (Fallback for unsupported GPUs)
+                        carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration, is_gpu=True)
 
                     self._accumulate_carbon(carbon_emitted, func.__name__, duration, file_path=file_path, line_number=line_number)
                     logger.info(f"GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
@@ -649,6 +685,7 @@ class EcoTrace:
         func_success = False
 
         try:
+            energy_start = self.hardware.get_cpu_energy_j()
             with self.cpu_monitor():
                 if self.gpu_info:
                     with self.gpu_monitor():
@@ -658,6 +695,7 @@ class EcoTrace:
                 func_success = True
         finally:
             end_time = time.perf_counter()
+            energy_end = self.hardware.get_cpu_energy_j()
             duration = end_time - start_time
 
             try:
@@ -673,7 +711,11 @@ class EcoTrace:
                 except Exception:
                     file_path, line_number = None, None
 
-                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+                energy_delta_j = None
+                if energy_start is not None and energy_end is not None:
+                    energy_delta_j = max(0.0, energy_end - energy_start)
+
+                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration, energy_delta_j=energy_delta_j)
                 self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu, file_path=file_path, line_number=line_number)
 
                 if func_success:
@@ -722,6 +764,7 @@ class EcoTrace:
         func_success = False
 
         try:
+            energy_start = self.hardware.get_cpu_energy_j()
             with self.cpu_monitor():
                 try:
                     if self.gpu_info:
@@ -734,6 +777,7 @@ class EcoTrace:
                     await asyncio.sleep(self.MONITOR_INTERVAL_S)  # Allow trailing samples to be captured
         finally:
             end_time = time.perf_counter()
+            energy_end = self.hardware.get_cpu_energy_j()
             duration = end_time - start_time
 
             try:
@@ -742,7 +786,11 @@ class EcoTrace:
                 with self._cpu_sample_lock:
                     measurement_samples = list(self._cpu_samples)
 
-                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
+                energy_delta_j = None
+                if energy_start is not None and energy_end is not None:
+                    energy_delta_j = max(0.0, energy_end - energy_start)
+
+                carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration, energy_delta_j=energy_delta_j)
                 self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
 
                 if func_success:
