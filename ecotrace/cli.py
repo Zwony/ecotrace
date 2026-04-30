@@ -32,7 +32,7 @@ def _get_version():
         from ecotrace import __version__
         return __version__
     except ImportError:
-        return "0.8.0"
+        return "0.9.0"
 
 
 # --- CLI Banner --------------------------------------------------------------
@@ -99,6 +99,7 @@ def _cmd_run(args):
     sys.argv = [script_path] + args.script_args
 
     session_start = time.perf_counter()
+    energy_start = eco.hardware.get_cpu_energy_j()
     exit_code = 0
 
     try:
@@ -122,13 +123,19 @@ def _cmd_run(args):
         sys.argv = original_argv
 
     session_end = time.perf_counter()
+    energy_end = eco.hardware.get_cpu_energy_j()
     session_duration = session_end - session_start
 
     # --- Post-Execution Carbon Summary ---
     # Calculate total carbon from the monitoring session
     try:
         avg_cpu = eco._get_avg_cpu_in_range(session_start, session_end)
-        carbon_emitted = eco._compute_carbon(eco.cpu_info['tdp'], avg_cpu, session_duration)
+        
+        energy_delta_j = None
+        if energy_start is not None and energy_end is not None:
+            energy_delta_j = max(0.0, energy_end - energy_start)
+            
+        carbon_emitted = eco._compute_carbon(eco.cpu_info['tdp'], avg_cpu, session_duration, energy_delta_j=energy_delta_j)
 
         # Accumulate into the CSV audit log
         script_name = os.path.basename(script_path)

@@ -46,3 +46,23 @@ def get_gpu_info(gpu_index, gpu_tdp_defaults):
         pass
 
     return None
+
+def get_gpu_power_w(gpu_info):
+    """Reads exact instantaneous GPU power usage in watts via NVML.
+    
+    Args:
+        gpu_info (dict): The GPU metadata dictionary from get_gpu_info.
+        
+    Returns:
+        float: Current power draw in watts, or None if unavailable/unsupported.
+    """
+    if not gpu_info or gpu_info.get("type") != "nvidia" or gpu_info.get("handle") is None:
+        return None
+        
+    try:
+        import nvidia_ml_py as pynvml  # type: ignore
+        # NVML returns power in milliwatts
+        power_mw = pynvml.nvmlDeviceGetPowerUsage(gpu_info["handle"])
+        return power_mw / 1000.0
+    except Exception:
+        return None
