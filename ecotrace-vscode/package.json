@@ -88,7 +88,7 @@
     "@types/node": "25.x",
     "typescript": "^6.0.3",
     "eslint": "^10.2.1",
-    "@typescript-eslint/parser": "^8.58.1",
+    "@typescript-eslint/parser": "^8.59.1",
     "@typescript-eslint/eslint-plugin": "^8.59.0"
   }
 }
