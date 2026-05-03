@@ -2,7 +2,7 @@
   "name": "ecotrace-monitor",
   "displayName": "EcoTrace: Python Carbon Monitor",
   "description": "Real-time carbon footprint monitoring for your Python code.",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "publisher": "ecotrace-team",
   "icon": "assets/logo.png",
   "galleryBanner": {
@@ -18,8 +18,7 @@
     "Visualization"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onView:ecotrace-sidebar"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -51,8 +50,22 @@
       {
         "command": "ecotrace.resetSession",
         "title": "EcoTrace: Reset Carbon Session"
+      },
+      {
+        "command": "ecotrace.ecoFriendlyMode",
+        "title": "EcoTrace: Toggle Eco-Friendly Build Mode"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "EcoTrace",
+      "properties": {
+        "ecotrace.carbonBudget": {
+          "type": "number",
+          "default": 10.0,
+          "description": "The carbon emission budget (in g CO2) for the current session. A warning will be shown when this threshold is exceeded."
+        }
+      }
+    }
   },
   "repository": {
     "type": "git",
@@ -71,11 +84,11 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
+    "@types/vscode": "^1.118.0",
     "@types/node": "25.x",
     "typescript": "^6.0.3",
-    "eslint": "^10.2.0",
-    "@typescript-eslint/parser": "^8.58.1",
-    "@typescript-eslint/eslint-plugin": "^8.58.2"
+    "eslint": "^10.3.0",
+    "@typescript-eslint/parser": "^8.59.1",
+    "@typescript-eslint/eslint-plugin": "^8.59.0"
   }
 }

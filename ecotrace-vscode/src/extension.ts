@@ -20,6 +20,96 @@ import { EcoTraceSidebarProvider } from './SidebarProvider';
 let myStatusBarItem: vscode.StatusBarItem;
 let sessionTotal: number = 0;
 let lastLogState: string = ""; // Cache state to prevent redundant UI paints
+let budgetWarned: boolean = false; // Prevent spamming budget warnings
+
+// --- CodeLens Provider Design ---
+class EcoTraceCodeLensProvider implements vscode.CodeLensProvider {
+    private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+    public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
+    private carbonData: { [path: string]: { lineNum: number, carbon: string }[] } = {};
+
+    constructor() {
+        this.loadData();
+        const watcher = vscode.workspace.createFileSystemWatcher('**/ecotrace_log.csv');
+        watcher.onDidChange(() => {
+            this.loadData();
+            this._onDidChangeCodeLenses.fire();
+        });
+    }
+
+    private loadData() {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) return;
+        const logPath = path.join(workspaceFolders[0].uri.fsPath, 'ecotrace_log.csv');
+        if (!fs.existsSync(logPath)) return;
+
+        try {
+            const content = fs.readFileSync(logPath, { encoding: 'utf8', flag: 'r' });
+            const lines = content.trim().split('\n');
+            this.carbonData = {};
+            lines.slice(1).forEach(line => {
+                const cols = line.split(',');
+                if (cols.length >= 8) {
+                    const filePath = cols[6];
+                    const lineNum = parseInt(cols[7]);
+                    const carbon = cols[3];
+                    if (filePath && !isNaN(lineNum) && filePath !== "N/A") {
+                        if (!this.carbonData[filePath]) this.carbonData[filePath] = [];
+                        this.carbonData[filePath].push({ lineNum, carbon });
+                    }
+                }
+            });
+        } catch (err) {
+            // Silently ignore contention
+        }
+    }
+
+    provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
+        const lenses: vscode.CodeLens[] = [];
+        const fileData = this.carbonData[document.fileName];
+        if (fileData) {
+            // Deduplicate by line to avoid overlapping lenses
+            const addedLines = new Set<number>();
+            // Reverse so we get the latest measurements first
+            [...fileData].reverse().forEach(data => {
+                if (!addedLines.has(data.lineNum)) {
+                    addedLines.add(data.lineNum);
+                    const range = new vscode.Range(data.lineNum - 1, 0, data.lineNum - 1, 0);
+                    const command: vscode.Command = {
+                        title: `${data.carbon}g CO2`,
+                        command: 'ecotrace.openFullReport',
+                        tooltip: 'View carbon emission details'
+                    };
+                    lenses.push(new vscode.CodeLens(range, command));
+                }
+            });
+        }
+        return lenses;
+    }
+}
+
+// --- Diagnostic Provider Design ---
+const diagnosticCollection = vscode.languages.createDiagnosticCollection('ecotrace');
+
+function updateDiagnostics(document: vscode.TextDocument) {
+    if (document.languageId !== 'python') return;
+    const diagnostics: vscode.Diagnostic[] = [];
+    const text = document.getText();
+    const regex = /^(import json|from json import)/gm;
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+        const startPos = document.positionAt(match.index);
+        const endPos = document.positionAt(match.index + match[0].length);
+        const diagnostic = new vscode.Diagnostic(
+            new vscode.Range(startPos, endPos),
+            'EcoTrace: Consider using `ujson` or `orjson` instead of standard `json` to reduce CPU energy consumption.',
+            vscode.DiagnosticSeverity.Information
+        );
+        diagnostic.code = 'ECO_OPT_001';
+        diagnostics.push(diagnostic);
+    }
+    diagnosticCollection.set(document.uri, diagnostics);
+}
 
 // --- Hotspot Decoration Design ---
 const hotspotDecorationType = vscode.window.createTextEditorDecorationType({
@@ -40,7 +130,7 @@ const hotspotDecorationType = vscode.window.createTextEditorDecorationType({
  * @param context vscode.ExtensionContext provided by the VS Code runtime.
  */
 export function activate(context: vscode.ExtensionContext) {
-    console.log('EcoTrace v0.8.0: Extension Monitoring Active');
+    console.log('EcoTrace v0.9.0: Extension Monitoring Active');
 
     const sidebarProvider = new EcoTraceSidebarProvider(context.extensionUri);
     context.subscriptions.push(
@@ -54,7 +144,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Positions the leaf icon and carbon metrics on the left side of the UI.
     myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     myStatusBarItem.command = 'ecotrace.openFullReport';
-    myStatusBarItem.text = `$(leaf) EcoTrace Ready`;
+    myStatusBarItem.text = `$(pulse) EcoTrace Ready`;
     myStatusBarItem.tooltip = 'EcoTrace: Carbon Footprint Monitor\nMonitoring system activity...';
     context.subscriptions.push(myStatusBarItem);
     myStatusBarItem.show();
@@ -106,10 +196,32 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('ecotrace.resetSession', () => {
             sessionTotal = 0;
+            budgetWarned = false;
             updateStatusBarItem();
             vscode.window.showInformationMessage('[EcoTrace] Carbon session reset successfully.');
         })
     );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ecotrace.ecoFriendlyMode', () => {
+            // Example of eco-mode setting a local var or env flag
+            process.env.ECOTRACE_ECO_MODE = '1';
+            vscode.window.showInformationMessage('Eco-Friendly Mode Activated: Background indexing paused and tests will run in energy-saving mode.');
+        })
+    );
+
+    // Register CodeLens Provider
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider({ language: 'python' }, new EcoTraceCodeLensProvider())
+    );
+
+    // Register Diagnostic Listeners
+    context.subscriptions.push(diagnosticCollection);
+    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(updateDiagnostics));
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(updateDiagnostics));
+    if (vscode.window.activeTextEditor) {
+        updateDiagnostics(vscode.window.activeTextEditor.document);
+    }
 }
 
 /**
@@ -124,16 +236,21 @@ export function activate(context: vscode.ExtensionContext) {
  */
 async function updateStatusBarItem(): Promise<void> {
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders) return;
+    let logPath: string | undefined;
 
-    applyHotspotDecorations(); // Also refresh markers
+    if (workspaceFolders) {
+        logPath = path.join(workspaceFolders[0].uri.fsPath, 'ecotrace_log.csv');
+    } else if (vscode.window.activeTextEditor) {
+        // Fallback: Look for log in the same directory as the active file
+        logPath = path.join(path.dirname(vscode.window.activeTextEditor.document.fileName), 'ecotrace_log.csv');
+    }
 
-    const logPath = path.join(workspaceFolders[0].uri.fsPath, 'ecotrace_log.csv');
-
-    if (!fs.existsSync(logPath)) {
+    if (!logPath || !fs.existsSync(logPath)) {
         myStatusBarItem.text = `$(graph) EcoTrace: Waiting for data...`;
         return;
     }
+
+    applyHotspotDecorations(); // Also refresh markers
 
     try {
         // Read file using cross-platform safe 'r' flag to avoid locking collisions
@@ -161,9 +278,18 @@ async function updateStatusBarItem(): Promise<void> {
                 const alertMark = carbonValue > 0.1 ? ' !' : '';
                 myStatusBarItem.text = `$(graph) ${carbonValue.toFixed(4)}g${alertMark} | Total: ${sessionTotal.toFixed(4)}g`;
                 myStatusBarItem.tooltip = `Last Function: ${funcName}\nTimestamp: ${timestamp}\n---\nSession Cumulative: ${sessionTotal.toFixed(4)}g CO2\nClick to view full EcoTrace report`;
-                
+
                 // Visual Indicator: Use error color if a single function is unusually heavy (>0.1g)
                 myStatusBarItem.backgroundColor = carbonValue > 0.1 ? new vscode.ThemeColor('statusBarItem.errorBackground') : undefined;
+                
+                // CI/CD / Budget Integration Warning: Dynamic limit from VS Code Settings
+                const config = vscode.workspace.getConfiguration('ecotrace');
+                const budgetLimit = config.get<number>('carbonBudget', 10.0);
+
+                if (sessionTotal > budgetLimit && !budgetWarned) {
+                    vscode.window.showWarningMessage(`EcoTrace: Carbon budget exceeded (${budgetLimit}g CO2)! Please review your latest changes for energy regressions.`);
+                    budgetWarned = true;
+                }
             }
         }
     } catch (err) {
@@ -178,10 +304,15 @@ async function updateStatusBarItem(): Promise<void> {
  */
 async function applyHotspotDecorations() {
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders) return;
+    let logPath: string | undefined;
 
-    const logPath = path.join(workspaceFolders[0].uri.fsPath, 'ecotrace_log.csv');
-    if (!fs.existsSync(logPath)) return;
+    if (workspaceFolders) {
+        logPath = path.join(workspaceFolders[0].uri.fsPath, 'ecotrace_log.csv');
+    } else if (vscode.window.activeTextEditor) {
+        logPath = path.join(path.dirname(vscode.window.activeTextEditor.document.fileName), 'ecotrace_log.csv');
+    }
+
+    if (!logPath || !fs.existsSync(logPath)) return;
 
     const content = fs.readFileSync(logPath, { encoding: 'utf8', flag: 'r' });
     const lines = content.trim().split('\n');
@@ -199,7 +330,7 @@ async function applyHotspotDecorations() {
 
             if (filePath && !isNaN(lineNum) && filePath !== "N/A") {
                 if (!decorationsByFile[filePath]) decorationsByFile[filePath] = [];
-                
+
                 // Only show the latest measurement for each function/line combo
                 const existing = decorationsByFile[filePath].find(d => d.range.start.line === lineNum - 1);
                 if (existing) return;
@@ -233,3 +364,6 @@ async function applyHotspotDecorations() {
  * Handles extension teardown.
  */
 export function deactivate() { }
+
+// /* --- Hybrid End of File / Dosya Sonu --- */ //
+// # EcoTrace VS Code Integration Module # //

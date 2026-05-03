@@ -1,55 +1,83 @@
-<div align="center">
+# EcoTrace - See the Carbon Cost of Every Function, Live in Your Editor.
 
-# 🌱 EcoTrace — Sustainability OS for VS Code
+![EcoTrace Preview](assets/ecotrace_preview.png)
 
-### Real-time carbon footprint monitoring for your engineering workflow.
+EcoTrace brings real-time carbon footprint monitoring directly into VS Code. As you run your Python code, you see exactly how much CO2 each function emitted - displayed above the function, in your status bar, and compiled into a full PDF report.
 
-[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/Zwony.ecotrace-vscode.svg?color=2E8B57&style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=Zwony.ecotrace-vscode)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/Zwony.ecotrace-vscode.svg?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Zwony.ecotrace-vscode)
-[![Sustainability](https://img.shields.io/badge/🌍_Carbon--Aware-2E8B57?style=for-the-badge)](https://github.com/Zwony/ecotrace)
+**Sneak Peek: v1.0.1 is coming.** Soon introducing AI-powered code optimization, carbon budget enforcement, and intuitive carbon equivalence metrics.
 
-**EcoTrace is a professional IDE extension designed for sustainable engineering. It bridges the gap between your Python carbon engine and your development environment.**
+---
 
-</div>
+## Upcoming Features (v1.0.1)
 
-## 🌟 Features
+### AI-Powered Optimization
+Click the "AI Optimize" button directly above any function. EcoTrace will analyze your code's carbon footprint and suggest a greener, more energy-efficient implementation using Google Gemini AI.
 
-- **🚀 Real-Time Monitoring:** Automatically watches your `ecotrace_log.csv` and updates your status bar as you run your code.
-- **🌱 Live Carbon Totals:** Tracks both the last measured footprint and your total cumulative carbon for the current session.
-- **📋 One-Click Reporting:** Click the status bar item to instantly open your detailed `ecotrace_full_report.pdf`.
-- **🏗️ Zero Configuration:** Automatically detects EcoTrace logs in your current workspace without any setup.
+### Carbon Budget Gauge
+A visual progress bar in the sidebar tracks your total session carbon against your set budget.
+- **Green:** Under budget.
+- **Yellow:** Approaching 80% of your limit.
+- **Red:** Budget exceeded.
+
+### Human-Readable Equivalences
+Carbon metrics are converted into relatable comparisons for better context:
+- ≈ 4.2 Google searches
+- ≈ 15 min of LED bulb time
+- ≈ 3 smartphone charges
+
+### Real-Time Metrics & CodeLens
+Function-level carbon emissions appear directly above your code and update on every run. 
+```python
+# 0.0010g CO2 (≈ 5 smartphone charges)
+@ecotrace.track
+def process_data():
+    ...
+```
+
+---
 
 ## 🛠️ Getting Started
 
-1. **Install the Python Library:**
-   ```bash
-   pip install ecotrace
-   ```
+### 1. Install the Python library
+```bash
+pip install ecotrace
+```
 
-2. **Instrument Your Code:**
-   ```python
-   from ecotrace import EcoTrace
-   eco = EcoTrace()
-   
-   with eco.track_block("processing"):
-       # Your carbon-intensive code here
-       pass
-   ```
+### 2. Instrument your functions
+```python
+from ecotrace import EcoTrace
+eco = EcoTrace(region_code="US")
 
-3. **Watch the Status Bar:** Once your code runs, the EcoTrace icon will appear in the bottom-left corner of your VS Code.
+@eco.track
+def my_function():
+    ...
+```
 
-## 📊 Analytics & Insights
-
-EcoTrace uses the **Boavizta TDP Database** and **Electricity Maps API** to provide the most accurate real-time carbon data available for local development.
+### 3. (Optional) Set up AI Insights
+To use the **✨ AI Optimize** feature, add your [Google Gemini API Key](https://aistudio.google.com/app/apikey) in VS Code Settings:
+`EcoTrace → Gemini API Key`
 
 ---
 
-## 📜 Manifesto
+## ⚙️ Configuration
 
-We believe that **performance is sustainability**. By making carbon metrics visible in the IDE, we empower developers to write leaner, greener, and more efficient code.
-
-*Crafted with 💚 for a sustainable future.*
+| Setting | Description | Default |
+|---|---|---|
+| `ecotrace.carbonBudget` | Session carbon threshold (gCO2) before warning | `10.0` |
+| `ecotrace.geminiApiKey` | Your Google Gemini API Key for AI Insights | `""` |
+| `ecotrace.region` | ISO 3166-1 alpha-2 region code for intensity | `GLOBAL` |
 
 ---
 
-**[GitHub Repository](https://github.com/Zwony/ecotrace) · [Report an Issue](https://github.com/Zwony/ecotrace/issues) · [Marketplace](https://marketplace.visualstudio.com/items?itemName=Zwony.ecotrace-vscode)**
+## Requirements
+
+- VS Code `1.80.0` or higher
+- Python `3.9+`
+- `ecotrace` Python library (`pip install ecotrace`)
+
+---
+
+## Repository
+Visit the project on [GitHub](https://github.com/Zwony/ecotrace).
+
+*EcoTrace - Carbon observability for developers who care about what their code actually costs.*
