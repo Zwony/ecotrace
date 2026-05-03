@@ -6,12 +6,12 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v0.9.0 is now live!** Includes high-precision hybrid energy tracking (RAPL + Boavizta).
+**v1.0.1 — Stable Release.** Carbon budget enforcement, CI/CD gate, differential tracking, and session summaries.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
 
-Real-time monitoring · 50+ Global Zones · AI-powered insights · Zero-configuration
+Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configuration
 
 <br>
 
@@ -36,10 +36,31 @@ Real-time monitoring · 50+ Global Zones · AI-powered insights · Zero-configur
 
 ---
 
+## What's New in v1.0.1
+
+> [!IMPORTANT]
+> **EcoTrace is now Production/Stable.** This release exits beta and introduces active carbon budget enforcement — the library no longer just measures, it enforces the rules you set.
+
+- **Carbon Budget Enforcement** — Set `carbon_limit` and get real-time alerts at 80% and 100% thresholds, with optional callback hooks.
+- **CI/CD Carbon Gate** — `ecotrace gate --budget 10.0` returns exit code 1 if budget exceeded. No competitor has this.
+- **Differential Tracking** — OS idle noise is now subtracted from measurements. You see only YOUR code's carbon cost.
+- **Session Summary** — Automatic summary table at process exit: duration, functions tracked, total carbon, budget status.
+- **Carbon Equivalences** — Abstract gCO2 values converted to relatable comparisons (Google searches, LED bulb time, car km).
+- **Critical Bug Fixes** — Exception handling, GPU crash fixes, and packaging corrections. See [CHANGELOG.md](CHANGELOG.md).
+
+---
+
 ## Quick Install
 
 ```bash
 pip install ecotrace
+```
+
+Optional extras:
+```bash
+pip install ecotrace[gpu]   # NVIDIA GPU support
+pip install ecotrace[ai]    # Gemini AI insights
+pip install ecotrace[all]   # Everything
 ```
 
 ---
@@ -59,7 +80,6 @@ Decorate functions for granular instrumentation:
 ```python
 from ecotrace import EcoTrace
 
-# region_code: Use ISO 3166-1 alpha-2 (e.g., US, TR, DE). See docs/SUPPORT.md for full list.
 eco = EcoTrace(region_code="US")
 
 @eco.track
@@ -74,28 +94,82 @@ eco.generate_pdf_report("carbon_audit.pdf")
 print(f"Total Carbon Emitted: {eco.total_carbon} gCO2")
 ```
 
+### Option 3: Carbon Budget Mode
+Set a limit and let EcoTrace enforce it:
+
+```python
+eco = EcoTrace(
+    region_code="TR",
+    carbon_limit=5.0,                   # 5 gCO2 budget
+    on_budget_exceeded=lambda t, l: print(f"Budget exceeded: {t:.4f}/{l:.4f} gCO2")
+)
+
+@eco.track
+def training_pipeline():
+    ...
+
+training_pipeline()
+print(f"Remaining budget: {eco.remaining_budget} gCO2")
+```
+
 ### Expected Output
 When initialized, EcoTrace performs automated hardware detection:
 
 ```text
----------------------------------
---- EcoTrace v0.8.0 Initialized ---
-Region  : US (367 gCO2/kWh)
-CPU     : 13th Gen Intel Core i9-13900K
-TDP     : 125.0W
-Monitoring: Active (50ms sampling)
----------------------------------
+[EcoTrace] INFO: [INFO] EcoTrace instrumentation session initialized (STATIC).
+[EcoTrace] INFO: -----------------------------------------------------
+[EcoTrace] INFO: Region        : TR (475 gCO2/kWh)
+[EcoTrace] INFO: Hardware Logic: 13th Gen Intel Core i7-13700H
+[EcoTrace] INFO: Specifications: 20 Cores | 45.0W TDP
+[EcoTrace] INFO: Energy Sensor : Boavizta Advanced Estimation
+[EcoTrace] INFO: Memory Config : 15.6 GB DDR4
+[EcoTrace] INFO: GPU Accelerator: Intel Iris Xe Graphics (15.0W TDP)
+[EcoTrace] INFO: -----------------------------------------------------
 ```
+
+At process exit, a session summary is printed automatically:
+
+```text
+=======================================================
+  EcoTrace — Session Summary
+=======================================================
+  Duration       : 12.34s
+  Functions      : 5 tracked
+  Total Carbon   : 0.00312000 gCO2
+  Region         : TR (475 gCO2/kWh)
+  Budget         : 0.003120 / 5.000000 gCO2 (0.1%) [OK]
+  Equivalent     : 0.4 min of LED bulb (10W)
+=======================================================
+```
+
+---
+
+## CI/CD Integration
+
+Enforce carbon budgets in your pipeline with a single command:
+
+```yaml
+# .github/workflows/ci.yml
+- name: Run tests
+  run: python -m pytest tests/
+
+- name: Carbon Gate
+  run: ecotrace gate --budget 10.0
+```
+
+If total emissions exceed the budget, the gate fails with exit code 1 — preventing carbon-heavy code from being merged.
 
 ---
 
 ## Why EcoTrace?
 
-| Feature | **EcoTrace** | CodeCarbon | CarbonTracker |
+| Feature | **EcoTrace v1.0** | CodeCarbon | CarbonTracker |
 |---|:---:|:---:|:---:|
 | **Sampling Interval** | **50ms** | 15s | Per Epoch |
 | **Isolation** | **Process-scoped** | System-wide | System-wide |
-| **Dependencies** | **Zero (Core)** | 10+ (Pandas, etc.) | 5+ |
+| **Budget Enforcement** | **Built-in** | No | No |
+| **CI/CD Gate** | **Built-in** | No | No |
+| **Idle Noise Subtraction** | **Automatic** | No | No |
 | **Async Support** | **Native** | Limited | No |
 
 - **Deep Transparency:** Derived from verified manufacturer TDP specifications rather than category averages.
@@ -136,4 +210,4 @@ MIT License — Use it however you like.
 
 *Developed for sustainable software development practices.*
 
-</div>
+</div>
