@@ -38,8 +38,8 @@ def create_cpu_usage_chart(samples_data, core_count=1):
         return None
 
     try:
-        timestamps = [t for t, _ in samples_data]
-        cpu_values = [min(s, 100.0) for _, s in samples_data]
+        timestamps = [item[0] for item in samples_data]
+        cpu_values = [min(item[1], 100.0) for item in samples_data]
         relative_times = [(t - timestamps[0]) for t in timestamps]
 
         fig, ax = plt.subplots(figsize=(10, 4))
@@ -74,8 +74,8 @@ def create_gpu_usage_chart(samples_data):
         return None
 
     try:
-        timestamps = [t for t, _ in samples_data]
-        gpu_values = [min(s, 100.0) for _, s in samples_data]
+        timestamps = [item[0] for item in samples_data]
+        gpu_values = [min(item[1], 100.0) for item in samples_data]
         relative_times = [(t - timestamps[0]) for t in timestamps]
 
         fig, ax = plt.subplots(figsize=(10, 4))
@@ -248,7 +248,7 @@ def generate_pdf_report(
         # CPU Chart Section
         if cpu_samples:
             core_count = cpu_info.get("cores", 1)
-            normalized_samples = [(t, min(s / core_count, 100.0)) for t, s in cpu_samples]
+            normalized_samples = [(item[0], min(item[1] / core_count, 100.0)) for item in cpu_samples]
             chart_path = create_cpu_usage_chart(normalized_samples, core_count)
             if chart_path:
                 pdf.add_page()
@@ -258,7 +258,7 @@ def generate_pdf_report(
                 pdf.image(chart_path, x=10, y=50, w=190)
                 pdf.ln(120)
 
-                normalized_values = [s for _, s in normalized_samples]
+                normalized_values = [item[1] for item in normalized_samples]
                 avg_cpu = sum(normalized_values) / len(normalized_values) if normalized_values else 0.0
                 max_cpu = max(normalized_values) if normalized_values else 0.0
                 min_cpu = min(normalized_values) if normalized_values else 0.0
@@ -278,7 +278,7 @@ def generate_pdf_report(
                 pdf.image(gpu_chart_path, x=10, y=50, w=190)
                 pdf.ln(120)
 
-                gpu_values = [s for _, s in gpu_samples]
+                gpu_values = [item[1] for item in gpu_samples]
                 avg_gpu = sum(gpu_values) / len(gpu_values) if gpu_values else 0.0
                 peak_gpu = max(gpu_values) if gpu_values else 0.0
                 

@@ -4,11 +4,11 @@
 
 EcoTrace brings real-time carbon footprint monitoring directly into VS Code. As you run your Python code, you see exactly how much CO2 each function emitted - displayed above the function, in your status bar, and compiled into a full PDF report.
 
-**Sneak Peek: v1.0.1 is coming.** Soon introducing AI-powered code optimization, carbon budget enforcement, and intuitive carbon equivalence metrics.
+**v1.0.1 Release.** Now featuring AI-powered code optimization, carbon budget enforcement, and intuitive carbon equivalence metrics.
 
 ---
 
-## Upcoming Features (v1.0.1)
+## Key Features in v1.0.1
 
 ### AI-Powered Optimization
 Click the "AI Optimize" button directly above any function. EcoTrace will analyze your code's carbon footprint and suggest a greener, more energy-efficient implementation using Google Gemini AI.
@@ -36,7 +36,7 @@ def process_data():
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
 ### 1. Install the Python library
 ```bash
@@ -53,13 +53,13 @@ def my_function():
     ...
 ```
 
-### 3. (Optional) Set up AI Insights
-To use the **✨ AI Optimize** feature, add your [Google Gemini API Key](https://aistudio.google.com/app/apikey) in VS Code Settings:
-`EcoTrace → Gemini API Key`
+### 3. Optional: Set up AI Insights
+To use the AI Optimize feature, add your [Google Gemini API Key](https://aistudio.google.com/app/apikey) in VS Code Settings:
+`EcoTrace -> Gemini API Key`
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 | Setting | Description | Default |
 |---|---|---|

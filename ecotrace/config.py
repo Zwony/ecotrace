@@ -6,7 +6,7 @@ DEFAULT_GPU_TDP_AMD_W = 75.0
 DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
 DEFAULT_CARBON_INTENSITY = 475
 DEFAULT_REGION = "GLOBAL"
-USER_AGENT = "EcoTrace/0.9.0"
+USER_AGENT = "EcoTrace/1.0.1"
 
 def load_constants(json_path):
     """Loads constants from the JSON configuration file.

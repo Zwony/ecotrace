@@ -4,7 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [0.9.0] - 2026-04-30
+## [1.0.1] - 2026-05-05
+### Added
+- **Carbon Budget Enforcement:** `carbon_limit` parameter now actively enforces budget with two-tier alerts (80% warning + 100% exceeded) and optional `on_budget_exceeded` callback.
+- **Differential Tracking:** Idle baseline measurement is now subtracted from all CPU utilization readings, reporting only the energy cost of YOUR code — not OS background noise.
+- **Session Summary:** Automatic `atexit` hook prints a formatted session summary (duration, functions tracked, total carbon, budget status) when the process exits.
+- **Carbon Equivalences:** New `equivalence(gco2)` method converts abstract gCO2 values into human-readable comparisons (Google searches, LED bulb minutes, smartphone charges, Netflix streaming, car km).
+- **CI/CD Carbon Gate:** New `ecotrace gate --budget 10.0` CLI command returns exit code 1 if accumulated emissions exceed the carbon budget. Designed for GitHub Actions / GitLab CI integration.
+- **`remaining_budget` Property:** Programmatic access to remaining carbon budget for external consumers (IDE, dashboards).
+
+### Fixed
+- **Exception Swallowing:** `measure()` and `measure_async()` now properly re-raise user exceptions instead of silently returning `None`.
+- **GPU `track_block` Crash:** Fixed tuple unpacking error when computing GPU carbon in `track_block()`.
+- **GPU Chart Crash:** Fixed 3-tuple unpacking in `report.py` GPU chart generation.
+- **Packaging:** Added `ecotrace.middleware` and `ecotrace.plugins` to distribution packages.
+- **Optional Dependencies:** Moved `nvidia-ml-py`, `google-generativeai`, and `wmi` to optional extras (`pip install ecotrace[gpu]`, `[ai]`, `[all]`).
+
+### Updated
+- Logger default level changed from WARNING to INFO (initialization banner now visible).
+- Version bumped to 1.0.1 across `pyproject.toml`, `__init__.py`, and `config.py`.
+
+## [0.9.0] - 2026-04-30
 ### Added
 - **Exact Mode (RAPL)**: Support for direct hardware energy counter monitoring on Linux (0% deviation).
 - **Advanced Power Modeling**: Implementation of non-linear Boavizta load curves for precise estimation on Windows/macOS.

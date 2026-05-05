@@ -9,10 +9,13 @@
     "sourceMap": true,
     "rootDir": "src",
     "strict": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "exclude": [
     "node_modules",

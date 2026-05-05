@@ -387,6 +387,140 @@ def _cmd_benchmark(args):
 
 
 # =============================================================================
+# Subcommand: gate (v1.0)
+# =============================================================================
+# CI/CD carbon budget enforcement. The library decides pass/fail based on
+# accumulated emissions. The pipeline acts on the exit code.
+# This is the library's rule — not the IDE's, not the user's guess.
+
+def _cmd_gate(args):
+    """Enforces a carbon budget against the CSV audit log.
+
+    Reads ``ecotrace_log.csv``, sums total carbon emissions, and compares
+    against the specified budget. Returns exit code 0 if within budget,
+    exit code 1 if exceeded.
+
+    Designed for CI/CD pipeline integration::
+
+        # GitHub Actions example
+        - name: Carbon Gate
+          run: ecotrace gate --budget 10.0
+
+    Args:
+        args: Parsed argparse namespace with ``budget`` and ``file`` options.
+    """
+    csv_path = args.file
+    budget = args.budget
+    _print_banner()
+
+    print(f"[GATE] Budget    : {budget:.6f} gCO2")
+    print(f"[GATE] Log file  : {csv_path}")
+    print()
+
+    # --- Parse CSV audit log for total emissions ----------------------------
+    total_carbon = 0.0
+    measurement_count = 0
+
+    if not os.path.isfile(csv_path):
+        print(f"[GATE] No log file found: {csv_path}")
+        print("[GATE] Result: PASS (no emissions recorded)")
+        sys.exit(0)
+
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    total_carbon += float(row.get("Carbon(gCO2)", 0))
+                    measurement_count += 1
+                except (ValueError, TypeError):
+                    continue
+    except Exception as e:
+        print(f"[ERROR] CSV read failed: {e}")
+        sys.exit(1)
+
+    # --- Budget evaluation --------------------------------------------------
+    # The library produces the verdict. The pipeline acts on exit code.
+    used_pct = (total_carbon / budget) * 100 if budget > 0 else 0
+
+    print("=" * 55)
+    print("  EcoTrace — Carbon Gate Report")
+    print("=" * 55)
+    print(f"  Measurements   : {measurement_count}")
+    print(f"  Total Carbon   : {total_carbon:.8f} gCO2")
+    print(f"  Budget         : {budget:.6f} gCO2")
+    print(f"  Usage          : {used_pct:.1f}%")
+    print("-" * 55)
+
+    if total_carbon > budget:
+        print(f"  Result: FAIL — Budget exceeded by {total_carbon - budget:.6f} gCO2")
+        print("=" * 55)
+        sys.exit(1)
+    else:
+        remaining = budget - total_carbon
+        print(f"  Result: PASS — {remaining:.6f} gCO2 remaining")
+        print("=" * 55)
+        sys.exit(0)
+
+
+# =============================================================================
+# Subcommand: optimize (v1.0.1)
+# =============================================================================
+# Connects to Google Gemini AI to analyze a specific function's source code
+# and provide carbon-aware optimization suggestions. Called by the VS Code extension.
+
+def _cmd_optimize(args):
+    """Analyzes a function's source code using Gemini AI for energy optimizations."""
+    file_path = args.file
+    func_name = args.func
+    region = args.region
+
+    # Don't print banner here because VS Code reads stdout directly for HTML rendering
+    # or just raw text.
+
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        print("Error: GEMINI_API_KEY environment variable is not set.")
+        sys.exit(1)
+
+    if not os.path.isfile(file_path):
+        print(f"Error: Source file not found: {file_path}")
+        sys.exit(1)
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            source_code = f.read()
+    except Exception as e:
+        print(f"Error reading source file: {e}")
+        sys.exit(1)
+
+    try:
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+            import google.generativeai as genai
+
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        prompt = (
+            f"You are an expert Python performance and sustainability engineer. "
+            f"Analyze the function '{func_name}' in the following Python code for energy efficiency and carbon emissions. "
+            f"Provide concrete, actionable code changes to reduce CPU usage and execution time. "
+            f"Keep your answer concise, professional, and format it using Markdown. Do not use emojis.\n\n"
+            f"```python\n{source_code}\n```"
+        )
+        
+        response = model.generate_content(prompt)
+        print(response.text)
+        sys.exit(0)
+    except Exception as e:
+        print(f"AI Analysis failed: {e}")
+        sys.exit(1)
+
+
+
+# =============================================================================
 # Argument Parser — CLI Entry Point
 # =============================================================================
 # Uses Python's built-in argparse to avoid adding click/typer dependencies.
@@ -456,6 +590,27 @@ def main():
     benchmark_parser.add_argument("-n", "--iterations", type=int, default=500_000,
                                   help="Benchmark iteration count (default: 500000)")
 
+    # --- gate (v1.0) ---
+    gate_parser = subparsers.add_parser(
+        "gate",
+        help="CI/CD carbon budget gate (exit 1 if budget exceeded)",
+        description="Check total emissions against a carbon budget. Returns exit code 1 if exceeded."
+    )
+    gate_parser.add_argument("-b", "--budget", type=float, required=True,
+                             help="Carbon budget threshold in gCO2")
+    gate_parser.add_argument("-f", "--file", default="ecotrace_log.csv",
+                             help="Path to CSV log file (default: ecotrace_log.csv)")
+
+    # --- optimize (v1.0.1) ---
+    optimize_parser = subparsers.add_parser(
+        "optimize",
+        help="Analyze a function using AI for carbon optimization",
+        description="Reads a source file and asks Gemini AI for energy optimizations on a specific function."
+    )
+    optimize_parser.add_argument("file", help="Python source file to analyze")
+    optimize_parser.add_argument("--func", required=True, help="Name of the function to optimize")
+    optimize_parser.add_argument("--region", default="GLOBAL", help="ISO region code for context")
+
     # --- Parse & Dispatch ---
     args = parser.parse_args()
 
@@ -469,6 +624,8 @@ def main():
         "analyze": _cmd_analyze,
         "export": _cmd_export,
         "benchmark": _cmd_benchmark,
+        "gate": _cmd_gate,
+        "optimize": _cmd_optimize,
     }
 
     handler = commands.get(args.command)

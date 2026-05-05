@@ -15,7 +15,7 @@ def get_ram_info():
 
     Returns:
         dict: Dictionary containing:
-            - total_gb (float): System total memory memory in gigabytes.
+            - total_gb (float): System total memory in gigabytes.
             - type (str): RAM generation ('DDR4' or 'DDR5').
             - speed_mhz (str): Active memory frequency, or 'Unknown'.
     """
