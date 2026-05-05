@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "0.9.0"
+version = "1.0.1"
 description = "EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting."
 keywords = ["carbon-footprint", "energy-efficiency", "green-computing", "sustainability", "metrics", "cpu-monitoring", "gpu-monitoring"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -17,7 +17,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12"
 ]
-readme = "README.md"
+readme = "README.MD"
 requires-python = ">=3.9"
 
 authors = [
@@ -28,12 +28,15 @@ dependencies = [
     "py-cpuinfo",
     "fpdf",
     "matplotlib",
-    "nvidia-ml-py",
-    "google-generativeai",
     "requests",
-    "packaging",
-    "wmi; sys_platform == 'win32'"
+    "packaging"
 ]
+
+[project.optional-dependencies]
+gpu = ["nvidia-ml-py"]
+ai = ["google-generativeai"]
+web = ["starlette", "flask"]
+all = ["nvidia-ml-py", "google-generativeai", "starlette", "flask", "wmi; sys_platform == 'win32'"]
 
 [project.scripts]
 ecotrace = "ecotrace.cli:main"
@@ -43,7 +46,7 @@ Homepage = "https://github.com/Zwony/ecotrace"
 Repository = "https://github.com/Zwony/ecotrace"
 
 [tool.setuptools]
-packages = ["ecotrace"]
+packages = ["ecotrace", "ecotrace.middleware", "ecotrace.plugins"]
 
 [tool.setuptools.package-data]
 ecotrace = ["*.json", "*.csv", "cpu_spec.csv/**/*.csv"]

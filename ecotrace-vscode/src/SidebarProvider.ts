@@ -22,7 +22,7 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    // Message handling (if we want to add buttons later)
+    // Message handling
     webviewView.webview.onDidReceiveMessage((data) => {
       switch (data.type) {
         case "openReport":
@@ -31,7 +31,6 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
       }
     });
 
-    // Initial data load
     this.updateData();
   }
 
@@ -42,9 +41,11 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
     if (!workspaceFolders) return;
 
     const logPath = path.join(workspaceFolders[0].uri.fsPath, "ecotrace_log.csv");
+    const config = vscode.workspace.getConfiguration("ecotrace");
+    const budgetLimit = config.get<number>("carbonBudget", 10.0);
 
     if (!fs.existsSync(logPath)) {
-      this._view.webview.postMessage({ type: "noData" });
+      this._view.webview.postMessage({ type: "noData", budgetLimit });
       return;
     }
 
@@ -66,12 +67,13 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
       this._view.webview.postMessage({
         type: "update",
         totalCarbon: totalCarbon.toFixed(6),
+        budgetLimit: budgetLimit,
+        usedPct: Math.min((totalCarbon / budgetLimit) * 100, 100).toFixed(1),
         topFunctions: topFunctions.map(f => ({
             name: f.func,
             carbon: f.carbon.toFixed(6),
             cpu: f.cpu
-        })),
-        lastExecution: data[data.length - 1]
+        }))
       });
     } catch (err) {
       console.error("Sidebar update failed", err);
@@ -79,14 +81,7 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-    const styleResetUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "reset.css")
-    );
-    const styleVSCodeUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "vscode.css")
-    );
-
-    // Sleek Dark Theme UI
+    // Sleek Dark Theme UI with Budget Progress Bar
     return `<!DOCTYPE html>
 			<html lang="en">
 			<head>
@@ -114,6 +109,8 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
                         opacity: 0.7;
                         letter-spacing: 1px;
                         margin-bottom: 5px;
+                        display: flex;
+                        justify-content: space-between;
                     }
                     .stat-value {
                         font-size: 24px;
@@ -125,6 +122,23 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
                         opacity: 0.8;
                         margin-left: 4px;
                     }
+                    
+                    /* --- Budget Progress Bar --- */
+                    .progress-container {
+                        width: 100%;
+                        background-color: rgba(255,255,255,0.1);
+                        border-radius: 4px;
+                        height: 8px;
+                        margin-top: 10px;
+                        overflow: hidden;
+                    }
+                    .progress-bar {
+                        height: 100%;
+                        background-color: #4ade80;
+                        width: 0%;
+                        transition: width 0.3s ease, background-color 0.3s ease;
+                    }
+
                     h3 {
                         font-size: 12px;
                         margin: 20px 0 10px 0;
@@ -195,8 +209,14 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
 			<body>
 				<div id="content">
                     <div class="card">
-                        <div class="stat-label"><span class="pulse"></span>Total Session Carbon</div>
-                        <div class="stat-value" id="total-carbon">0.000000<span class="stat-unit">g CO2</span></div>
+                        <div class="stat-label">
+                            <span><span class="pulse"></span>Session Carbon</span>
+                            <span id="budget-text">0 / 10g</span>
+                        </div>
+                        <div class="stat-value" id="total-carbon">0.000<span class="stat-unit">g CO2</span></div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="budget-bar"></div>
+                        </div>
                     </div>
 
                     <h3>TOP EMITTERS</h3>
@@ -207,7 +227,7 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
 
                     <button class="btn" onclick="openReport()">Open Full PDF Report</button>
                     <div style="font-size: 9px; margin-top: 15px; opacity: 0.5; text-align: center;">
-                        EcoTrace v0.8.0 | Continuous Monitoring Active
+                        EcoTrace v1.0.1 | Active Enforcement Mode
                     </div>
                 </div>
 
@@ -221,8 +241,26 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
 					window.addEventListener('message', event => {
 						const message = event.data;
 						if (message.type === 'update') {
+                            // Update total value
 							document.getElementById('total-carbon').innerHTML = \`\${message.totalCarbon}<span class="stat-unit">g CO2</span>\`;
+                            
+                            // Update Budget Gauge
+                            document.getElementById('budget-text').innerText = \`\${message.usedPct}% of Budget\`;
+                            const bar = document.getElementById('budget-bar');
+                            bar.style.width = \`\${message.usedPct}%\`;
+                            
+                            if (message.usedPct >= 100) {
+                                bar.style.backgroundColor = '#ef4444'; // Red
+                                document.getElementById('total-carbon').style.color = '#ef4444';
+                            } else if (message.usedPct >= 80) {
+                                bar.style.backgroundColor = '#fbbf24'; // Yellow
+                                document.getElementById('total-carbon').style.color = '#fbbf24';
+                            } else {
+                                bar.style.backgroundColor = '#4ade80'; // Green
+                                document.getElementById('total-carbon').style.color = '#4ade80';
+                            }
 							
+                            // Update Top Functions
                             const list = document.getElementById('function-list');
                             list.innerHTML = '';
                             message.topFunctions.forEach(f => {
@@ -230,7 +268,7 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
                                 item.className = 'function-item';
                                 const isHigh = parseFloat(f.carbon) > 0.1;
                                 const style = isHigh ? 'color: #ef4444; font-weight: bold;' : 'color: #fbbf24;';
-                                const alert = isHigh ? ' [!]' : '';
+                                const alert = '';
 
                                 item.innerHTML = \`
                                     <div class="function-name" title="\${f.name}">\${f.name}</div>
@@ -239,6 +277,7 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
                                 list.appendChild(item);
                             });
 						} else if (message.type === 'noData') {
+                            document.getElementById('budget-text').innerText = \`0 / \${message.budgetLimit}g\`;
                             document.getElementById('function-list').innerHTML = '<div class="no-data">No execution logs found.<br>Run your code with @eco.track to see data.</div>';
                         }
 					});
@@ -247,3 +286,4 @@ export class EcoTraceSidebarProvider implements vscode.WebviewViewProvider {
 			</html>`;
   }
 }
+

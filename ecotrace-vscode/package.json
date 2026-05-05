@@ -2,7 +2,7 @@
   "name": "ecotrace-monitor",
   "displayName": "EcoTrace: Python Carbon Monitor",
   "description": "Real-time carbon footprint monitoring for your Python code.",
-  "version": "0.9.0",
+  "version": "1.0.1",
   "publisher": "ecotrace-team",
   "icon": "assets/logo.png",
   "galleryBanner": {
@@ -54,6 +54,10 @@
       {
         "command": "ecotrace.ecoFriendlyMode",
         "title": "EcoTrace: Toggle Eco-Friendly Build Mode"
+      },
+      {
+        "command": "ecotrace.optimizeFunction",
+        "title": "EcoTrace: AI Optimize Function"
       }
     ],
     "configuration": {
@@ -63,6 +67,16 @@
           "type": "number",
           "default": 10.0,
           "description": "The carbon emission budget (in g CO2) for the current session. A warning will be shown when this threshold is exceeded."
+        },
+        "ecotrace.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your Google Gemini API Key, required for the ✨ AI Optimize CodeLens feature."
+        },
+        "ecotrace.region": {
+          "type": "string",
+          "default": "GLOBAL",
+          "description": "ISO 3166-1 alpha-2 region code (e.g., US, TR) for carbon intensity mapping."
         }
       }
     }
@@ -84,7 +98,7 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.118.0",
+    "@types/vscode": "^1.80.0",
     "@types/node": "25.x",
     "typescript": "^6.0.3",
     "eslint": "^10.3.0",

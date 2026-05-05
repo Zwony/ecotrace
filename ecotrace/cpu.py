@@ -80,9 +80,6 @@ def get_cpu_info(tdp_db, constants_data):
             found_tdp = tdp_db[clean_brand]
         else:
             for model_name, tdp in tdp_db.items():
-                if model_name == clean_brand:
-                    found_tdp = tdp
-                    break
                 if clean_brand in model_name and len(clean_brand) > 10:
                     found_tdp = tdp
                     break

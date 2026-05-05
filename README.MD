@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**Upcoming: v1.0.1 — Stable Release Target.** Previewing carbon budget enforcement, CI/CD gate, differential tracking, and session summaries.
+**v1.0.1 — Production/Stable Release.** Features carbon budget enforcement, CI/CD gate, differential tracking, and session summaries.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -36,7 +36,7 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Preview: What's Coming in v1.0.1
+## What's New in v1.0.1
 
 > **EcoTrace is heading towards Production/Stable.** The upcoming v1.0.1 release introduces active carbon budget enforcement — shifting from just measuring to active enforcement.
 

@@ -70,7 +70,8 @@ class EcoTrace:
     WATTS_PER_KILOWATT = 1000
 
     def __init__(self, region_code="GLOBAL", carbon_limit=None, gpu_index=0,
-                 api_key=None, grid_api_key=None, check_updates=True, quiet=False):
+                 api_key=None, grid_api_key=None, check_updates=True, quiet=False,
+                 on_budget_exceeded=None, session_summary=True):
         # --- Auto-Update Check (v6.0) ----------------------------------------
         # Runs FIRST so the user sees the update prompt before initialization.
         # Completely fail-safe — errors are silently swallowed.
@@ -98,6 +99,14 @@ class EcoTrace:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.grid_api_key = grid_api_key or os.environ.get("ECOTRACE_GRID_API_KEY")
         self.quiet = quiet
+
+        # --- Carbon Budget Enforcement (v1.0) --------------------------------
+        # The library produces data AND enforces rules. Budget alerts and
+        # callbacks are the library's responsibility, not the IDE's.
+        self._on_budget_exceeded = on_budget_exceeded
+        self._budget_warning_fired = False   # 80% threshold — fires once
+        self._budget_exceeded_fired = False  # 100% threshold — fires once
+        self._tracked_functions_count = 0    # Total tracked calls for session summary
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(self.base_dir, "constants.json")
@@ -150,7 +159,6 @@ class EcoTrace:
         # --- High-Resolution Monitoring State ---
         # 50ms (0.05) is the engineering sweet spot. Higher frequency hits CPU
         # overhead; lower frequency (like 15s) misses bursty micro-code.
-        self.MONITOR_INTERVAL_S = 0.05
         self._monitor_interval = self.MONITOR_INTERVAL_S
         self._current_process = psutil.Process()
 
@@ -183,9 +191,20 @@ class EcoTrace:
             logger.info("-" * 53)
             logger.info("[INFO] Instrumentation sequence finalized.\n")
 
-        # NOTE: Calculating idle baseline to subtract system noise. 
-        # We don't want to attribute OS background updates to YOUR code.
-        self._idle_baseline_w = self._measure_idle_baseline()
+        # --- Differential Tracking — Idle Baseline (v1.0) --------------------
+        # Measures ambient CPU activity so we can subtract OS background noise
+        # from every subsequent measurement. The library's job: report only
+        # the energy YOUR code consumed, not system updates or antivirus.
+        self._idle_baseline_pct = self._measure_idle_baseline()
+
+        # --- Session Lifecycle — atexit Hook (v1.0) --------------------------
+        # Automatically prints a session summary when the process exits.
+        # The library owns the data; it prints the summary itself.
+        self._session_start_time = time.perf_counter()
+        self._session_summary_enabled = session_summary and not quiet
+        if self._session_summary_enabled:
+            import atexit
+            atexit.register(self._print_session_summary)
 
     # ========================================================================
     # Live Grid API — Intensity Resolution (v6.0)
@@ -243,18 +262,20 @@ class EcoTrace:
 
     def _measure_idle_baseline(self):
         """Captures short baseline measurement for differential carbon tracking.
-        
+
         Takes a 100ms snapshot of current system utilization to establish the
         idle baseline. This baseline is subtracted from function measurements
         to report only the code's incremental energy cost.
-        
+
         Returns:
-            float: Baseline CPU utilization percentage (0-100).
+            float: Baseline CPU utilization percentage (0-100), core-normalized.
         """
         baseline_start = time.perf_counter()
         baseline_samples = []
-        
-        # Collect samples for baseline duration
+
+        # --- Ambient noise sampling ----
+        # Short burst of readings before any user code runs.
+        # Core-normalized so it matches _get_avg_cpu_in_range output.
         while (time.perf_counter() - baseline_start) * 1000 < self.BASELINE_MEASUREMENT_MS:
             try:
                 cpu_usage = self._current_process.cpu_percent()
@@ -262,8 +283,13 @@ class EcoTrace:
                 time.sleep(self.MONITOR_INTERVAL_S)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 break
-        
-        return sum(baseline_samples) / len(baseline_samples) if baseline_samples else 0.0
+
+        if not baseline_samples:
+            return 0.0
+
+        raw_avg = sum(baseline_samples) / len(baseline_samples)
+        core_count = psutil.cpu_count(logical=True) or 1
+        return raw_avg / core_count
 
     def _compute_carbon(self, tdp, utilization_pct, duration_s, energy_delta_j=None, is_gpu=False):
         """Computes carbon emissions from power parameters.
@@ -316,6 +342,10 @@ class EcoTrace:
     def _accumulate_carbon(self, carbon_emitted, func_name, duration, avg_cpu=None, file_path=None, line_number=None):
         """Thread-safe accumulation of carbon emissions with CSV logging.
 
+        Accumulates the emitted carbon into the session total, logs to CSV,
+        and enforces carbon budget limits if configured. The library is the
+        authority on budget rules — it warns and triggers callbacks here.
+
         Args:
             carbon_emitted: Carbon value in gCO2 to add to the running total.
             func_name: Name of the measured function for the audit log.
@@ -326,7 +356,154 @@ class EcoTrace:
         """
         with self._carbon_lock:
             self.total_carbon += carbon_emitted
+            self._tracked_functions_count += 1
             self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu, file_path, line_number)
+
+            # --- Carbon Budget Enforcement (v1.0) ----------------------------
+            # The library enforces its own rules. If a limit was set, we check
+            # it here — not in the IDE, not in middleware, right at the source.
+            self._enforce_carbon_budget(func_name)
+
+    def _enforce_carbon_budget(self, func_name):
+        """Checks carbon budget thresholds and fires warnings/callbacks.
+
+        Called inside _accumulate_carbon under the carbon lock. Implements a
+        two-tier alert system:
+            - 80% threshold: WARNING log (fires once)
+            - 100% threshold: WARNING log + optional callback (fires once)
+
+        The library is the authority on budget rules. External consumers
+        (IDE, CI/CD) read the state via ``remaining_budget``.
+
+        Args:
+            func_name: Name of the function that triggered the check.
+        """
+        if self.carbon_limit is None:
+            return
+
+        # --- Tier 1: 80% Early Warning (fires once) -------------------------
+        if not self._budget_warning_fired and self.total_carbon >= self.carbon_limit * 0.8:
+            self._budget_warning_fired = True
+            remaining = self.carbon_limit - self.total_carbon
+            logger.warning(
+                f"Carbon budget 80% consumed: {self.total_carbon:.6f} / "
+                f"{self.carbon_limit:.6f} gCO2 (remaining: {remaining:.6f} gCO2)"
+            )
+
+        # --- Tier 2: Budget Exceeded (fires once + callback) -----------------
+        if not self._budget_exceeded_fired and self.total_carbon >= self.carbon_limit:
+            self._budget_exceeded_fired = True
+            logger.warning(
+                f"CARBON BUDGET EXCEEDED after '{func_name}': "
+                f"{self.total_carbon:.6f} gCO2 (limit: {self.carbon_limit:.6f} gCO2)"
+            )
+            # --- Callback: The library notifies, the consumer decides ---------
+            # on_budget_exceeded is an optional hook for custom enforcement.
+            # The library fires it; the user decides what to do (log, alert, abort).
+            if self._on_budget_exceeded:
+                try:
+                    self._on_budget_exceeded(self.total_carbon, self.carbon_limit)
+                except Exception as e:
+                    logger.debug(f"on_budget_exceeded callback error: {e}")
+
+    @property
+    def remaining_budget(self):
+        """Returns the remaining carbon budget in gCO2, or None if no limit is set.
+
+        This is the primary data interface for external consumers (IDE sidebar,
+        CI/CD gates). The library provides the number; the consumer acts on it.
+
+        Returns:
+            float or None: Remaining gCO2 budget, or None if no limit configured.
+        """
+        if self.carbon_limit is None:
+            return None
+        return max(0.0, self.carbon_limit - self.total_carbon)
+
+    def _print_session_summary(self):
+        """Prints a summary table when the process exits via atexit.
+
+        Registered in __init__ when session_summary=True and quiet=False.
+        This is a library-side responsibility: the engine knows the data,
+        so the engine prints the summary. IDE should not duplicate this.
+        """
+        try:
+            session_duration = time.perf_counter() - self._session_start_time
+            if self._tracked_functions_count == 0:
+                return  # No measurements taken, skip summary
+
+            print()
+            print("=" * 55)
+            print("  EcoTrace — Session Summary")
+            print("=" * 55)
+            print(f"  Duration       : {session_duration:.2f}s")
+            print(f"  Functions      : {self._tracked_functions_count} tracked")
+            print(f"  Total Carbon   : {self.total_carbon:.8f} gCO2")
+            print(f"  Region         : {self.region_code} ({self.carbon_intensity} gCO2/kWh)")
+
+            # --- Carbon Budget Status ----------------------------------------
+            if self.carbon_limit is not None:
+                remaining = self.remaining_budget
+                used_pct = (self.total_carbon / self.carbon_limit) * 100
+                status = "EXCEEDED" if remaining == 0 else "OK"
+                print(f"  Budget         : {self.total_carbon:.6f} / {self.carbon_limit:.6f} gCO2 ({used_pct:.1f}%) [{status}]")
+
+            # --- Carbon Equivalences (v1.0) ----------------------------------
+            # Makes abstract gCO2 numbers tangible for humans.
+            # Sources: IEA, EPA, peer-reviewed LCA studies.
+            equiv = self.equivalence(self.total_carbon)
+            if equiv:
+                print(f"  Equivalent     : {equiv}")
+
+            print("=" * 55)
+        except Exception:
+            pass  # Session summary must never crash the application
+
+    # ========================================================================
+    # Carbon Equivalences (v1.0)
+    # ========================================================================
+    # The library converts abstract gCO2 into human-readable comparisons.
+    # Data sources: IEA 2024, EPA greenhouse gas equivalencies, published LCA.
+
+    def equivalence(self, gco2):
+        """Converts a gCO2 value into a human-readable real-world comparison.
+
+        Uses a tiered system: selects the most relatable comparison based on
+        the magnitude of the emission value. The library owns this conversion;
+        external consumers (IDE, reports) can call it to enrich their display.
+
+        Args:
+            gco2: Carbon emissions in grams of CO2.
+
+        Returns:
+            str: Human-readable equivalence string, or empty string if the
+            value is too small to compare meaningfully.
+        """
+        if gco2 <= 0:
+            return ""
+
+        # --- Equivalence factors (per 1 gCO2) --------------------------------
+        # LED bulb (10W): ~5.2 gCO2/hour → 1 gCO2 ≈ 11.5 min
+        # Smartphone charge: ~8.22 gCO2 per full charge
+        # Car driving: ~121 gCO2/km (EU avg petrol)
+        # Google search: ~0.2 gCO2 per search
+        # Netflix streaming: ~36 gCO2 per hour
+
+        if gco2 < 0.01:
+            searches = gco2 / 0.2
+            return f"{searches:.2f} Google searches"
+        elif gco2 < 1.0:
+            led_minutes = (gco2 / 5.2) * 60
+            return f"{led_minutes:.1f} min of LED bulb (10W)"
+        elif gco2 < 10.0:
+            charges = gco2 / 8.22
+            return f"{charges:.2f} smartphone charges"
+        elif gco2 < 100.0:
+            netflix_min = (gco2 / 36.0) * 60
+            return f"{netflix_min:.1f} min of Netflix streaming"
+        else:
+            km = gco2 / 121.0
+            return f"{km:.2f} km of car driving"
 
     # ========================================================================
     # Monitoring infrastructure
@@ -465,13 +642,17 @@ class EcoTrace:
     def _get_avg_cpu_in_range(self, start_time, end_time):
         """Computes mean CPU utilization from samples within a time window.
 
+        Applies idle baseline subtraction so the returned value represents
+        only the incremental CPU load caused by the measured code, not
+        background OS activity.
+
         Args:
             start_time: Window start as a ``time.perf_counter()`` value.
             end_time: Window end as a ``time.perf_counter()`` value.
 
         Returns:
-            float: Average CPU percentage, or FULL_UTILIZATION_PERCENT if no
-            samples were captured (conservative fallback).
+            float: Average CPU percentage (baseline-subtracted), or
+            FULL_UTILIZATION_PERCENT if no samples were captured.
         """
         with self._cpu_sample_lock:
             relevant_samples = [
@@ -480,11 +661,16 @@ class EcoTrace:
             ]
             if not relevant_samples:
                 return self.FULL_UTILIZATION_PERCENT
-            
+
             # Smart Core Normalization: Divide by logical cores
             raw_avg = sum(relevant_samples) / len(relevant_samples)
             core_count = psutil.cpu_count(logical=True) or 1
-            return raw_avg / core_count
+            normalized = raw_avg / core_count
+
+            # --- Differential Tracking (v1.0) --------------------------------
+            # Subtract the idle baseline measured at init time.
+            # Floor at 0 to avoid negative utilization from measurement jitter.
+            return max(0.0, normalized - self._idle_baseline_pct)
 
     def _get_avg_gpu_in_range(self, start_time, end_time):
         """Computes mean GPU utilization and power from samples within a time window.
@@ -738,6 +924,7 @@ class EcoTrace:
                         "cpu_samples": [],
                         "result": result_data
                     }
+                raise  # Re-raise the original exception if function failed
 
     async def measure_async(self, func, *args, **kwargs):
         """Executes an async function and measures its CPU carbon emissions.
@@ -813,6 +1000,7 @@ class EcoTrace:
                         "cpu_samples": [],
                         "result": result_data
                     }
+                raise
 
     def compare(self, func1, func2):
         """Runs two functions sequentially and compares their carbon footprints.
@@ -1016,7 +1204,7 @@ class EcoTrace:
         with open(filename, "w", encoding="utf-8") as f:
             _json.dump(report, f, indent=2, ensure_ascii=False)
 
-        logger.info(f"JSON rapor yazıldı: {filename} ({len(measurements)} kayıt)")
+        logger.info(f"JSON report written: {filename} ({len(measurements)} records)")
 
     # ========================================================================
     # Lifecycle
@@ -1055,13 +1243,19 @@ class EcoTrace:
                 
                 gpu_carbon = 0.0
                 if self.gpu_info:
-                    avg_gpu = self._get_avg_gpu_in_range(start_time, end_time)
-                    gpu_carbon = self._compute_carbon(self.gpu_info['tdp'], avg_gpu, duration)
+                    avg_gpu, avg_gpu_pwr = self._get_avg_gpu_in_range(start_time, end_time)
+                    if avg_gpu_pwr is not None:
+                        # EXACT GPU MODE
+                        gpu_energy_wh = (avg_gpu_pwr * duration) / self.SECONDS_PER_HOUR
+                        gpu_carbon = (gpu_energy_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
+                    else:
+                        # ESTIMATION MODE
+                        gpu_carbon = self._compute_carbon(self.gpu_info['tdp'], avg_gpu, duration, is_gpu=True)
                 
                 carbon_emitted = cpu_carbon + gpu_carbon
                 self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
                 
-                logger.info(f"Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.6f}g CO2")
+                logger.info(f"Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.8f}g CO2")
             except Exception as e:
                 logger.error(f"Block measurement failed for '{block_name}': {e}")
 
