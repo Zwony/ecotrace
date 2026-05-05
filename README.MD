@@ -36,9 +36,9 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## What's New in v1.0.1
+## Core Features in v1.0.1
 
-> **EcoTrace is heading towards Production/Stable.** The upcoming v1.0.1 release introduces active carbon budget enforcement — shifting from just measuring to active enforcement.
+> **EcoTrace is now Production/Stable.** The v1.0.1 release establishes active carbon budget enforcement as a core standard — shifting from passive measurement to active environmental accountability.
 
 - **Carbon Budget Enforcement** — Set `carbon_limit` and get real-time alerts at 80% and 100% thresholds, with optional callback hooks.
 - **CI/CD Carbon Gate** — `ecotrace gate --budget 10.0` returns exit code 1 if budget exceeded. No competitor has this.
