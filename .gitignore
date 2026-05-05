@@ -13,3 +13,6 @@ out/
 .vscode-test/
 *.vsix
 .vsce/
+scratch/
+test_v*.py
+demo_*.py
