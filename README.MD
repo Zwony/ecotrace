@@ -145,15 +145,21 @@ At process exit, a session summary is printed automatically:
 
 ## CI/CD Integration
 
-Enforce carbon budgets in your pipeline with a single command:
+### Official GitHub Action
+Enforce carbon budgets in your pipeline with our official GitHub Action. Add this to your `.github/workflows/ci.yml`:
 
 ```yaml
-# .github/workflows/ci.yml
-- name: Run tests
-  run: python -m pytest tests/
+- name: EcoTrace Carbon Gate
+  uses: Zwony/ecotrace@v1.0.1
+  with:
+    budget: '10.0'
+    region: 'US'
+```
 
-- name: Carbon Gate
-  run: ecotrace gate --budget 10.0
+### Manual CLI Integration
+You can also run the gate manually:
+```bash
+ecotrace gate --budget 10.0
 ```
 
 If total emissions exceed the budget, the gate fails with exit code 1 — preventing carbon-heavy code from being merged.
