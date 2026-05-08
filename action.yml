@@ -1,0 +1,30 @@
+name: 'EcoTrace Carbon Gate'
+description: 'Enforce carbon emission budgets in your CI/CD pipeline and prevent carbon-heavy code from being merged.'
+author: 'Emre Ozkal'
+inputs:
+  budget:
+    description: 'Carbon emission budget in grams of CO2.'
+    required: true
+    default: '10.0'
+  region:
+    description: 'ISO 3166-1 alpha-2 region code for carbon intensity (e.g., US, TR, FR).'
+    required: false
+    default: 'GLOBAL'
+  project_path:
+    description: 'Path to the project directory.'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install EcoTrace
+      run: pip install ecotrace
+      shell: bash
+    - name: Run Carbon Gate
+      run: ecotrace gate --budget ${{ inputs.budget }} --region ${{ inputs.region }}
+      shell: bash
+
+branding:
+  icon: 'shield'
+  color: 'green'
