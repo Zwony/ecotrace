@@ -102,7 +102,7 @@
     "@types/node": "25.x",
     "typescript": "^6.0.3",
     "eslint": "^10.3.0",
-    "@typescript-eslint/parser": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.2",
     "@typescript-eslint/eslint-plugin": "^8.59.0"
   }
 }
