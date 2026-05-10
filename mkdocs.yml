@@ -29,9 +29,23 @@ theme:
         name: Switch to light mode
 
 
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append(".")
 
 nav:
   - Home: index.md
   - Usage: USAGE.md
+  - API Reference: api.md
   - Architecture: ARCHITECTURE.md
+  - Community:
+      - Contributing: CONTRIBUTING.md
+      - Code of Conduct: CODE_OF_CONDUCT.md
+      - Security: SECURITY.md
+  - History: CHANGELOG.md
   - Support: SUPPORT.md
