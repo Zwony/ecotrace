@@ -2,29 +2,29 @@
 
 ## Supported Versions
 
-We are committed to providing security updates for the current major release of EcoTrace.
+Security updates are provided for the current stable release of EcoTrace.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| v0.6.x  | :white_check_mark: |
-| < v0.6  | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| v1.0.x  | Yes       |
+| v0.9.x  | No        |
+| < v0.9  | No        |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within the EcoTrace project, please do **NOT** open a public issue. Instead, please report it privately to the maintainers:
+If you discover a security vulnerability within the EcoTrace project, do **not** open a public issue. Report it privately to the maintainers:
 
-**Email**: [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com)
+**Email:** [ecotraceteam@gmail.com](mailto:ecotraceteam@gmail.com)
 
 Please include the following in your report:
+
 - A detailed description of the vulnerability.
 - Steps to reproduce the issue.
 - Potential impact if the vulnerability is exploited.
 
-### Our Response Process
+## Response Process
 
-1. **Acknowledgment**: We will acknowledge receipt of your report within **48 hours**.
-2. **Investigation**: We will investigate the issue and determine its severity and impact.
-3. **Fix**: If confirmed, we will work on a fix and test it thoroughly.
-4. **Disclosure**: Once a fix is ready and released, we will coordinate a public disclosure and credit you for your discovery (if desired).
-
-Thank you for helping keep EcoTrace and its users safe!
+1. **Acknowledgment** — Receipt of your report will be acknowledged within 48 hours.
+2. **Investigation** — The issue will be assessed for severity and impact.
+3. **Fix** — If confirmed, a patch will be developed and tested thoroughly.
+4. **Disclosure** — Once a fix is released, a public disclosure will be coordinated. Credit will be given to the reporter if desired.
