@@ -25,7 +25,7 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 <br>
 
-![EcoTrace Demo](demo.gif)
+![EcoTrace Demo](images/demo.gif)
 
 *Function-level carbon measurement with real-time monitoring*
 
@@ -180,9 +180,9 @@ If total emissions exceed the budget, the gate fails with exit code 1 — preven
 
 ## Documentation
 
-- [**Architecture and Science**](docs/ARCHITECTURE.md) — How the energy model and process isolation work.
-- [**Advanced Usage**](docs/USAGE.md) — GPU tracking, AI insights, benchmarks, and comparison tables.
-- [**Support and Reference**](docs/SUPPORT.md) — Troubleshooting, region codes, and hardware compatibility.
+- [**Architecture and Science**](ARCHITECTURE.md) — How the energy model and process isolation work.
+- [**Advanced Usage**](USAGE.md) — GPU tracking, AI insights, benchmarks, and comparison tables.
+- [**Support and Reference**](SUPPORT.md) — Troubleshooting, region codes, and hardware compatibility.
 
 ---
 

@@ -1,6 +1,6 @@
-# Contributing to EcoTrace 🌱
+# Contributing to EcoTrace
 
-Thank you for taking the time to contribute! EcoTrace is an open-source project and every contribution — big or small — makes a difference.
+EcoTrace is an open-source project. Contributions of any kind — code, documentation, hardware data, or bug reports — are welcome.
 
 ---
 
@@ -44,15 +44,13 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ## How to Contribute
 
-There are many ways to contribute to EcoTrace:
-
 | Type | Description |
 |------|-------------|
-| 🐛 Bug Fix | Fix a broken or unexpected behavior |
-| ✨ Feature | Add a new tracking method, region, or export format |
-| 📖 Docs | Improve the README, docstrings, or add examples |
-| 🧪 Tests | Write or improve unit tests |
-| 🌍 Data | Contribute CPU/GPU TDP values or regional carbon intensity data |
+| Bug Fix | Fix a broken or unexpected behavior |
+| Feature | Add a new tracking method, region, or export format |
+| Documentation | Improve the README, docstrings, or add examples |
+| Tests | Write or improve unit tests |
+| Data | Contribute CPU/GPU TDP values or regional carbon intensity data |
 
 ---
 
@@ -64,7 +62,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install in editable mode with dev dependencies
-pip install -e ".[dev]""
+pip install -e ".[dev]"
 
 # Run tests
 pytest
@@ -86,7 +84,7 @@ flake8 ecotrace/
    ```
 3. Open a Pull Request against the `main` branch
 4. Fill in the PR template — describe what you changed and why
-5. Be patient! The maintainer will review as soon as possible
+5. The maintainer will review as soon as possible
 
 ---
 
@@ -120,10 +118,10 @@ Have an idea? [Open a feature request](https://github.com/Zwony/ecotrace/issues/
 
 ---
 
-## Questions?
+## Questions
 
 Join the community on [Discord](https://discord.gg/hs58XXb3Uq) or open a [Discussion](https://github.com/Zwony/ecotrace/discussions).
 
 ---
 
-Made with 💚 by [Emre Özkal](https://github.com/Zwony) and contributors.
+Maintained by [Emre Ozkal](https://github.com/Zwony) and contributors.
