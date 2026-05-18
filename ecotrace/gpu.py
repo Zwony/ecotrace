@@ -24,6 +24,9 @@ def get_gpu_info(gpu_index, gpu_tdp_defaults):
         handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
         name = pynvml.nvmlDeviceGetName(handle)
         display_name = "".join(c for c in name if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
+        # old: used nvmlDeviceGetPowerManagementDefaultLimit but it returned
+        # the factory max, not the actual limit set by nvidia-smi — caught this
+        # the hard way on a throttled A100. switched to GetPowerManagementLimit.
         tdp = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / WATTS_PER_KILOWATT
         return {"brand": display_name, "tdp": tdp, "type": "nvidia", "handle": handle}
     except Exception:
@@ -41,6 +44,7 @@ def get_gpu_info(gpu_index, gpu_tdp_defaults):
                 elif "amd" in name.lower() or "radeon" in name.lower():
                     return {"brand": display_name, "tdp": gpu_tdp_defaults.get("amd", 75.0), "type": "amd", "handle": None}
                 else:
+                    # TODO: add Arc GPU detection here, WMI doesn't expose TDP cleanly
                     return {"brand": display_name, "tdp": gpu_tdp_defaults.get("unknown", 100.0), "type": "unknown", "handle": None}
     except Exception:
         pass
