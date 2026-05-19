@@ -1,7 +1,4 @@
-<div align="center">
-
-<img src="logo.png" width="200" alt="EcoTrace Logo">
-
+![EcoTrace Logo](images/logo.png)
 # EcoTrace
 
 ### High-Precision Energy and Emissions Instrumentation
@@ -19,7 +16,6 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=for-the-badge&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
-[![Documentation Status](https://readthedocs.org/projects/ecotrace/badge/?version=latest)](https://ecotrace.readthedocs.io/en/latest/?badge=latest)
 [![VS Code Extension](https://img.shields.io/badge/VS_Code-EcoTrace-007ACC?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
 
 <br>
@@ -29,11 +25,9 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 <br>
 
-![EcoTrace Demo](demo.gif)
+![EcoTrace Demo](images/demo.gif)
 
 *Function-level carbon measurement with real-time monitoring*
-
-</div>
 
 ---
 
@@ -186,12 +180,9 @@ If total emissions exceed the budget, the gate fails with exit code 1 — preven
 
 ## Documentation
 
-Full documentation is available at [**ecotrace.readthedocs.io**](https://ecotrace.readthedocs.io/en/latest/).
-
-- [**Architecture and Science**](https://ecotrace.readthedocs.io/en/latest/ARCHITECTURE/) — How the energy model and process isolation work.
-- [**Advanced Usage**](https://ecotrace.readthedocs.io/en/latest/USAGE/) — GPU tracking, AI insights, benchmarks, and comparison tables.
-- [**API Reference**](https://ecotrace.readthedocs.io/en/latest/api/) — Technical documentation for core classes and functions.
-- [**Support and Reference**](https://ecotrace.readthedocs.io/en/latest/SUPPORT/) — Troubleshooting, region codes, and hardware compatibility.
+- [**Architecture and Science**](ARCHITECTURE.md) — How the energy model and process isolation work.
+- [**Advanced Usage**](USAGE.md) — GPU tracking, AI insights, benchmarks, and comparison tables.
+- [**Support and Reference**](SUPPORT.md) — Troubleshooting, region codes, and hardware compatibility.
 
 ---
 
@@ -215,8 +206,4 @@ We welcome contributions! Please see our [**CONTRIBUTING.MD**](CONTRIBUTING.MD) 
 
 MIT License — Use it however you like.
 
-<div align="center">
-
-*Developed for sustainable software development practices.*
-
-</div>
+*Developed for sustainable software development practices.*

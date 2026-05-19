@@ -1,40 +1,42 @@
-# 🚀 EcoTrace v0.5.2 — The Unified Monitoring Update
+# Release Notes — v0.5.2
 
-**Release Date:** 28.03.2026 (The Definitive 0.5.x Release)  
-**Version:** v0.5.2  
-**Focus:** Unified CPU+GPU Monitoring & Core-Aware Performance Insights
-
----
-
-## 🌟 What's New
-
-### 🛰️ Unified Multi-Resource Monitoring
-We've unified the core tracking logic. The standard `@track` decorator and `measure()` API now automatically detect and monitor your **GPU** alongside the CPU. 
-- **Aggregated Carbon**: Rapor artık CPU ve GPU emisyonlarını toplayarak tek bir "Toplam Karbon Ayak İzi" sunuyor.
-- **Zero Configuration**: Eğer sistemde GPU varsa, EcoTrace bunu otomatik algılar ve izlemeye başlar.
-
-### 📊 Automated Visual Reporting
-Raporlama motoru artık hiçbir parametre gerektirmeden tam otomatik çalışıyor.
-- **Auto-Snapshoting**: `generate_pdf_report()` çağrıldığında o ana kadar toplanan tüm CPU ve GPU örnekleri grafik olarak rapora eklenir.
-- **High-Res Visuals**: Yüksek çözünürlüklü kullanım grafikleri artık her raporda standart olarak sunuluyor.
-
-### 🧠 Smart "Core-Aware" Insights
-20 çekirdekli i7-13700H gibi güçlü işlemcilerde oluşan yanlış "Düşük CPU" (Low CPU) uyarıları giderildi.
-- **Dynamic Thresholding**: Analiz motoru artık çekirdek sayısına göre dinamik eşikler hesaplıyor.
-- **Realistic Advice**: "Single-Thread Intensive" gibi daha teknik ve gerçekçi performans tavsiyeleri eklendi.
+**Release Date:** 2026-03-28
+**Type:** Patch Release
 
 ---
 
-## 🛠️ Internal Improvements
-- **Context Manager Nesting**: CPU ve GPU monitörleri artık birbirini bloklamadan iç içe çalışabiliyor.
-- **Unified Accumulation**: Tüm izleme yöntemleri (`track`, `track_block`, `measure`) ortak bir karbon toplama mantığına çekildi.
-- **Wait Stability**: Async izlemelerdekiTrailing sample kayıpları giderildi.
+## Overview
+
+v0.5.2 unifies CPU and GPU monitoring under the standard `@track` decorator and delivers fully automated PDF report generation.
 
 ---
 
-## 🚀 How to Upgrade
+## Added
+
+**Unified Multi-Resource Monitoring**
+
+The standard `@track` decorator and `measure()` API now automatically detect and monitor GPU alongside CPU when hardware is available. Carbon emissions from both sources are aggregated into a single total in all reports.
+
+**Automated Visual Reporting**
+
+`generate_pdf_report()` now operates without any additional parameters. All CPU and GPU samples collected during the session are automatically included as high-resolution utilization charts in the generated report.
+
+**Core-Aware Performance Insights**
+
+False "Low CPU" warnings on high-core-count processors (such as the Intel i7-13700H with 20 logical cores) have been resolved. The analysis engine now computes dynamic thresholds based on the detected core count, and advice terminology has been updated to distinguish between single-thread intensive and high-multicore workloads.
+
+---
+
+## Internal Improvements
+
+- CPU and GPU monitors can now run concurrently without blocking each other.
+- All tracking methods (`track`, `track_block`, `measure`) share a unified carbon accumulation path.
+- Resolved trailing sample loss in async tracking sessions.
+
+---
+
+## How to Upgrade
+
 ```bash
 pip install --upgrade ecotrace
 ```
-
-*Crafted for maximum precision, minimum effort, and a carbon-aware future.*

@@ -98,11 +98,11 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
+    "@types/vscode": "^1.120.0",
     "@types/node": "25.x",
     "typescript": "^6.0.3",
-    "eslint": "^10.3.0",
-    "@typescript-eslint/parser": "^8.59.1",
-    "@typescript-eslint/eslint-plugin": "^8.59.0"
+    "eslint": "^10.4.0",
+    "@typescript-eslint/parser": "^8.59.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.2"
   }
 }
