@@ -13,6 +13,7 @@ from .config import (load_constants, validate_region_code, resolve_carbon_intens
 import functools
 import asyncio
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 import tempfile
 
@@ -107,6 +108,8 @@ class EcoTrace:
         self._budget_warning_fired = False   # 80% threshold — fires once
         self._budget_exceeded_fired = False  # 100% threshold — fires once
         self._tracked_functions_count = 0    # Total tracked calls for session summary
+        self._exporters = []                 # External telemetry exporters (e.g. OTEL)
+        self._exporter_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="EcoTrace-Exporter")
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(self.base_dir, "constants.json")
@@ -359,10 +362,33 @@ class EcoTrace:
             self._tracked_functions_count += 1
             self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu, file_path, line_number)
 
+            # --- Emit to registered telemetry exporters ----------------------
+            if self._exporters:
+                def _dispatch_exporters():
+                    for exporter in self._exporters:
+                        try:
+                            exporter.export(
+                                carbon_emitted=carbon_emitted,
+                                func_name=func_name,
+                                duration=duration,
+                                region=self.region_code
+                            )
+                        except Exception as e:
+                            logger.debug(f"EcoTrace Exporter error: {e}")
+                self._exporter_pool.submit(_dispatch_exporters)
+
             # --- Carbon Budget Enforcement (v1.0) ----------------------------
             # The library enforces its own rules. If a limit was set, we check
             # it here — not in the IDE, not in middleware, right at the source.
             self._enforce_carbon_budget(func_name)
+
+    def add_exporter(self, exporter):
+        """Registers a telemetry exporter to receive carbon metrics in real-time.
+        
+        Args:
+            exporter: An object implementing an `export(carbon_emitted, func_name, duration, region)` method.
+        """
+        self._exporters.append(exporter)
 
     def _enforce_carbon_budget(self, func_name):
         """Checks carbon budget thresholds and fires warnings/callbacks.
@@ -428,6 +454,9 @@ class EcoTrace:
         so the engine prints the summary. IDE should not duplicate this.
         """
         try:
+            # Flush exporter pool before exit
+            self._exporter_pool.shutdown(wait=True)
+            
             session_duration = time.perf_counter() - self._session_start_time
             if self._tracked_functions_count == 0:
                 return  # No measurements taken, skip summary

@@ -1,6 +1,8 @@
 site_name: EcoTrace
+site_url: https://ecotrace.readthedocs.io/en/latest/
 site_description: High-precision carbon tracking engine for production Python.
 site_author: Emre Ozkal
+
 repo_url: https://github.com/Zwony/ecotrace
 repo_name: Zwony/ecotrace
 
@@ -8,26 +10,30 @@ theme:
   name: material
   logo: images/logo.png
   favicon: images/logo.png
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.top
-    - search.suggest
-    - search.highlight
+  language: en
   palette:
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: teal
       accent: green
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
       primary: teal
       accent: green
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
 
 plugins:
   - search
@@ -37,6 +43,18 @@ plugins:
           setup_commands:
             - import sys
             - sys.path.append(".")
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Zwony/ecotrace
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/hs58XXb3Uq
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/ecotrace
 
 nav:
   - Home: index.md
@@ -53,6 +71,7 @@ nav:
       - Support: SUPPORT.md
   - History:
       - Changelog: CHANGELOG.md
+      - v1.1.0: history/releases/RELEASE_v1.1.0.md
       - v1.0.1: history/releases/RELEASE_v1.0.1.md
       - v0.9.0: history/releases/RELEASE_v0.9.0.md
       - v0.8.0: history/releases/RELEASE_v0.8.0.md
@@ -64,3 +83,14 @@ nav:
       - v0.5.1: history/releases/RELEASE_v0.5.1.md
       - v0.5.0: history/releases/RELEASE_v0.5.0.md
       - v0.4.0: history/releases/RELEASE_v0.4.0.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html

@@ -21,7 +21,8 @@ def get_ram_info():
     """
     total_ram_gb = psutil.virtual_memory().total / (1024**3)
     
-    ram_type = 'DDR4'
+    ram_type = 'DDR4'  # safe default, most systems since ~2015
+    # TODO: handle DDR3 fallback for older server hardware, came up in an issue
     ram_speed = 'Unknown'
     
     try:
