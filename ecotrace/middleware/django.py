@@ -12,7 +12,7 @@ except ImportError:
 
 from ecotrace.core import EcoTrace
 
-class EcoTraceMiddleware:
+class EcoTraceDjangoMiddleware:
     """Django middleware for tracking carbon emissions per request.
     
     Supports both WSGI (synchronous) and ASGI (asynchronous) views seamlessly.
@@ -27,7 +27,7 @@ class EcoTraceMiddleware:
 
     def __init__(self, get_response):
         if iscoroutinefunction is None:
-            msg = "EcoTraceMiddleware requires 'django' (which includes asgiref). Run: pip install ecotrace[web]"
+            msg = "EcoTraceDjangoMiddleware requires 'django' (which includes asgiref). Run: pip install ecotrace[web]"
             logger.error(msg)
             
         self.get_response = get_response
@@ -36,7 +36,6 @@ class EcoTraceMiddleware:
         if self.is_async and markcoroutinefunction:
             markcoroutinefunction(self)
             
-        # Try to load configuration from Django settings safely
         try:
             from django.conf import settings
             ecotrace_instance = getattr(settings, 'ECOTRACE_INSTANCE', None)
@@ -51,7 +50,6 @@ class EcoTraceMiddleware:
         if self.is_async:
             return self.__acall__(request)
             
-        # Synchronous WSGI flow
         request.META['ecotrace_start_time'] = time.perf_counter()
         self.ecotrace._start_cpu_monitor()
         response = None
@@ -63,7 +61,6 @@ class EcoTraceMiddleware:
         return response
 
     async def __acall__(self, request):
-        # Asynchronous ASGI flow
         request.META['ecotrace_start_time'] = time.perf_counter()
         self.ecotrace._start_cpu_monitor()
         response = None
@@ -100,8 +97,4 @@ class EcoTraceMiddleware:
                 self.ecotrace._accumulate_carbon(carbon_emitted, func_name, duration, avg_cpu)
                 
         except Exception as e:
-            # Objective: Never crash the main request cycle if measurement fails
             logger.debug(f"EcoTrace Django measurement failed: {e}")
-
-# /* --- Hybrid End of File / Dosya Sonu --- */ #
-# // EcoTrace Django Middleware Integration // #

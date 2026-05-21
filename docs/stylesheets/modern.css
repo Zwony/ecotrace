@@ -1,0 +1,193 @@
+/* docs/stylesheets/modern.css */
+:root {
+  --eco-primary: #10b981;
+  --eco-primary-glow: rgba(16, 185, 129, 0.2);
+  --eco-secondary: #064e3b;
+  --eco-accent: #34d399;
+  --eco-dark: #020617;
+  --eco-glass: rgba(15, 23, 42, 0.7);
+  --eco-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Base body styling */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #020617;
+  --md-default-fg-color: #f8fafc;
+  --md-primary-fg-color: #10b981;
+}
+
+/* Glassmorphism Header */
+.md-header {
+  background-color: var(--eco-glass) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--eco-border);
+}
+
+/* Hero Section */
+.eco-hero {
+  padding: 8rem 0 4rem;
+  text-align: center;
+  background: radial-gradient(circle at 50% -20%, var(--eco-primary-glow), transparent 70%);
+  overflow: hidden;
+  position: relative;
+}
+
+.eco-hero h1 {
+  font-size: 4.5rem !important;
+  font-weight: 800 !important;
+  background: linear-gradient(to bottom right, #ffffff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem !important;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.eco-hero p {
+  font-size: 1.25rem !important;
+  color: #94a3b8 !important;
+  max-width: 800px;
+  margin: 0 auto 2rem !important;
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease 0.2s forwards;
+}
+
+/* Buttons */
+.eco-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  margin: 0.5rem;
+}
+
+.eco-btn-primary {
+  background: var(--eco-primary);
+  color: white !important;
+  box-shadow: 0 0 20px var(--eco-primary-glow);
+}
+
+.eco-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px var(--eco-primary-glow);
+}
+
+.eco-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: white !important;
+  border: 1px solid var(--eco-border);
+}
+
+.eco-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Features Grid */
+.eco-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 4rem 0;
+}
+
+.eco-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--eco-border);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.eco-card:hover {
+  border-color: var(--eco-primary);
+  transform: translateY(-5px);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.eco-card h3 {
+  color: var(--eco-primary) !important;
+  margin-top: 0 !important;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide original logo in hero if we use custom HTML */
+.eco-hero img {
+  max-width: 180px;
+  margin-bottom: 2rem;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Modernize Code Blocks */
+.md-typeset pre {
+  border-radius: 12px !important;
+  border: 1px solid var(--eco-border) !important;
+  background-color: #0f172a !important;
+}
+
+/* Custom badges */
+.eco-badge {
+  background: var(--eco-primary-glow);
+  color: var(--eco-accent);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+/* Layout improvements */
+.md-content__inner {
+  margin-top: 0 !important;
+}
+
+.md-main__inner {
+  max-width: 1200px !important;
+}
+
+/* Sidebar Glassmorphism */
+.md-sidebar--primary {
+    background: transparent !important;
+}
+
+.md-sidebar__inner {
+    background: rgba(15, 23, 42, 0.3) !important;
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    margin: 1rem;
+    padding: 0.5rem;
+    border: 1px solid var(--eco-border);
+}
+
+.md-nav--primary .md-nav__title {
+    background-color: transparent !important;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 1rem;
+    color: var(--eco-primary) !important;
+}

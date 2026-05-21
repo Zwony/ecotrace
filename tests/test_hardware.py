@@ -7,14 +7,14 @@ from ecotrace.ram import get_ram_info
 
 def test_cpu_info_detection():
     # We mock cpuinfo to return a predictable string
-    with patch("ecotrace.cpu.cpuinfo.get_cpu_info", return_value={"brand_raw": "Intel Core i9-13900K"}):
+    with patch("ecotrace.cpu.fetch_raw_cpu_info", return_value={"brand_raw": "Intel Core i9-13900K"}):
         info = get_cpu_info({}, {})
         assert "Intel Core i9" in info["brand"]
         assert info["cores"] > 0
         assert info["tdp"] == 65.0  # Fallback TDP if not in DB
 
 def test_apple_silicon_tdp():
-    with patch("ecotrace.cpu.cpuinfo.get_cpu_info", return_value={"brand_raw": "Apple M2 Max"}):
+    with patch("ecotrace.cpu.fetch_raw_cpu_info", return_value={"brand_raw": "Apple M2 Max"}):
         constants = {"TDP_MAP": {"M2": 30.0}}
         info = get_cpu_info({}, constants)
         assert info["tdp"] == 30.0

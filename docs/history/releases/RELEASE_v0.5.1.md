@@ -1,38 +1,49 @@
-# 🚀 EcoTrace v0.5.1 — The Precision & Reporting Patch
+# Release Notes — v0.5.1
 
-**Release Date:** 28.03.2026 (Rapid Response Update)  
-**Version:** v0.5.1  
-**Focus:** Visual Analytics Restoration & Smart Insight Logic
+**Release Date:** 2026-03-28 **Type:** Patch Release
 
 ---
 
-## 🌟 What's New
+## Overview
 
-### 📈 Automated PDF Visuals
-Fixed a regression where CPU/GPU charts were omitted in v0.5.0 reports unless manually passed. 
-- **Auto-Snapshoting**: `generate_pdf_report()` now automatically captures the entire session's monitoring data for high-resolution utilization graphs.
-- **GPU Visualization**: Restored and improved the GPU utilization chart (SteelBlue theme) for NVIDIA, AMD, and Intel hardware.
+v0.5.1 restores PDF visual reporting that regressed in v0.5.0 and refines the performance insight engine.
 
-### 🧠 Balanced Performance Insights
-Refined the internal recommendation engine to account for **Smart Core Normalization**. 
-- **Dynamic Thresholds**: Optimization advice now scales based on the system's core count, eliminating false-positive "Try batching" warnings for single-threaded tasks on high-core processors (e.g., Apple M3 or Intel i9).
-- **New Terminology**: Realistically distinguishes between "Single-Thread Intensive" tasks and true "High Multi-Core" system-wide stress.
+---
 
-### 🛡️ Hardware Robustness
+## Fixed
+
+**Automated PDF Visuals**
+
+`generate_pdf_report()` now automatically captures the full session monitoring data for CPU and GPU utilization charts. This restores a regression introduced in v0.5.0 where charts were omitted unless passed manually.
+
+**GPU Visualization**
+
+Restored and improved the GPU utilization chart for NVIDIA, AMD, and Intel hardware.
+
+---
+
+## Updated
+
+**Balanced Performance Insights**
+
+The internal recommendation engine now accounts for Smart Core Normalization. Optimization advice scales based on the system's core count, eliminating false-positive "Try batching" warnings for single-threaded tasks on high-core processors (Apple M3, Intel i9, etc.). Advice terminology now distinguishes accurately between single-thread intensive tasks and true high-multicore system-wide stress.
+
+**Hardware Robustness**
+
 Improved GPU detection logic for Intel Iris Xe and AMD integrated graphics, ensuring monitoring threads initialize correctly across all vendor classes.
 
 ---
 
-## 🛠️ Internal Improvements
-- **Thread-Safe Reporting**: Snapshotting internal deques for PDF generation is now protected by monitoring locks.
-- **CSV Data Consistency**: Fixed historical log parsing in the PDF generator to match the new v0.5.1 multi-column format.
-- **Optimized Heuristics**: Prioritized execution-time alerts over utilization flags for actionable "Green Coding" advice.
+## Internal Improvements
+
+- Snapshotting of internal deques for PDF generation is now protected by monitoring locks.
+- Fixed historical log parsing in the PDF generator to match the v0.5.1 multi-column CSV format.
+- Execution-time alerts are now prioritized over utilization flags for more actionable output.
 
 ---
 
-## 🚀 How to Upgrade
-```bash
+## How to Upgrade
+
+```
 pip install --upgrade ecotrace
 ```
-
-*Rapidly refined for a more transparent and accurate sustainability future.*

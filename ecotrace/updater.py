@@ -70,10 +70,9 @@ def _is_newer_version(current, latest):
         from packaging.version import parse  # type: ignore
         return parse(latest) > parse(current)
     except Exception as e:
-        # If packaging is unavailable, fall back to simple string comparison
         from .logger import logger
-        logger.debug(f"Semantic version comparison fallback due to: {e}")
-        return latest != current
+        logger.debug(f"Semantic version comparison failed: {e}")
+        return False
 
 
 def _run_pip_upgrade():

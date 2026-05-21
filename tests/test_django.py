@@ -2,7 +2,7 @@ import pytest
 import time
 from unittest.mock import MagicMock, patch
 from ecotrace.core import EcoTrace
-from ecotrace.middleware.django import EcoTraceMiddleware
+from ecotrace.middleware.django import EcoTraceDjangoMiddleware
 
 @pytest.fixture
 def mock_django_settings(monkeypatch):
@@ -32,7 +32,7 @@ def test_django_middleware_sync_wsgi(mock_django_settings):
         time.sleep(0.01)
         return mock_response
         
-    middleware = EcoTraceMiddleware(get_response=dummy_get_response)
+    middleware = EcoTraceDjangoMiddleware(get_response=dummy_get_response)
     
     # Mock request
     request = MagicMock()
@@ -59,7 +59,7 @@ def test_django_middleware_async_asgi(mock_django_settings):
         
     with patch('ecotrace.middleware.django.iscoroutinefunction', return_value=True), \
          patch('ecotrace.middleware.django.markcoroutinefunction', MagicMock()):
-        middleware = EcoTraceMiddleware(get_response=dummy_get_response_async)
+        middleware = EcoTraceDjangoMiddleware(get_response=dummy_get_response_async)
     assert middleware.is_async is True
     
     # Mock request
@@ -79,7 +79,7 @@ def test_django_middleware_error_safety(mock_django_settings):
     def dummy_get_response(request):
         return mock_response
         
-    middleware = EcoTraceMiddleware(get_response=dummy_get_response)
+    middleware = EcoTraceDjangoMiddleware(get_response=dummy_get_response)
     
     request = MagicMock()
     request.META = {}
@@ -93,4 +93,3 @@ def test_django_middleware_error_safety(mock_django_settings):
     # Response should still be returned successfully despite the fault
     assert response is mock_response
 
-# /* --- Hybrid End of File / Dosya Sonu --- */ #

@@ -3,10 +3,6 @@ import csv
 import tempfile
 from fpdf import FPDF
 import matplotlib.pyplot as plt
-import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
-    import google.generativeai as genai
 from .logger import logger
 from .exceptions import ReportGenerationError
 
@@ -117,14 +113,22 @@ def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):
         return None
 
     try:
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+            import google.generativeai as genai
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
 
-        # Limit history to last 5 entries for prompt efficiency
         recent_history = history[-5:]
         history_summary = ""
         for row in recent_history:
-            history_summary += f"- {row[1]}: {row[2]}s, {row[3]}gCO2, {row[5]}% CPU\n"
+            history_summary += (
+                f"- {row.get('Function', 'unknown')}: "
+                f"{row.get('Duration(s)', '0')}s, "
+                f"{row.get('Carbon(gCO2)', '0')}gCO2, "
+                f"{row.get('AvgCPU(%)', 'N/A')}% CPU\n"
+            )
 
         gpu_desc = f"GPU: {gpu_info.get('brand')} ({gpu_info.get('tdp')}W)" if gpu_info else "No GPU"
 
@@ -162,7 +166,8 @@ def generate_pdf_report(
     comparison=None, 
     cpu_samples=None,
     gpu_samples=None,
-    api_key=None
+    api_key=None,
+    log_path=None
 ):
     """Generates a comprehensive PDF audit report covering energy footprint data.
 
@@ -178,6 +183,7 @@ def generate_pdf_report(
         cpu_samples (list): Captured process thread state samples for visualization rendering.
         gpu_samples (list): Captured GPU utilization samples for visualization rendering.
         api_key (str): Optional Google Gemini API key.
+        log_path (str): Path to the CSV audit log. Defaults to ``ecotrace_log.csv``.
 
     Returns:
         None: Operations output side-effects to the disk format system, with CLI feedbacks.
@@ -187,13 +193,12 @@ def generate_pdf_report(
         
     try:
         history = []
-        log_file = "ecotrace_log.csv"
+        log_file = log_path or "ecotrace_log.csv"
         if os.path.exists(log_file):
             with open(log_file, mode='r', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                next(reader)
+                reader = csv.DictReader(f)
                 for row in reader:
-                    if len(row) >= 6:
+                    if row.get("Function"):
                         history.append(row)
 
         pdf = FPDF()
@@ -234,14 +239,14 @@ def generate_pdf_report(
         pdf.set_font("helvetica", size=8)
         total_sum = 0.0
         for row in history:
-            safe_func_name = sanitize_for_pdf(row[1])
-            pdf.cell(40, 8, str(row[0]), border=1)
+            safe_func_name = sanitize_for_pdf(row.get("Function", ""))
+            pdf.cell(40, 8, str(row.get("Date", "")), border=1)
             pdf.cell(50, 8, safe_func_name, border=1)
-            pdf.cell(25, 8, str(row[2]), border=1)
-            pdf.cell(45, 8, str(row[3]), border=1)
-            pdf.cell(30, 8, str(row[4]), border=1, ln=True)
+            pdf.cell(25, 8, str(row.get("Duration(s)", "")), border=1)
+            pdf.cell(45, 8, str(row.get("Carbon(gCO2)", "")), border=1)
+            pdf.cell(30, 8, str(row.get("Region", "")), border=1, ln=True)
             try:
-                total_sum += float(row[3])
+                total_sum += float(row.get("Carbon(gCO2)", 0))
             except ValueError:
                 pass
 
@@ -334,9 +339,11 @@ def generate_pdf_report(
             
             for row in history[-5:]:
                 try:
-                    func_name = row[1][:15] + "..." if len(row[1]) > 15 else row[1]
-                    duration = float(row[2])
-                    avg_cpu = float(row[5])
+                    func_raw = row.get("Function", "")
+                    func_name = func_raw[:15] + "..." if len(func_raw) > 15 else func_raw
+                    duration = float(row.get("Duration(s)", 0))
+                    avg_cpu_str = row.get("AvgCPU(%)", "0")
+                    avg_cpu = float(avg_cpu_str) if avg_cpu_str != "N/A" else 0.0
                     
                     # --- Balanced Insight Engine ---
                     recommendation = "Optimal"

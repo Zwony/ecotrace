@@ -1,40 +1,51 @@
-# 🚀 EcoTrace v0.5.0 — The Hardware Intelligence Update
+# Release Notes — v0.5.0
 
-**Release Date:** 28.03.2026 (Released 1 Day Early!)  
-**Version:** v0.5.0  
-**Focus:** High-Precision Hardware Analysis & AI-Powered Sustainability Insights
+**Release Date:** 2026-03-28 **Type:** Minor Release
 
 ---
 
-## 🌟 Major Features
+## Overview
 
-### 1. 🧬 Smart Core Normalization
-Developed a core-aware utilization tracking system that properly scales across multi-core processors (1 to 128+ logical cores). This eliminates the "inflation" effect in multi-threaded Python applications, providing scientific accuracy for real-world production workloads.
-
-### 2. ⚡ RAM Generation Tracking
-Introducing deep RAM analysis. EcoTrace now detects RAM type (DDR4, DDR5, LPDDR) and MHz speed to apply specific watt-factors (RSS-based recursive process tracking), making energy estimation for data-heavy tasks significantly more accurate.
-
-### 3. 🤖 Gemini AI Insights (Beta)
-The highlight of this release. EcoTrace now optionally integrates with **Google Gemini AI**. Instead of static alerts, developers get:
-- **Hardware-Aware Optimization**: Recommendations tailored to your specific CPU/GPU model.
-- **Pythonic Green Refactoring**: Suggestions for async, vectorization, or library-level swaps to reduce carbon spikes.
-- **Actionable Sustainability**: "Green coding" advice directly in your audit-ready PDF reports.
-
-### 🍎 Apple Silicon Optimization
-Full native support for M1, M2, and M3 series architectures, including specific power profile mappings for Mac users.
+v0.5.0 delivers high-precision hardware analysis with core-aware CPU normalization, deep RAM generation tracking, optional Gemini AI insights, and full Apple Silicon support.
 
 ---
 
-## 🛠️ Architectural Improvements
-- **Deep Modularization**: Refactored the engine into distinct `cpu`, `gpu`, and `ram` intelligence modules.
-- **Stability Core**: Hardened the monitoring daemon to ensure zero impact on production performance.
-- **Strict Input Validation**: 100% Google-style docstrings and strict verification for `gpu_index` and `region_code`.
+## Added
+
+**Smart Core Normalization**
+
+A core-aware utilization tracking system properly scales across multi-core processors (1 to 128+ logical cores). This eliminates the utilization inflation effect in multi-threaded Python applications and ensures scientific accuracy for real-world production workloads.
+
+**RAM Generation Tracking**
+
+EcoTrace now detects RAM type (DDR4, DDR5, LPDDR) and clock speed to apply type-specific watt-factors using RSS-based recursive process tracking. Energy estimation for data-heavy tasks is significantly more accurate as a result.
+
+**Gemini AI Insights (Beta)**
+
+Optional integration with Google Gemini AI. When enabled, PDF reports include:
+
+- Hardware-aware optimization recommendations tailored to the specific CPU and GPU model.
+- Pythonic refactoring suggestions (async, vectorization, library-level swaps) to reduce carbon spikes.
+- Actionable sustainability advice embedded directly in the audit report.
+
+Requires `pip install ecotrace[ai]` .
+
+**Apple Silicon Support**
+
+Full native support for M1, M2, and M3 series architectures with specific power profile mappings.
 
 ---
 
-## 🚀 How to Upgrade
-```bash
+## Architectural Improvements
+
+- Engine refactored into distinct `cpu` , `gpu` , and `ram` intelligence modules.
+- Monitoring daemon hardened to ensure minimal impact on production performance.
+- Strict input validation for `gpu_index` and `region_code` parameters.
+
+---
+
+## How to Upgrade
+
+```
 pip install --upgrade ecotrace
 ```
-
-*Built with 💚 for a sustainable software future.*

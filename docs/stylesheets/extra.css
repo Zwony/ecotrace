@@ -1,0 +1,9 @@
+/* docs/stylesheets/extra.css */
+
+/* Top right logo customization (removed per user request) */
+.md-header__source {
+    position: relative;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}

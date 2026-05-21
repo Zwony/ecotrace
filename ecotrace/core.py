@@ -54,6 +54,7 @@ class EcoTrace:
         check_updates: If True (default), checks PyPI for newer versions at
             startup and prompts the user interactively. Set to False in CI/CD
             or non-interactive environments.
+        log_path: Path to the CSV audit log file. Defaults to ``ecotrace_log.csv``.
 
     Raises:
         TypeError: If gpu_index is not an integer or carbon_limit is not numeric.
@@ -66,13 +67,24 @@ class EcoTrace:
     MONITOR_JOIN_TIMEOUT_S = 1.0
     BASELINE_MEASUREMENT_MS = 100  # 100ms idle baseline measurement
 
-    # --- Unit conversion constants ------------------------------------------
     SECONDS_PER_HOUR = 3600
     WATTS_PER_KILOWATT = 1000
 
+    import weakref as _weakref
+    _instances = _weakref.WeakSet()
+    _atexit_registered = False
+
+    @classmethod
+    def _atexit_handler(cls):
+        for instance in list(cls._instances):
+            try:
+                instance._print_session_summary()
+            except Exception:
+                pass
+
     def __init__(self, region_code="GLOBAL", carbon_limit=None, gpu_index=0,
                  api_key=None, grid_api_key=None, check_updates=True, quiet=False,
-                 on_budget_exceeded=None, session_summary=True):
+                 on_budget_exceeded=None, session_summary=True, log_path=None):
         # --- Auto-Update Check (v6.0) ----------------------------------------
         # Runs FIRST so the user sees the update prompt before initialization.
         # Completely fail-safe — errors are silently swallowed.
@@ -100,6 +112,7 @@ class EcoTrace:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.grid_api_key = grid_api_key or os.environ.get("ECOTRACE_GRID_API_KEY")
         self.quiet = quiet
+        self.log_path = log_path or "ecotrace_log.csv"
 
         # --- Carbon Budget Enforcement (v1.0) --------------------------------
         # The library produces data AND enforces rules. Budget alerts and
@@ -207,7 +220,10 @@ class EcoTrace:
         self._session_summary_enabled = session_summary and not quiet
         if self._session_summary_enabled:
             import atexit
-            atexit.register(self._print_session_summary)
+            self.__class__._instances.add(self)
+            if not self.__class__._atexit_registered:
+                atexit.register(self.__class__._atexit_handler)
+                self.__class__._atexit_registered = True
 
     # ========================================================================
     # Live Grid API — Intensity Resolution (v6.0)
@@ -636,15 +652,17 @@ class EcoTrace:
 
     def _stop_cpu_monitor(self):
         """Signals the CPU sampling thread to stop only when ref count hits zero."""
+        thread_to_join = None
         with self._cpu_sample_lock:
             if self._cpu_monitor_ref_count > 0:
                 self._cpu_monitor_ref_count -= 1
             
             if self._cpu_monitor_ref_count == 0 and self._cpu_monitor_active:
                 self._cpu_monitor_active = False
-                if self._cpu_monitor_thread:
-                    self._cpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
-                    self._cpu_monitor_thread = None
+                thread_to_join = self._cpu_monitor_thread
+                self._cpu_monitor_thread = None
+        if thread_to_join:
+            thread_to_join.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
 
     def _start_gpu_monitor(self):
         """Spawns the background GPU sampling thread with reference counting."""
@@ -658,15 +676,17 @@ class EcoTrace:
 
     def _stop_gpu_monitor(self):
         """Signals the GPU sampling thread to stop only when ref count hits zero."""
+        thread_to_join = None
         with self._gpu_sample_lock:
             if self._gpu_monitor_ref_count > 0:
                 self._gpu_monitor_ref_count -= 1
             
             if self._gpu_monitor_ref_count == 0 and self._gpu_monitor_active:
                 self._gpu_monitor_active = False
-                if self._gpu_monitor_thread:
-                    self._gpu_monitor_thread.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
-                    self._gpu_monitor_thread = None
+                thread_to_join = self._gpu_monitor_thread
+                self._gpu_monitor_thread = None
+        if thread_to_join:
+            thread_to_join.join(timeout=self.MONITOR_JOIN_TIMEOUT_S)
 
     def _get_avg_cpu_in_range(self, start_time, end_time):
         """Computes mean CPU utilization from samples within a time window.
@@ -772,8 +792,8 @@ class EcoTrace:
             line_number: Source line number.
         """
         try:
-            file_exists = os.path.isfile("ecotrace_log.csv")
-            with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
+            file_exists = os.path.isfile(self.log_path)
+            with open(self.log_path, "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not file_exists:
                     writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region", "AvgCPU(%)", "FilePath", "Line"])
@@ -898,6 +918,7 @@ class EcoTrace:
         start_time = time.perf_counter()
         result_data = None
         func_success = False
+        user_exc = None
 
         try:
             energy_start = self.hardware.get_cpu_energy_j()
@@ -908,6 +929,8 @@ class EcoTrace:
                 else:
                     result_data = func(*args, **kwargs)
                 func_success = True
+        except BaseException as exc:
+            user_exc = exc
         finally:
             end_time = time.perf_counter()
             energy_end = self.hardware.get_cpu_energy_j()
@@ -953,7 +976,8 @@ class EcoTrace:
                         "cpu_samples": [],
                         "result": result_data
                     }
-                raise  # Re-raise the original exception if function failed
+            if user_exc is not None:
+                raise user_exc
 
     async def measure_async(self, func, *args, **kwargs):
         """Executes an async function and measures its CPU carbon emissions.
@@ -978,6 +1002,7 @@ class EcoTrace:
         start_time = time.perf_counter()
         result_data = None
         func_success = False
+        user_exc = None
 
         try:
             energy_start = self.hardware.get_cpu_energy_j()
@@ -991,6 +1016,8 @@ class EcoTrace:
                     func_success = True
                 finally:
                     await asyncio.sleep(self.MONITOR_INTERVAL_S)  # Allow trailing samples to be captured
+        except BaseException as exc:
+            user_exc = exc
         finally:
             end_time = time.perf_counter()
             energy_end = self.hardware.get_cpu_energy_j()
@@ -1029,7 +1056,8 @@ class EcoTrace:
                         "cpu_samples": [],
                         "result": result_data
                     }
-                raise
+            if user_exc is not None:
+                raise user_exc
 
     def compare(self, func1, func2):
         """Runs two functions sequentially and compares their carbon footprints.
@@ -1085,17 +1113,15 @@ class EcoTrace:
             comparison=comparison,
             cpu_samples=final_cpu_samples,
             gpu_samples=final_gpu_samples,
-            api_key=self.api_key
+            api_key=self.api_key,
+            log_path=self.log_path
         )
 
     # ========================================================================
     # JSON Export (v0.8.0)
     # ========================================================================
-    # Data bridge between the core engine and external consumers (VS Code
-    # extension, CI/CD pipelines, custom dashboards). Produces a structured
-    # JSON file that is far easier to parse than raw CSV.
 
-    def export_json(self, filename="ecotrace_report.json", csv_path="ecotrace_log.csv"):
+    def export_json(self, filename="ecotrace_report.json", csv_path=None):
         """Exports session data to a structured JSON file.
 
         Combines hardware metadata, measurement history from the CSV audit
@@ -1119,18 +1145,9 @@ class EcoTrace:
 
         Raises:
             IOError: If the output file cannot be written.
-
-        Example::
-
-            eco = EcoTrace(region_code="TR")
-
-            @eco.track
-            def my_function():
-                pass
-
-            my_function()
-            eco.export_json("report.json")
         """
+        if csv_path is None:
+            csv_path = getattr(self, "log_path", "ecotrace_log.csv")
         import json as _json
         from . import __version__
 
@@ -1255,45 +1272,45 @@ class EcoTrace:
             None: Control flow continues within the context.
         """
         start_time = time.perf_counter()
-        with self.cpu_monitor():
-            if self.gpu_info:
-                with self.gpu_monitor():
+        try:
+            with self.cpu_monitor():
+                if self.gpu_info:
+                    with self.gpu_monitor():
+                        yield
+                else:
                     yield
-            else:
-                yield
-            
+        finally:
             end_time = time.perf_counter()
             duration = end_time - start_time
-            
             try:
-                # Calculate metrics
                 avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
                 cpu_carbon = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
-                
                 gpu_carbon = 0.0
                 if self.gpu_info:
                     avg_gpu, avg_gpu_pwr = self._get_avg_gpu_in_range(start_time, end_time)
                     if avg_gpu_pwr is not None:
-                        # EXACT GPU MODE
                         gpu_energy_wh = (avg_gpu_pwr * duration) / self.SECONDS_PER_HOUR
                         gpu_carbon = (gpu_energy_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
                     else:
-                        # ESTIMATION MODE
                         gpu_carbon = self._compute_carbon(self.gpu_info['tdp'], avg_gpu, duration, is_gpu=True)
-                
                 carbon_emitted = cpu_carbon + gpu_carbon
                 self._accumulate_carbon(carbon_emitted, block_name, duration, avg_cpu)
-                
                 logger.info(f"Block '{block_name}': {duration:.3f}s, {avg_cpu:.1f}% CPU, {carbon_emitted:.8f}g CO2")
             except Exception as e:
                 logger.error(f"Block measurement failed for '{block_name}': {e}")
 
     def __del__(self):
         """Ensures all background monitoring threads are stopped and resources released."""
-        self._stop_cpu_monitor()
-        self._stop_gpu_monitor()
+        try:
+            self._stop_cpu_monitor()
+        except Exception:
+            pass
+        try:
+            self._stop_gpu_monitor()
+        except Exception:
+            pass
         try:
             import nvidia_ml_py as pynvml  # type: ignore
             pynvml.nvmlShutdown()
-        except (ImportError, Exception) as e:
-            logger.debug(f"nvmlShutdown bypassed or failed: {e}")
+        except Exception:
+            pass

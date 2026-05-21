@@ -1,5 +1,7 @@
 dist/
 build/
+site/
+docs/_readthedocs_html/
 *.egg-info/
 __pycache__/
 *.pyc

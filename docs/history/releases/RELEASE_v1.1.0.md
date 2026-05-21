@@ -43,7 +43,7 @@ Full WSGI and ASGI support for tracking carbon per HTTP request in Django applic
 ```python
 # settings.py
 MIDDLEWARE = [
-    "ecotrace.middleware.django.EcoTraceMiddleware",
+    "ecotrace.middleware.django.EcoTraceDjangoMiddleware",
     ...
 ]
 

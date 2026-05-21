@@ -4,7 +4,9 @@ from typing import Optional
 logger = logging.getLogger("ecotrace.exporters.otel")
 
 try:
+    # pyrefly: ignore [missing-import]
     from opentelemetry import metrics
+    # pyrefly: ignore [missing-import]
     from opentelemetry.metrics import MeterProvider, Meter
 except ImportError:
     metrics = None

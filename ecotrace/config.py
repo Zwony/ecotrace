@@ -6,7 +6,36 @@ DEFAULT_GPU_TDP_AMD_W = 75.0
 DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
 DEFAULT_CARBON_INTENSITY = 475
 DEFAULT_REGION = "GLOBAL"
-USER_AGENT = "EcoTrace/1.1.0"
+
+def _resolve_user_agent():
+    version_str = None
+    try:
+        from importlib.metadata import version
+        version_str = version("ecotrace")
+    except Exception:
+        pass
+    if not version_str:
+        try:
+            from . import __version__
+            version_str = __version__
+        except Exception:
+            pass
+    if not version_str:
+        try:
+            import pathlib
+            pyproject = pathlib.Path(__file__).resolve().parent.parent / "pyproject.toml"
+            if pyproject.is_file():
+                for line in pyproject.read_text(encoding="utf-8").splitlines():
+                    if line.strip().startswith("version"):
+                        version_str = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        break
+        except Exception:
+            pass
+    if not version_str:
+        version_str = "unknown"
+    return f"EcoTrace/{version_str}"
+
+USER_AGENT = _resolve_user_agent()
 
 def load_constants(json_path):
     """Loads constants from the JSON configuration file.
