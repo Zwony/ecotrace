@@ -1,6 +1,7 @@
 dist/
 build/
 site/
+.cursor/
 docs/_readthedocs_html/
 *.egg-info/
 __pycache__/
