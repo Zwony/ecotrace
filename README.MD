@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.0.1 — Production/Stable Release.** Features carbon budget enforcement, CI/CD gate, differential tracking, and session summaries.
+**v1.1.2 — Production/Stable Release.** Features OpenTelemetry export, Django/Celery integration, and critical stability improvements.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -37,16 +37,16 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.0.1
+## Core Features in v1.1.2
 
-> **EcoTrace is now Production/Stable.** The v1.0.1 release establishes active carbon budget enforcement as a core standard — shifting from passive measurement to active environmental accountability.
+> **Enterprise-Grade Monitoring & Export.** v1.1.2 adds OpenTelemetry export for cloud platforms, framework integrations, and critical stability enhancements.
 
-- **Carbon Budget Enforcement** — Set `carbon_limit` and get real-time alerts at 80% and 100% thresholds, with optional callback hooks.
-- **CI/CD Carbon Gate** — `ecotrace gate --budget 10.0` returns exit code 1 if budget exceeded. No competitor has this.
-- **Differential Tracking** — OS idle noise is now subtracted from measurements. You see only YOUR code's carbon cost.
-- **Session Summary** — Automatic summary table at process exit: duration, functions tracked, total carbon, budget status.
-- **Carbon Equivalences** — Abstract gCO2 values converted to relatable comparisons (Google searches, LED bulb time, car km).
-- **Critical Bug Fixes** — Exception handling, GPU crash fixes, and packaging corrections. See [CHANGELOG.md](CHANGELOG.md).
+- **OpenTelemetry Exporter** — Export carbon metrics to Grafana, Datadog, New Relic, and Prometheus without blocking your application.
+- **Django & Celery Middleware** — WSGI/ASGI request tracking and Celery task-level carbon measurement with response headers and worker signal cleanup.
+- **Session Management** — Class-level atexit handlers with WeakSet instances prevent memory leaks on repeated module reloads.
+- **Exception Transparency** — User exceptions now properly propagate after measurement teardown; measurement errors no longer mask failures.
+- **Platform Reliability** — PowerShell `Get-CimInstance` (Windows) and `dmidecode` with sudo fallback (Linux) for robust RAM detection.
+- **Critical Fixes** — Gemini lazy-loading, cached CPU info reuse, USER_AGENT fallbacks, and version checker robustness. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -219,4 +219,4 @@ MIT License — Use it however you like.
 
 *Developed for sustainable software development practices.*
 
-</div>
+</div>
