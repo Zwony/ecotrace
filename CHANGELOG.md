@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-05-21
+### Fixed
+- **Session atexit:** Class-level `atexit` handler with `WeakSet` instances replaces per-instance registration.
+- **measure / measure_async:** User exceptions propagate after measurement teardown; measurement errors no longer mask failures.
+- **PDF / CSV:** `generate_pdf_report` accepts `log_path`; report CSV parsing uses `DictReader` column names.
+- **Gemini import:** Lazy-load `google.generativeai` inside `get_gemini_insights` only.
+- **Windows RAM:** PowerShell `Get-CimInstance` replaces deprecated `wmic`.
+- **Linux RAM:** `dmidecode` without sudo first, then `sudo -n` when output is empty.
+- **CPU info:** Reuses cached `fetch_raw_cpu_info()` instead of duplicate `cpuinfo` calls.
+- **USER_AGENT:** Resolved from installed package version with fallbacks.
+- **Update checker:** `_is_newer_version` returns `False` on parse failure.
+
+### Changed
+- **Breaking:** Django middleware renamed to `EcoTraceDjangoMiddleware` (`ecotrace.middleware.django`). FastAPI `EcoTraceMiddleware` unchanged.
+- Logger default level restored to `WARNING`.
+
+### Updated
+- Version bumped to 1.1.2 across package metadata.
+
+## [1.1.0] - 2026-05-19
+### Added
+- **OpenTelemetry Exporter:** Added `OTelExporter` for non-blocking export of carbon metrics to OpenTelemetry-compatible platforms such as Grafana, Datadog, New Relic, and Prometheus.
+- **Django Middleware:** Added WSGI/ASGI request tracking with `X-Eco-Carbon-Emitted` and `X-Eco-Duration` response headers.
+- **Celery Plugin:** Added task-level carbon tracking through Celery worker signals, including retry and revoke cleanup handling.
+- **Exporter API:** Added `EcoTrace.add_exporter(exporter)` for registering custom exporter objects.
+
+### Fixed
+- **GPU TDP Resolution:** Runtime power limits are now used instead of factory default limits, improving estimates on power-capped GPUs.
+
+### Updated
+- Exporter dispatch now runs through a dedicated thread pool and flushes pending export tasks during process shutdown.
+- Version bumped to 1.1.0 across package metadata.
+
 ## [1.0.1] - 2026-05-05
 ### Added
 - **Carbon Budget Enforcement:** `carbon_limit` parameter now actively enforces budget with two-tier alerts (80% warning + 100% exceeded) and optional `on_budget_exceeded` callback.
