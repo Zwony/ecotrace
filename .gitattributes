@@ -1,2 +1,2 @@
 # Exclude the generated documentation site from language statistics
-/site/* linguist-generated
+site/** linguist-generated
