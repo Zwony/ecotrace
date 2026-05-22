@@ -151,7 +151,7 @@ Enforce carbon budgets in your pipeline with our official GitHub Action. Add thi
 
 ```yaml
 - name: EcoTrace Carbon Gate
-  uses: Zwony/ecotrace@v1.0.1
+  uses: Zwony/ecotrace@core-v1.1.2
   with:
     budget: '10.0'
     region: 'US'
