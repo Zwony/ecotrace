@@ -12,13 +12,13 @@
         <meta name="author" content="Emre Ozkal">
       
       
-        <link rel="canonical" href="https://ecotrace.readthedocs.io/en/latest/history/releases/RELEASE_v0.5.2/">
+        <link rel="canonical" href="https://ecotrace.readthedocs.io/en/latest/history/releases/RELEASE_v1.1.2/">
       
       
-        <link rel="prev" href="../RELEASE_v0.6.0/">
+        <link rel="prev" href="../../../CHANGELOG/">
       
       
-        <link rel="next" href="../RELEASE_v0.5.1/">
+        <link rel="next" href="../RELEASE_v1.1.0/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>v0.5.2 - EcoTrace</title>
+        <title>v1.1.2 - EcoTrace</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#release-notes-v052" class="md-skip">
+        <a href="#release-notes-v112" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              v0.5.2
+              v1.1.2
             
           </span>
         </div>
@@ -893,10 +893,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../RELEASE_v1.1.2/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.1.2
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -912,6 +939,148 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Breaking Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#django-middleware-renaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Django Middleware Renaming
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-fixes-engine-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes &amp; Engine Improvements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bug Fixes &amp; Engine Improvements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-robust-exception-propagation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Robust Exception Propagation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-session-atexit-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Session atexit Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-ram-cpu-hardware-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. RAM &amp; CPU Hardware Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-pdf-csv-reporting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. PDF &amp; CSV Reporting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-dependency-versioning-tweaks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Dependency &amp; Versioning Tweaks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1145,37 +1314,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    v0.5.2
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../RELEASE_v0.5.2/" class="md-nav__link">
         
   
   
@@ -1191,70 +1333,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Added
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#internal-improvements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Internal Improvements
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-upgrade" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How to Upgrade
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1378,10 +1456,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#summary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Summary
       
     </span>
   </a>
@@ -1389,32 +1467,110 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
+  <a href="#breaking-changes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Added
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Breaking Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#django-middleware-renaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Django Middleware Renaming
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#internal-improvements" class="md-nav__link">
+  <a href="#bug-fixes-engine-improvements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Internal Improvements
+        Bug Fixes &amp; Engine Improvements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bug Fixes &amp; Engine Improvements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-robust-exception-propagation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Robust Exception Propagation
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-upgrade" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#2-session-atexit-optimization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to Upgrade
+        2. Session atexit Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-ram-cpu-hardware-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. RAM &amp; CPU Hardware Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-pdf-csv-reporting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. PDF &amp; CSV Reporting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-dependency-versioning-tweaks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Dependency &amp; Versioning Tweaks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
       
     </span>
   </a>
@@ -1441,30 +1597,55 @@
   
 
 
-<h1 id="release-notes-v052">Release Notes — v0.5.2<a class="headerlink" href="#release-notes-v052" title="Permanent link">&para;</a></h1>
-<p><strong>Release Date:</strong> 2026-03-28
-<strong>Type:</strong> Patch Release</p>
+<h1 id="release-notes-v112">Release Notes — v1.1.2<a class="headerlink" href="#release-notes-v112" title="Permanent link">&para;</a></h1>
+<p><strong>Released:</strong> 2026-05-21
+<strong>Type:</strong> Patch — Stability &amp; Integration Fixes</p>
 <hr />
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>v0.5.2 unifies CPU and GPU monitoring under the standard <code>@track</code> decorator and delivers fully automated PDF report generation.</p>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
+<p>v1.1.2 is a quality-of-life and stability patch releasing critical fixes for exceptions handling, reporting tools, and RAM/CPU auto-detection routines. It also introduces one breaking change renaming the Django middleware for naming consistency.</p>
 <hr />
-<h2 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h2>
-<p><strong>Unified Multi-Resource Monitoring</strong></p>
-<p>The standard <code>@track</code> decorator and <code>measure()</code> API now automatically detect and monitor GPU alongside CPU when hardware is available. Carbon emissions from both sources are aggregated into a single total in all reports.</p>
-<p><strong>Automated Visual Reporting</strong></p>
-<p><code>generate_pdf_report()</code> now operates without any additional parameters. All CPU and GPU samples collected during the session are automatically included as high-resolution utilization charts in the generated report.</p>
-<p><strong>Core-Aware Performance Insights</strong></p>
-<p>False "Low CPU" warnings on high-core-count processors (such as the Intel i7-13700H with 20 logical cores) have been resolved. The analysis engine now computes dynamic thresholds based on the detected core count, and advice terminology has been updated to distinguish between single-thread intensive and high-multicore workloads.</p>
+<h2 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h2>
+<h3 id="django-middleware-renaming">Django Middleware Renaming<a class="headerlink" href="#django-middleware-renaming" title="Permanent link">&para;</a></h3>
+<p>For naming consistency across integrations, the Django middleware class has been renamed to <strong><code>EcoTraceDjangoMiddleware</code></strong> and its module location updated to <code>ecotrace.middleware.django</code>. The FastAPI <code>EcoTraceMiddleware</code> remains unchanged.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Old (v1.1.0)</span>
+<span class="n">MIDDLEWARE</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ecotrace.middleware.django.EcoTraceMiddleware&quot;</span><span class="p">,</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+
+<span class="c1"># New (v1.1.2)</span>
+<span class="n">MIDDLEWARE</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ecotrace.middleware.django.EcoTraceDjangoMiddleware&quot;</span><span class="p">,</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</code></pre></div>
 <hr />
-<h2 id="internal-improvements">Internal Improvements<a class="headerlink" href="#internal-improvements" title="Permanent link">&para;</a></h2>
+<h2 id="bug-fixes-engine-improvements">Bug Fixes &amp; Engine Improvements<a class="headerlink" href="#bug-fixes-engine-improvements" title="Permanent link">&para;</a></h2>
+<h3 id="1-robust-exception-propagation">1. Robust Exception Propagation<a class="headerlink" href="#1-robust-exception-propagation" title="Permanent link">&para;</a></h3>
+<p>In <code>measure</code> and <code>measure_async</code> decorators/managers, user exceptions are now guaranteed to propagate after measurement teardown. Any internal EcoTrace telemetry errors during teardown are caught and handled, preventing them from masking original application failures.</p>
+<h3 id="2-session-atexit-optimization">2. Session atexit Optimization<a class="headerlink" href="#2-session-atexit-optimization" title="Permanent link">&para;</a></h3>
+<p>Replaced per-instance registration of <code>atexit</code> handlers with a class-level handler tracking active <code>WeakSet</code> instances, reducing clean-up overhead and preventing memory retention issues during runtime restarts.</p>
+<h3 id="3-ram-cpu-hardware-detection">3. RAM &amp; CPU Hardware Detection<a class="headerlink" href="#3-ram-cpu-hardware-detection" title="Permanent link">&para;</a></h3>
 <ul>
-<li>CPU and GPU monitors can now run concurrently without blocking each other.</li>
-<li>All tracking methods (<code>track</code>, <code>track_block</code>, <code>measure</code>) share a unified carbon accumulation path.</li>
-<li>Resolved trailing sample loss in async tracking sessions.</li>
+<li><strong>Windows:</strong> Upgraded to use PowerShell <code>Get-CimInstance</code> to retrieve RAM info, deprecating <code>wmic</code> usage which could trigger security or deprecation warnings on newer Windows editions.</li>
+<li><strong>Linux:</strong> <code>dmidecode</code> is run without <code>sudo</code> first. If output is empty, it attempts <code>sudo -n</code> for passwordless execution.</li>
+<li><strong>CPU Info Caching:</strong> The caching logic was improved to reuse <code>fetch_raw_cpu_info()</code> results instead of performing redundant <code>cpuinfo</code> calls.</li>
+</ul>
+<h3 id="4-pdf-csv-reporting">4. PDF &amp; CSV Reporting<a class="headerlink" href="#4-pdf-csv-reporting" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>generate_pdf_report</code> now accepts custom <code>log_path</code>.</li>
+<li>CSV report parser now correctly resolves columns via <code>DictReader</code> column names instead of hardcoded indexes, improving durability against log schema modifications.</li>
+</ul>
+<h3 id="5-dependency-versioning-tweaks">5. Dependency &amp; Versioning Tweaks<a class="headerlink" href="#5-dependency-versioning-tweaks" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Gemini AI:</strong> <code>google.generativeai</code> package is now lazy-loaded inside <code>get_gemini_insights()</code>, avoiding unnecessary startup delays when AI features are not used.</li>
+<li><strong>User Agent:</strong> Resolved from installed package version with appropriate fallback values.</li>
+<li><strong>Update Checker:</strong> Added safety check to return <code>False</code> if parsing version strings fails.</li>
+<li>Restored the default log level to <code>WARNING</code> to reduce terminal noise.</li>
 </ul>
 <hr />
-<h2 id="how-to-upgrade">How to Upgrade<a class="headerlink" href="#how-to-upgrade" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>ecotrace
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">ecotrace</span><span class="o">==</span><span class="m">1</span>.1.2
 </code></pre></div>
 
 
