@@ -482,10 +482,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#v101-productionstable-release-features-carbon-budget-enforcement-cicd-gate-differential-tracking-and-session-summaries" class="md-nav__link">
+  <a href="#v112-productionstable-release-features-opentelemetry-export-djangocelery-integration-and-critical-stability-improvements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        v1.0.1 — Production/Stable Release. Features carbon budget enforcement, CI/CD gate, differential tracking, and session summaries.
+        v1.1.2 — Production/Stable Release. Features OpenTelemetry export, Django/Celery integration, and critical stability improvements.
       
     </span>
   </a>
@@ -493,10 +493,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-features-in-v101" class="md-nav__link">
+  <a href="#core-features-in-v112" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Core Features in v1.0.1
+        Core Features in v1.1.2
       
     </span>
   </a>
@@ -1539,10 +1539,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#v101-productionstable-release-features-carbon-budget-enforcement-cicd-gate-differential-tracking-and-session-summaries" class="md-nav__link">
+  <a href="#v112-productionstable-release-features-opentelemetry-export-djangocelery-integration-and-critical-stability-improvements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        v1.0.1 — Production/Stable Release. Features carbon budget enforcement, CI/CD gate, differential tracking, and session summaries.
+        v1.1.2 — Production/Stable Release. Features OpenTelemetry export, Django/Celery integration, and critical stability improvements.
       
     </span>
   </a>
@@ -1550,10 +1550,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-features-in-v101" class="md-nav__link">
+  <a href="#core-features-in-v112" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Core Features in v1.0.1
+        Core Features in v1.1.2
       
     </span>
   </a>
@@ -1750,7 +1750,7 @@
 <h1 id="ecotrace">EcoTrace<a class="headerlink" href="#ecotrace" title="Permanent link">&para;</a></h1>
 <h3 id="high-precision-energy-and-emissions-instrumentation">High-Precision Energy and Emissions Instrumentation<a class="headerlink" href="#high-precision-energy-and-emissions-instrumentation" title="Permanent link">&para;</a></h3>
 <hr />
-<h2 id="v101-productionstable-release-features-carbon-budget-enforcement-cicd-gate-differential-tracking-and-session-summaries"><strong>v1.0.1 — Production/Stable Release.</strong> Features carbon budget enforcement, CI/CD gate, differential tracking, and session summaries.<a class="headerlink" href="#v101-productionstable-release-features-carbon-budget-enforcement-cicd-gate-differential-tracking-and-session-summaries" title="Permanent link">&para;</a></h2>
+<h2 id="v112-productionstable-release-features-opentelemetry-export-djangocelery-integration-and-critical-stability-improvements"><strong>v1.1.2 — Production/Stable Release.</strong> Features OpenTelemetry export, Django/Celery integration, and critical stability improvements.<a class="headerlink" href="#v112-productionstable-release-features-opentelemetry-export-djangocelery-integration-and-critical-stability-improvements" title="Permanent link">&para;</a></h2>
 <p><strong>EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.</strong></p>
 <p>Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configuration</p>
 <p><br></p>
@@ -1768,17 +1768,17 @@
 <p><img alt="EcoTrace Demo" src="images/demo.gif" /></p>
 <p><em>Function-level carbon measurement with real-time monitoring</em></p>
 <hr />
-<h2 id="core-features-in-v101">Core Features in v1.0.1<a class="headerlink" href="#core-features-in-v101" title="Permanent link">&para;</a></h2>
+<h2 id="core-features-in-v112">Core Features in v1.1.2<a class="headerlink" href="#core-features-in-v112" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>EcoTrace is now Production/Stable.</strong> The v1.0.1 release establishes active carbon budget enforcement as a core standard — shifting from passive measurement to active environmental accountability.</p>
+<p><strong>Enterprise-Grade Monitoring &amp; Export.</strong> v1.1.2 adds OpenTelemetry export for cloud platforms, framework integrations, and critical stability enhancements.</p>
 </blockquote>
 <ul>
-<li><strong>Carbon Budget Enforcement</strong> — Set <code>carbon_limit</code> and get real-time alerts at 80% and 100% thresholds, with optional callback hooks.</li>
-<li><strong>CI/CD Carbon Gate</strong> — <code>ecotrace gate --budget 10.0</code> returns exit code 1 if budget exceeded. No competitor has this.</li>
-<li><strong>Differential Tracking</strong> — OS idle noise is now subtracted from measurements. You see only YOUR code's carbon cost.</li>
-<li><strong>Session Summary</strong> — Automatic summary table at process exit: duration, functions tracked, total carbon, budget status.</li>
-<li><strong>Carbon Equivalences</strong> — Abstract gCO2 values converted to relatable comparisons (Google searches, LED bulb time, car km).</li>
-<li><strong>Critical Bug Fixes</strong> — Exception handling, GPU crash fixes, and packaging corrections. See <a href="CHANGELOG/">CHANGELOG.md</a>.</li>
+<li><strong>OpenTelemetry Exporter</strong> — Export carbon metrics to Grafana, Datadog, New Relic, and Prometheus without blocking your application.</li>
+<li><strong>Django &amp; Celery Middleware</strong> — WSGI/ASGI request tracking and Celery task-level carbon measurement with response headers and worker signal cleanup.</li>
+<li><strong>Session Management</strong> — Class-level atexit handlers with WeakSet instances prevent memory leaks on repeated module reloads.</li>
+<li><strong>Exception Transparency</strong> — User exceptions now properly propagate after measurement teardown; measurement errors no longer mask failures.</li>
+<li><strong>Platform Reliability</strong> — PowerShell <code>Get-CimInstance</code> (Windows) and <code>dmidecode</code> with sudo fallback (Linux) for robust RAM detection.</li>
+<li><strong>Critical Fixes</strong> — Gemini lazy-loading, cached CPU info reuse, USER_AGENT fallbacks, and version checker robustness. See <a href="CHANGELOG/">CHANGELOG.md</a>.</li>
 </ul>
 <hr />
 <h2 id="quick-install">Quick Install<a class="headerlink" href="#quick-install" title="Permanent link">&para;</a></h2>
@@ -1856,7 +1856,7 @@ pip<span class="w"> </span>install<span class="w"> </span>ecotrace<span class="o
 <h3 id="official-github-action">Official GitHub Action<a class="headerlink" href="#official-github-action" title="Permanent link">&para;</a></h3>
 <p>Enforce carbon budgets in your pipeline with our official GitHub Action. Add this to your <code>.github/workflows/ci.yml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EcoTrace Carbon Gate</span>
-<span class="w">  </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Zwony/ecotrace@v1.0.1</span>
+<span class="w">  </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Zwony/ecotrace@core-v1.1.2</span>
 <span class="w">  </span><span class="nt">with</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">budget</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10.0&#39;</span>
 <span class="w">    </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;US&#39;</span>
