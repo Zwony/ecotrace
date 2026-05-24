@@ -68,7 +68,7 @@ class EcoTraceML:
         if self.gpu_info:
             print(f"Starting energy tracking for {self.model_name} on GPU: {self.gpu_info['brand']} with TDP: {self.gpu_info['tdp']}W")
         else:
-            print(f"Starting energy tracking for {self.model_name} with no GPU detected. Using default TDP assumptions.")
+            print(f"Real data cannot be read at the moment; simulation mode is active.")
 
         self.is_running = True
         self._thread = threading.Thread(target=self._monitor_gpu, daemon=True)

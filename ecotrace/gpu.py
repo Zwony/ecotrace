@@ -1,6 +1,6 @@
 import os
 import sys
-
+import pynvml
 def get_gpu_info(gpu_index, gpu_tdp_defaults):
     WATTS_PER_KILOWATT = 1000
     
@@ -11,7 +11,6 @@ def get_gpu_info(gpu_index, gpu_tdp_defaults):
                 os.environ["PATH"] += os.path.pathsep + p
 
     try:
-        import pynvml
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
         name = pynvml.nvmlDeviceGetName(handle)
@@ -48,7 +47,6 @@ def get_gpu_power_w(gpu_info):
     if not gpu_info or gpu_info.get("type") != "nvidia" or gpu_info.get("handle") is None:
         return None
     try:
-        import pynvml
         power_mw = pynvml.nvmlDeviceGetPowerUsage(gpu_info["handle"])
         return power_mw / 1000.0
     except Exception as e:
