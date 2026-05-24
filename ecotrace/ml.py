@@ -5,12 +5,16 @@ from ecotrace.gpu import get_gpu_info, get_gpu_power_w
 
 class EcoTraceML:
     """
-    Yapay zeka ve makine öğrenimi modelleri için bağımsız enerji ve karbon takip motoru.
-    Kullanımı:
+    Independent energy and carbon tracking engine for artificial intelligence and machine learning models.
+    
+    Usage:
     @trace_ml(model_name="My AI Model")
     def train_model(...):
         ...
-    Bu sınıf, GPU enerji tüketimini gerçek zamanlı olarak izler ve model eğitimi tamamlandığında toplam enerji tüketimi ve tahmini karbon salınımını raporlar. GPU bilgisi alınamazsa, varsayılan TDP değerleri kullanılarak simülasyon yapılır.
+        
+    This class monitors GPU energy consumption in real-time and reports the total energy 
+    consumed and estimated carbon emissions upon completion of model training. If GPU 
+    metadata cannot be retrieved, a simulation is performed using default TDP assumptions.
     """
     
     def __init__(self, model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0):
@@ -21,7 +25,7 @@ class EcoTraceML:
         self.is_running = False
         self._thread = None
 
-        # 1. Ana motoru çakışma yaşamadan, sessiz modda arkada ayağa kaldırıyoruz
+        # 1. Initialize the core tracker in quiet mode to prevent initialization conflicts
         from ecotrace.core import EcoTrace
         self.core_tracker = EcoTrace(quiet=True, check_updates=False)
         
@@ -33,11 +37,11 @@ class EcoTraceML:
 
     def _monitor_gpu(self):
         """
-        GPU enerji tüketimini izlemek için arka planda çalışan fonksiyon.
-            - Her sample_interval saniyede bir GPU gücünü ölçer.
-            - Ölçülen güç değeri geçerli değilse, GPU'nun TDP'sinin yarısı kadar bir değer kullanır.
-            - Toplam enerji tüketimini joule cinsinden hesaplar (güç * zaman).
-            - İzleme durdurulduğunda, toplam enerji tüketimini kWh'ye çevirir ve tahmini karbon salınımını raporlar.
+        Background worker function that continuously samples GPU energy consumption.
+            - Measures instantaneous GPU power draw at every sample_interval seconds.
+            - Fallback mechanism: If the power reading is unavailable, utilizes 50% of the GPU's TDP.
+            - Calculates total energy consumption in Joules (power * elapsed time).
+            - Upon shutdown, converts total Joules to kWh and reports the estimated carbon footprint.
         """
         last_time = time.time()
 
@@ -46,16 +50,16 @@ class EcoTraceML:
 
             current_time = time.time()
             elapsed = current_time - last_time
-            last_time = current_time  # Zamanı hassas şekilde ilerletiyoruz
+            last_time = current_time  # Accurately increment the elapsed time window
 
             current_watt = get_gpu_power_w(self.gpu_info)
 
-            # Emniyet Kemeri (Fallback): Eğer o saniye anlık watt okunamazsa, kart varsa TDP'nin yarısını al
+            # Safety Fallback: If instantaneous wattage cannot be read, default to 50% of TDP if hardware exists
             if current_watt is None:
                 if self.gpu_info:
                     current_watt = self.gpu_info.get("tdp", 100.0) * 0.5
                 else:
-                    current_watt = 45.0  # Tamamen donadımsız ortamda sabit simülasyon değeri
+                    current_watt = 45.0  # Constant simulation value for completely hardware-agnostic environments
 
             if current_watt:
                 self.total_gpu_energy_joules += current_watt * elapsed
@@ -80,17 +84,21 @@ class EcoTraceML:
         carbon_intensity = getattr(self.core_tracker, "carbon_intensity", 0.475)
         co2_emitted_g = gpu_kwh * carbon_intensity * 1000.0
 
-        print(f"\n--- [{self.model_name}] Yapay Zeka Eğitim Karbon Raporu ---")
-        print(f"Harcanan Toplam Enerji : {gpu_kwh:.6f} kWh ({self.total_gpu_energy_joules:.2f} Joule)")
-        print(f"Tahmini Karbon Salınımı: {co2_emitted_g:.4f} g CO2")
+        print(f"\n--- [{self.model_name}] AI Training Carbon Report ---")
+        print(f"Total Energy Consumed : {gpu_kwh:.6f} kWh ({self.total_gpu_energy_joules:.2f} Joules)")
+        print(f"Estimated CO2 Emissions: {co2_emitted_g:.4f} g CO2")
         print("-----------------------------------------------------------\n")
         return False
 
 def trace_ml(model_name: str = "AI Model"):
     """
-    Yapay zeka ve makine öğrenimi modelleri için dekoratör fonksiyonu.
-    Kullanımı: @trace_ml(model_name="My AI Model")
-    Bu dekoratör, sarılan fonksiyonun çalışması sırasında EcoTraceML izleyicisini otomatik olarak başlatır ve durdurur. Model adı isteğe bağlıdır ve raporlarda kullanılmak üzere sağlanabilir.
+    Decorator function designed for artificial intelligence and machine learning models.
+    
+    Usage: @trace_ml(model_name="My AI Model")
+    
+    This decorator automatically provisions and teardowns the EcoTraceML context manager 
+    around the target callable block. The model name parameter is optional and enriches 
+    the session logs.
     """
     def decorator(func):
         @functools.wraps(func)
