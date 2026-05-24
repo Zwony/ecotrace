@@ -607,7 +607,7 @@ class EcoTrace:
             return
 
         try:
-            import nvidia_ml_py as pynvml  # type: ignore
+            import pynvml  # type: ignore
         except ImportError:
             return
 
@@ -1293,7 +1293,7 @@ class EcoTrace:
         self._stop_cpu_monitor()
         self._stop_gpu_monitor()
         try:
-            import nvidia_ml_py as pynvml  # type: ignore
+            import pynvml  # type: ignore
             pynvml.nvmlShutdown()
         except (ImportError, Exception) as e:
             logger.debug(f"nvmlShutdown bypassed or failed: {e}")
