@@ -25,12 +25,15 @@ class EcoTraceML:
 
     def _monitor_gpu(self):
         last_time = time.time()
+
         while self.is_running:
             time.sleep(self.sample_interval)
+
             current_time = time.time()
             elapsed, last_time = current_time - last_time, current_time
 
             current_watt = get_gpu_power_w(self.gpu_info)
+
             if current_watt is None:
                 current_watt = self.gpu_info.get("tdp", 100.0) * 0.5 if self.gpu_info else 45.0  
 
@@ -47,6 +50,7 @@ class EcoTraceML:
         self.is_running = True
         self._thread = threading.Thread(target=self._monitor_gpu, daemon=True)
         self._thread.start()
+
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -91,7 +95,6 @@ class EcoTraceML:
         try:
             temp_chart_path = create_gpu_usage_chart(gpu_utilization_samples)
             
-            # --- 2. SEÇENEK: Grafiği silinmeden önce çalışma dizinine kopyala ---
             if temp_chart_path and os.path.exists(temp_chart_path):
                 shutil.copy(temp_chart_path, f"ecotrace_{self.model_name.lower()}_chart.png")
                 print(f"Chart image permanently saved to: ecotrace_{self.model_name.lower()}_chart.png")
@@ -110,7 +113,7 @@ class EcoTraceML:
                 gpu_samples=gpu_utilization_samples,
                 api_key=getattr(self.eco, "api_key", None)
             )
-            print(f"📜 PDF report successfully generated: {report_filename}")
+            print(f"PDF report successfully generated: {report_filename}")
         except Exception as e:
             print(f"Could not generate integrated PDF report: {e}")
 
