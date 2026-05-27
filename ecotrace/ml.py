@@ -17,7 +17,8 @@ class EcoTraceML:
         self.total_gpu_energy_joules = 0.0
         self.is_running = False
         self._thread = None
-        self.power_history = [] 
+        self.power_history = []
+        self._lock = threading.Lock()
 
         from ecotrace import EcoTrace
         self.eco = EcoTrace(quiet=True, check_updates=False)
@@ -35,11 +36,12 @@ class EcoTraceML:
             current_watt = get_gpu_power_w(self.gpu_info)
 
             if current_watt is None:
-                current_watt = self.gpu_info.get("tdp", 100.0) * 0.5 if self.gpu_info else 45.0  
+                current_watt = self.gpu_info.get("tdp", 100.0) * 0.5 if self.gpu_info else 45.0
 
-            if current_watt:
-                self.total_gpu_energy_joules += current_watt * elapsed
-                self.power_history.append((current_time, current_watt))
+            if current_watt is not None:
+                with self._lock:
+                    self.total_gpu_energy_joules += current_watt * elapsed
+                    self.power_history.append((current_time, current_watt))
 
     def __enter__(self):
         if self.gpu_info and self.gpu_info.get('brand') != 'Unknown':
@@ -47,6 +49,8 @@ class EcoTraceML:
         else:
             print("Real data cannot be read at the moment; simulation mode is active.")
 
+        self.total_gpu_energy_joules = 0.0
+        self.power_history = []
         self.is_running = True
         self._thread = threading.Thread(target=self._monitor_gpu, daemon=True)
         self._thread.start()
@@ -58,7 +62,11 @@ class EcoTraceML:
         if self._thread:
             self._thread.join()
 
-        gpu_kwh = self.total_gpu_energy_joules / 3600000.0
+        with self._lock:
+            total_gpu_energy_joules = self.total_gpu_energy_joules
+            power_history = list(self.power_history)
+
+        gpu_kwh = total_gpu_energy_joules / 3600000.0
         raw_intensity = getattr(self.eco, "carbon_intensity", 0.475)
         carbon_intensity_g = raw_intensity * 1000.0 if raw_intensity < 10.0 else raw_intensity
         co2_emitted_g_iso = (gpu_kwh * carbon_intensity_g) * 1.05
@@ -75,7 +83,7 @@ class EcoTraceML:
         # Log to CSV file for report history summary
         log_file = "ecotrace_log.csv"
         file_exists = os.path.exists(log_file)
-        duration = self.power_history[-1][0] - self.power_history[0][0] if self.power_history else 0.0
+        duration = power_history[-1][0] - power_history[0][0] if len(power_history) >= 2 else 0.0
         region_str = getattr(self.eco, "region_code", "GLOBAL")
 
         try:
@@ -89,15 +97,17 @@ class EcoTraceML:
 
         # Scale metrics and prepare chart tracking data
         gpu_tdp = self.gpu_info.get('tdp', 45.0) if self.gpu_info else 45.0
-        gpu_utilization_samples = [(ts, min((w / gpu_tdp) * 100.0, 100.0)) for ts, w in self.power_history]
+        gpu_utilization_samples = [(ts, min((w / gpu_tdp) * 100.0, 100.0)) for ts, w in power_history]
         report_filename = f"ecotrace_{self.model_name.lower()}_report.pdf"
 
         try:
             temp_chart_path = create_gpu_usage_chart(gpu_utilization_samples)
             
             if temp_chart_path and os.path.exists(temp_chart_path):
-                shutil.copy(temp_chart_path, f"ecotrace_{self.model_name.lower()}_chart.png")
-                print(f"Chart image permanently saved to: ecotrace_{self.model_name.lower()}_chart.png")
+                chart_dest = f"ecotrace_{self.model_name.lower()}_chart.png"
+                shutil.copy(temp_chart_path, chart_dest)
+                os.remove(temp_chart_path)
+                print(f"Chart image permanently saved to: {chart_dest}")
 
             dynamic_cpu_info = getattr(self.eco, "cpu_info", None) or {
                 "brand": "Standard Processor",
@@ -119,11 +129,11 @@ class EcoTraceML:
 
         return False
     
-def ecotrace_ml(model_name: str = "AI Model"):
+def ecotrace_ml(model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            with EcoTraceML(model_name=model_name):
+            with EcoTraceML(model_name=model_name, gpu_index=gpu_index, sample_interval=sample_interval):
                 return func(*args, **kwargs)
         return wrapper
     return decorator
