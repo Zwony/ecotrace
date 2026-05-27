@@ -78,7 +78,6 @@ class EcoTraceML:
             if hasattr(self.eco, attr):
                 setattr(self.eco, attr, getattr(self.eco, attr) + val)
 
-        # 👑 DÜZELTME 1: self.total_gpu_energy_joules yerine güvenli lokal snapshot olan total_gpu_energy_joules kullanıldı
         print(f"\n--- [{self.model_name}] AI Training Carbon Report (ISO 14064 Compliant) ---")
         print(f"Total Energy Consumed : {gpu_kwh:.6f} kWh ({total_gpu_energy_joules:.2f} Joules)")
         print(f"ISO 14064 CO2 Footprint: {co2_emitted_g_iso:.6f} g CO2e (Includes 5% Uncertainty Margin)\n")
@@ -133,6 +132,9 @@ class EcoTraceML:
         return False
     
 def ecotrace_ml(model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0):
+    """
+    Decorator for tracking energy and carbon emissions of AI/ML model training using EcoTraceML context manager.
+    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
