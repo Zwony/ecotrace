@@ -2,7 +2,7 @@ import time
 # core.py'a hiç bulaşmadan, doğrudan kendi yazdığın ml.py dosyasından çağırıyoruz!
 from ecotrace.ml import ecotrace_ml 
 
-@ecotrace_ml(model_name="ai_model")
+@ecotrace_ml(model_name="ai_model", gpu_index=0, sample_interval=1.0)
 def model_egitim_simulasyonu():
     print("\n[SİMÜLASYON] Yapay zeka modeli eğitiliyor...")
     for i in range(1, 5):

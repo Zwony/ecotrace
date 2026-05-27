@@ -23,6 +23,7 @@ class EcoTraceML:
         from ecotrace import EcoTrace
         self.eco = EcoTrace(quiet=True, check_updates=False)
         self.gpu_info = self.eco.gpu_info or get_gpu_info(gpu_index, {"intel": 15.0, "amd": 75.0, "unknown": 100.0})
+        self.gpu_index = self.eco.gpu_index if self.eco.gpu_index is not None else gpu_index
 
     def _monitor_gpu(self):
         last_time = time.time()
@@ -62,6 +63,7 @@ class EcoTraceML:
         if self._thread:
             self._thread.join()
 
+        # Thread-safe snapshot alignment
         with self._lock:
             total_gpu_energy_joules = self.total_gpu_energy_joules
             power_history = list(self.power_history)
@@ -76,8 +78,9 @@ class EcoTraceML:
             if hasattr(self.eco, attr):
                 setattr(self.eco, attr, getattr(self.eco, attr) + val)
 
+        # 👑 DÜZELTME 1: self.total_gpu_energy_joules yerine güvenli lokal snapshot olan total_gpu_energy_joules kullanıldı
         print(f"\n--- [{self.model_name}] AI Training Carbon Report (ISO 14064 Compliant) ---")
-        print(f"Total Energy Consumed : {gpu_kwh:.6f} kWh ({self.total_gpu_energy_joules:.2f} Joules)")
+        print(f"Total Energy Consumed : {gpu_kwh:.6f} kWh ({total_gpu_energy_joules:.2f} Joules)")
         print(f"ISO 14064 CO2 Footprint: {co2_emitted_g_iso:.6f} g CO2e (Includes 5% Uncertainty Margin)\n")
         
         # Log to CSV file for report history summary
@@ -125,7 +128,7 @@ class EcoTraceML:
             )
             print(f"PDF report successfully generated: {report_filename}")
         except Exception as e:
-            print(f"Could not generate integrated PDF report: {e}")
+            print(f"Could not generate integrated PDF/Chart report: {e}")
 
         return False
     
