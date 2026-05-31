@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.1.2 — Production/Stable Release.** Features OpenTelemetry export, Django/Celery integration, and critical stability improvements.
+**v1.2.0 — Production/Stable Release.** Features the EcoTraceML tracking engine for machine learning, Windows NVML path discovery, and critical bug fixes.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -37,16 +37,16 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.1.2
+## Core Features in v1.2.0
 
-> **Enterprise-Grade Monitoring & Export.** v1.1.2 adds OpenTelemetry export for cloud platforms, framework integrations, and critical stability enhancements.
+> **ML Tracking & Platform Support.** v1.2.0 adds the EcoTraceML tracking engine, Windows NVML path auto-discovery, FPDF/Pylance compatibility, and lazy loading fixes.
 
-- **OpenTelemetry Exporter** — Export carbon metrics to Grafana, Datadog, New Relic, and Prometheus without blocking your application.
-- **Django & Celery Middleware** — WSGI/ASGI request tracking and Celery task-level carbon measurement with response headers and worker signal cleanup.
-- **Session Management** — Class-level atexit handlers with WeakSet instances prevent memory leaks on repeated module reloads.
-- **Exception Transparency** — User exceptions now properly propagate after measurement teardown; measurement errors no longer mask failures.
-- **Platform Reliability** — PowerShell `Get-CimInstance` (Windows) and `dmidecode` with sudo fallback (Linux) for robust RAM detection.
-- **Critical Fixes** — Gemini lazy-loading, cached CPU info reuse, USER_AGENT fallbacks, and version checker robustness. See [CHANGELOG.md](CHANGELOG.md).
+- **EcoTraceML Tracking Engine** — A dedicated context manager and decorator designed specifically for measuring carbon and energy footprint of machine learning and AI model training sessions.
+- **Continuous Sampling** — Uses asynchronous multi-threaded hardware metrics polling for high-frequency CPU/GPU/RAM monitoring.
+- **Windows NVML Auto-Discovery** — Dynamically resolves and injects NVML DLL paths (`NVSMI` and `System32`) to prevent load errors on Windows platforms.
+- **NVIDIA Driver Robustness** — Adds safe fallback UTF-8 decoding for newer NVIDIA drivers returning binary GPU names.
+- **FPDF & Pylance Type Safety** — Resolves strict type checking warnings by using positional parameters in PDF report cell generation.
+- **Lazy Dependencies** — Prevents startup `ModuleNotFoundError` by lazy-loading the optional `google-generativeai` package. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -151,7 +151,7 @@ Enforce carbon budgets in your pipeline with our official GitHub Action. Add thi
 
 ```yaml
 - name: EcoTrace Carbon Gate
-  uses: Zwony/ecotrace@core-v1.1.2
+  uses: Zwony/ecotrace@v1.2.0
   with:
     budget: '10.0'
     region: 'US'
