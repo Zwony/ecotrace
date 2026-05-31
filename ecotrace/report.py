@@ -3,10 +3,7 @@ import csv
 import tempfile
 from fpdf import FPDF
 import matplotlib.pyplot as plt
-import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
-    import google.generativeai as genai
+
 from .logger import logger
 from .exceptions import ReportGenerationError
 
@@ -117,6 +114,10 @@ def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):
         return None
 
     try:
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+            import google.generativeai as genai
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
 
