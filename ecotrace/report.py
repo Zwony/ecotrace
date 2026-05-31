@@ -202,27 +202,27 @@ def generate_pdf_report(
 
         pdf.set_font("helvetica", 'B', 20)
         pdf.set_text_color(46, 139, 87)
-        pdf.cell(200, 15, txt="EcoTrace Analysis Report", ln=True, align='C')
+        pdf.cell(200, 15, "EcoTrace Analysis Report", ln=True, align='C')
         pdf.ln(5)
 
         pdf.set_fill_color(245, 245, 245)
         pdf.set_font("helvetica", 'B', 12)
         pdf.set_text_color(0, 0, 0)
-        pdf.cell(0, 10, txt=" System Information", ln=True, fill=True)
+        pdf.cell(0, 10, " System Information", ln=True, fill=True)
         pdf.set_font("helvetica", size=10)
         cpu_display = sanitize_for_pdf(cpu_info.get('brand', 'Unknown'))
-        pdf.cell(100, 8, txt=f"CPU: {cpu_display}", ln=False)
-        pdf.cell(100, 8, txt=f"Cores: {cpu_info.get('cores', 1)}", ln=True)
-        pdf.cell(100, 8, txt=f"TDP: {cpu_info.get('tdp', 65.0)}W", ln=False)
-        pdf.cell(100, 8, txt=f"Region: {region_code}", ln=True)
+        pdf.cell(100, 8, f"CPU: {cpu_display}", ln=False)
+        pdf.cell(100, 8, f"Cores: {cpu_info.get('cores', 1)}", ln=True)
+        pdf.cell(100, 8, f"TDP: {cpu_info.get('tdp', 65.0)}W", ln=False)
+        pdf.cell(100, 8, f"Region: {region_code}", ln=True)
         if gpu_info:
             gpu_display = sanitize_for_pdf(gpu_info.get('brand', 'Unknown'))
-            pdf.cell(100, 8, txt=f"GPU: {gpu_display}", ln=False)
-            pdf.cell(100, 8, txt=f"GPU TDP: {gpu_info.get('tdp', 0)}W", ln=True)
+            pdf.cell(100, 8, f"GPU: {gpu_display}", ln=False)
+            pdf.cell(100, 8, f"GPU TDP: {gpu_info.get('tdp', 0)}W", ln=True)
         pdf.ln(10)
 
         pdf.set_font("helvetica", 'B', 12)
-        pdf.cell(0, 10, txt=" Function History", ln=True, fill=True)
+        pdf.cell(0, 10, " Function History", ln=True, fill=True)
         pdf.ln(2)
         pdf.set_font("helvetica", 'B', 9)
         pdf.set_fill_color(200, 220, 200)
@@ -254,7 +254,7 @@ def generate_pdf_report(
             if chart_path:
                 pdf.add_page()
                 pdf.set_font("helvetica", 'B', 12)
-                pdf.cell(0, 10, txt=" CPU Usage Over Time (Core-Normalized)", ln=True, fill=True)
+                pdf.cell(0, 10, " CPU Usage Over Time (Core-Normalized)", ln=True, fill=True)
                 pdf.ln(5)
                 pdf.image(chart_path, x=10, y=50, w=190)
                 pdf.ln(120)
@@ -265,7 +265,7 @@ def generate_pdf_report(
                 min_cpu = min(normalized_values) if normalized_values else 0.0
 
                 pdf.set_font("helvetica", size=9)
-                pdf.cell(0, 8, txt=f"Average CPU: {avg_cpu:.1f}% | Peak: {max_cpu:.1f}% | Min: {min_cpu:.1f}%", ln=True)
+                pdf.cell(0, 8, f"Average CPU: {avg_cpu:.1f}% | Peak: {max_cpu:.1f}% | Min: {min_cpu:.1f}%", ln=True)
                 if os.path.exists(chart_path): os.unlink(chart_path)
 
         # GPU Chart Section
@@ -274,7 +274,7 @@ def generate_pdf_report(
             if gpu_chart_path:
                 pdf.add_page()
                 pdf.set_font("helvetica", 'B', 12)
-                pdf.cell(0, 10, txt=" GPU Utilization Over Time", ln=True, fill=True)
+                pdf.cell(0, 10, " GPU Utilization Over Time", ln=True, fill=True)
                 pdf.ln(5)
                 pdf.image(gpu_chart_path, x=10, y=50, w=190)
                 pdf.ln(120)
@@ -284,14 +284,14 @@ def generate_pdf_report(
                 peak_gpu = max(gpu_values) if gpu_values else 0.0
                 
                 pdf.set_font("helvetica", size=9)
-                pdf.cell(0, 8, txt=f"Average GPU Usage: {avg_gpu:.1f}% | Peak Usage: {peak_gpu:.1f}%", ln=True)
+                pdf.cell(0, 8, f"Average GPU Usage: {avg_gpu:.1f}% | Peak Usage: {peak_gpu:.1f}%", ln=True)
                 if os.path.exists(gpu_chart_path): os.unlink(gpu_chart_path)
 
         pdf.ln(10)
         pdf.set_font("helvetica", 'B', 14)
         pdf.set_fill_color(46, 139, 87)
         pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 15, txt=f"TOTAL CUMULATIVE EMISSIONS: {total_sum:.8f} gCO2", border=1, fill=True, align='C', ln=True)
+        pdf.cell(0, 15, f"TOTAL CUMULATIVE EMISSIONS: {total_sum:.8f} gCO2", border=1, fill=True, align='C', ln=True)
 
         if comparison is not None:
             r1 = comparison.get("func1", {})
@@ -299,7 +299,7 @@ def generate_pdf_report(
             pdf.ln(10)
             pdf.set_font("helvetica", 'B', 12)
             pdf.set_text_color(0, 0, 0)
-            pdf.cell(0, 10, txt="Comparison Analysis", ln=True, fill=True)
+            pdf.cell(0, 10, "Comparison Analysis", ln=True, fill=True)
             pdf.set_font("helvetica", 'B', 9)
             pdf.set_fill_color(200, 220, 200)
             pdf.cell(50, 10, "Function",     border=1, fill=True)
@@ -320,7 +320,7 @@ def generate_pdf_report(
             pdf.ln(15)
             pdf.set_font("helvetica", 'B', 12)
             pdf.set_text_color(0, 0, 0)
-            pdf.cell(0, 10, txt="Performance Insights", ln=True, fill=True)
+            pdf.cell(0, 10, "Performance Insights", ln=True, fill=True)
             pdf.set_font("helvetica", 'B', 9)
             pdf.set_fill_color(240, 240, 200)
             pdf.cell(60, 10, "Function", border=1, fill=True)
@@ -373,13 +373,13 @@ def generate_pdf_report(
                 pdf.add_page()
                 pdf.set_font("helvetica", 'B', 16)
                 pdf.set_text_color(46, 139, 87)
-                pdf.cell(0, 15, txt="EcoTrace AI Insights (Beta)", ln=True, align='C')
+                pdf.cell(0, 15, "EcoTrace AI Insights (Beta)", ln=True, align='C')
                 pdf.ln(5)
                 pdf.set_fill_color(240, 255, 240)
                 pdf.set_font("helvetica", 'I', 10)
                 pdf.set_text_color(40, 40, 40)
                 clean_ai_text = ai_text.replace("**", "").replace("*", "").replace("`", "")
-                pdf.multi_cell(0, 8, txt=sanitize_for_pdf(clean_ai_text), border=1, fill=True)
+                pdf.multi_cell(0, 8, sanitize_for_pdf(clean_ai_text), border=1, fill=True)
 
         pdf.output(filename)
         logger.info(f"Report saved: {filename}")
