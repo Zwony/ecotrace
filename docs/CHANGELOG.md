@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-05-31
+### Added
+- **`EcoTraceML` tracking engine:** A context manager (`EcoTraceML`) and decorator (`@ecotrace_ml`) designed to track carbon footprint and energy consumption of machine learning model training.
+- **Continuous hardware sampling:** Implemented multi-threaded background sampling for high-frequency hardware metrics polling.
+- **ML test suite & example:** Added `tests/test_ml.py` and `example_ml.py` to demonstrate and verify ML tracking functionality.
+
+### Fixed
+- **NVIDIA NVML Windows compatibility:** Dynamic search and injection of Windows PATH for NVML DLLs, resolving import issues on Windows.
+- **NVIDIA driver decode:** Safe fallback UTF-8 decoding for newer NVIDIA driver queries returning binary GPU names.
+- **FPDF keyword issue:** Removed `txt` keyword argument from PDF cell generation to resolve strict Pylance/Type warnings.
+- **Lazy imports:** Moved `google-generativeai` import inside `get_gemini_insights` to avoid startup `ModuleNotFoundError` when the `[ai]` extra is not installed.
+
 ## [1.1.2] - 2026-05-21
 ### Fixed
 - **Session atexit:** Class-level `atexit` handler with `WeakSet` instances replaces per-instance registration.
