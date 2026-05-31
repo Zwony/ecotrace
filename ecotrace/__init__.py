@@ -1,3 +1,3 @@
 from .core import EcoTrace
-
-__version__ = "1.1.0"
+from .ml import EcoTraceML, ecotrace_ml
+__version__ = "1.2.0"
