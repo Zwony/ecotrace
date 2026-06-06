@@ -6,7 +6,11 @@ DEFAULT_GPU_TDP_AMD_W = 75.0
 DEFAULT_GPU_TDP_UNKNOWN_W = 100.0
 DEFAULT_CARBON_INTENSITY = 475
 DEFAULT_REGION = "GLOBAL"
-USER_AGENT = "EcoTrace/1.2.0"
+try:
+    from ecotrace import __version__ as _pkg_version
+    USER_AGENT = f"EcoTrace/{_pkg_version}"
+except ImportError:
+    USER_AGENT = "EcoTrace/1.2.1"
 
 def load_constants(json_path):
     """Loads constants from the JSON configuration file.
@@ -179,7 +183,7 @@ def identify_user_region():
     """Attempts to auto-detect the user's current region via IP address."""
     try:
         import requests  # type: ignore
-        api_url = "http://ip-api.com/json/?fields=countryCode"
+        api_url = "https://ip-api.com/json/?fields=countryCode"
         response = requests.get(api_url, headers={"User-Agent": USER_AGENT}, timeout=2)
         response.raise_for_status()
         data = response.json()

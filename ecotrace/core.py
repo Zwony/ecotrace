@@ -1,6 +1,7 @@
 # EcoTrace: Continuous Carbon Instrumentation Engine
 # Established accuracy for scalable carbon observability.
 import os
+import sys
 import time
 import psutil
 import csv
@@ -13,6 +14,8 @@ from .config import (load_constants, validate_region_code, resolve_carbon_intens
 import functools
 import asyncio
 import threading
+import weakref
+import atexit
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 import tempfile
@@ -27,6 +30,15 @@ from .hardware import HardwareMonitor
 
 # --- Energy Constants ---
 
+
+def _atexit_session_summaries():
+    for instance in list(EcoTrace._instances):
+        try:
+            instance._print_session_summary()
+        except Exception:
+            pass
+
+atexit.register(_atexit_session_summaries)
 
 class EcoTrace:
     """High-precision carbon tracking engine for production Python.
@@ -65,6 +77,8 @@ class EcoTrace:
     SAMPLE_BUFFER_SIZE = 10000  # Increased for longer sessions (8+ mins at 50ms)
     MONITOR_JOIN_TIMEOUT_S = 1.0
     BASELINE_MEASUREMENT_MS = 100  # 100ms idle baseline measurement
+
+    _instances = weakref.WeakSet()
 
     # --- Unit conversion constants ------------------------------------------
     SECONDS_PER_HOUR = 3600
@@ -206,8 +220,7 @@ class EcoTrace:
         self._session_start_time = time.perf_counter()
         self._session_summary_enabled = session_summary and not quiet
         if self._session_summary_enabled:
-            import atexit
-            atexit.register(self._print_session_summary)
+            EcoTrace._instances.add(self)
 
     # ========================================================================
     # Live Grid API — Intensity Resolution (v6.0)
@@ -546,55 +559,74 @@ class EcoTrace:
         Exits gracefully if the process is no longer accessible.
         """
         # self._current_process.cpu_percent()  # Priming is already handled in __init__ baseline
-        child_cache = {}  # pid -> psutil.Process object
-        next_sample_time = time.perf_counter()
-        while self._cpu_monitor_active:
+        
+        # Initialize COM on Windows to prevent "Windows fatal exception: code 0x800401f0"
+        has_com = False
+        if sys.platform == "win32":
             try:
-                # 1. Start with parent process usage
-                total_usage = self._current_process.cpu_percent()
-                
-                # 2. Get current children
+                import ctypes
+                ctypes.windll.ole32.CoInitialize(None)
+                has_com = True
+            except Exception:
+                pass
+
+        try:
+            child_cache = {}  # pid -> psutil.Process object
+            next_sample_time = time.perf_counter()
+            while self._cpu_monitor_active:
                 try:
-                    current_children = self._current_process.children(recursive=True)
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    current_children = []
-                
-                # 3. Update cache and sum usage
-                active_pids = set()
-                for child in current_children:
-                    pid = child.pid
-                    active_pids.add(pid)
-                    if pid not in child_cache:
-                        try:
-                            child.cpu_percent()
-                            child_cache[pid] = child
-                        except (psutil.NoSuchProcess, psutil.AccessDenied):
-                            continue
-                    else:
-                        try:
-                            total_usage += child_cache[pid].cpu_percent()
-                        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    # 1. Start with parent process usage
+                    total_usage = self._current_process.cpu_percent()
+                    
+                    # 2. Get current children
+                    try:
+                        current_children = self._current_process.children(recursive=True)
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        current_children = []
+                    
+                    # 3. Update cache and sum usage
+                    active_pids = set()
+                    for child in current_children:
+                        pid = child.pid
+                        active_pids.add(pid)
+                        if pid not in child_cache:
+                            try:
+                                child.cpu_percent()
+                                child_cache[pid] = child
+                            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                                continue
+                        else:
+                            try:
+                                total_usage += child_cache[pid].cpu_percent()
+                            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                                del child_cache[pid]
+                    
+                    # 4. Cleanup dead processes
+                    for pid in list(child_cache.keys()):
+                        if pid not in active_pids:
                             del child_cache[pid]
-                
-                # 4. Cleanup dead processes
-                for pid in list(child_cache.keys()):
-                    if pid not in active_pids:
-                        del child_cache[pid]
-                
-                timestamp = time.perf_counter()
-                with self._cpu_sample_lock:
-                    self._cpu_samples.append((timestamp, total_usage))
-                
-                # Tight timing control: account for computation duration
-                next_sample_time += self._monitor_interval
-                sleep_duration = next_sample_time - time.perf_counter()
-                if sleep_duration > 0:
-                    time.sleep(sleep_duration)
-                else:
-                    # Compensation for heavy loop: don't sleep, but catch up next time
-                    next_sample_time = time.perf_counter()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                break
+                    
+                    timestamp = time.perf_counter()
+                    with self._cpu_sample_lock:
+                        self._cpu_samples.append((timestamp, total_usage))
+                    
+                    # Tight timing control: account for computation duration
+                    next_sample_time += self._monitor_interval
+                    sleep_duration = next_sample_time - time.perf_counter()
+                    if sleep_duration > 0:
+                        time.sleep(sleep_duration)
+                    else:
+                        # Compensation for heavy loop: don't sleep, but catch up next time
+                        next_sample_time = time.perf_counter()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    break
+        finally:
+            if has_com:
+                try:
+                    import ctypes
+                    ctypes.windll.ole32.CoUninitialize()
+                except Exception:
+                    pass
 
     def _gpu_monitor_worker(self):
         """Background thread that continuously samples GPU utilization.

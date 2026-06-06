@@ -62,3 +62,29 @@ def test_ecotraceml_simulation_fallback():
             time.sleep(0.15)
             
         assert tracker.total_gpu_energy_joules > 0.0
+
+
+def test_ecotraceml_new_parameters():
+    with patch("ecotrace.ml.get_gpu_info", return_value=None), \
+         patch("ecotrace.ml.get_gpu_power_w", return_value=None), \
+         patch("ecotrace.ml.create_gpu_usage_chart", return_value=None), \
+         patch("ecotrace.ml.generate_pdf_report"):
+         
+        with EcoTraceML(project_name="CustomProj", epochs=10, batch_size=32, dataset_size=1000) as tracker:
+            assert tracker.model_name == "CustomProj"
+            assert tracker.epochs == 10
+            assert tracker.batch_size == 32
+            assert tracker.dataset_size == 1000
+
+
+def test_ecotraceml_decorator_new_parameters():
+    with patch("ecotrace.ml.get_gpu_info", return_value=None), \
+         patch("ecotrace.ml.get_gpu_power_w", return_value=None), \
+         patch("ecotrace.ml.create_gpu_usage_chart", return_value=None), \
+         patch("ecotrace.ml.generate_pdf_report"):
+         
+        @ecotrace_ml(project_name="DecProj", epochs=5, batch_size=64, dataset_size=500)
+        def dummy_training():
+            return "ok"
+            
+        assert dummy_training() == "ok"

@@ -44,3 +44,104 @@ def test_ram_info_detection():
     assert "type" in info
     assert info["total_gb"] > 0
     assert info["type"] in ["DDR4", "DDR5", "LPDDR4", "LPDDR5", "UNKNOWN"]
+
+
+def test_ram_info_windows_success():
+    mock_virtual_memory = MagicMock()
+    mock_virtual_memory.total = 16 * (1024**3)
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = "4800\n"
+    
+    with patch("os.name", "nt"), \
+         patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
+         patch("subprocess.run", return_value=mock_result) as mock_run:
+        info = get_ram_info()
+        assert info["total_gb"] == 16.0
+        assert info["type"] == "DDR5"
+        assert info["speed_mhz"] == "4800"
+        mock_run.assert_called_once()
+
+
+def test_ram_info_windows_failure():
+    mock_virtual_memory = MagicMock()
+    mock_virtual_memory.total = 8 * (1024**3)
+    mock_result = MagicMock()
+    mock_result.returncode = 1
+    mock_result.stdout = ""
+    
+    with patch("os.name", "nt"), \
+         patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
+         patch("subprocess.run", return_value=mock_result) as mock_run:
+        info = get_ram_info()
+        assert info["total_gb"] == 8.0
+        assert info["type"] == "DDR4"
+        assert info["speed_mhz"] == "Unknown"
+
+
+def test_ram_info_linux_success_no_sudo():
+    mock_virtual_memory = MagicMock()
+    mock_virtual_memory.total = 32 * (1024**3)
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = "Speed: 3200 MHz\n"
+    
+    with patch("os.name", "posix"), \
+         patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
+         patch("subprocess.run", return_value=mock_result) as mock_run:
+        info = get_ram_info()
+        assert info["total_gb"] == 32.0
+        assert info["type"] == "DDR4"
+        assert info["speed_mhz"] == "3200"
+        mock_run.assert_called_once_with(
+            ["dmidecode", "-t", "memory"],
+            capture_output=True, text=True, timeout=5
+        )
+
+
+def test_ram_info_linux_fallback_sudo():
+    mock_virtual_memory = MagicMock()
+    mock_virtual_memory.total = 32 * (1024**3)
+    
+    mock_result_fail = MagicMock()
+    mock_result_fail.returncode = 1
+    mock_result_fail.stdout = ""
+    
+    mock_result_success = MagicMock()
+    mock_result_success.returncode = 0
+    mock_result_success.stdout = "Speed: 5200 MHz\n"
+    
+    def side_effect(cmd, **kwargs):
+        if cmd[0] == "dmidecode":
+            return mock_result_fail
+        return mock_result_success
+
+    with patch("os.name", "posix"), \
+         patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
+         patch("subprocess.run", side_effect=side_effect) as mock_run:
+        info = get_ram_info()
+        assert info["total_gb"] == 32.0
+        assert info["type"] == "DDR5"
+        assert info["speed_mhz"] == "5200"
+
+
+def test_ram_info_linux_filenotfound_fallback_sudo():
+    mock_virtual_memory = MagicMock()
+    mock_virtual_memory.total = 32 * (1024**3)
+    
+    mock_result_success = MagicMock()
+    mock_result_success.returncode = 0
+    mock_result_success.stdout = "Speed: 4800 MHz\n"
+    
+    def side_effect(cmd, **kwargs):
+        if cmd[0] == "dmidecode":
+            raise FileNotFoundError()
+        return mock_result_success
+
+    with patch("os.name", "posix"), \
+         patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
+         patch("subprocess.run", side_effect=side_effect) as mock_run:
+        info = get_ram_info()
+        assert info["total_gb"] == 32.0
+        assert info["type"] == "DDR5"
+        assert info["speed_mhz"] == "4800"
