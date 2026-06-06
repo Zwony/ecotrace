@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-06-03
+
+### Fixed
+- **Windows RAM detection**: Replaced deprecated `wmic` with PowerShell `Get-CimInstance` for Windows RAM speed detection, preventing compatibility issues on Windows 11 24H2.
+- **ML CSV alignment**: Aligned ML tracking CSV headers with the core engine's format to prevent parse mismatches.
+- **ML constructor parameters**: Added missing `project_name`, `epochs`, `batch_size`, and `dataset_size` parameters to the `EcoTraceML` constructor and decorator.
+- **API security**: Switched `ip-api.com` endpoint to HTTPS to protect against MITM attacks.
+- **Dynamic User Agent**: Resolved dynamic package version in `USER_AGENT` to prevent stale version reports.
+- **GPU naming**: Renamed misleading `WATTS_PER_KILOWATT` to `MILLIWATTS_PER_WATT` for Milliseconds to Watts NVML conversions.
+- **Class-level atexit**: Implemented class-level exit handler using a `WeakSet` to prevent duplicate per-instance exit summaries.
+- **Security Policy**: Updated supported versions in `SECURITY.MD` to include v1.2.x and v1.1.x.
+
 ## [1.2.0] - 2026-05-31
 ### Added
 - **`EcoTraceML` tracking engine:** A context manager (`EcoTraceML`) and decorator (`@ecotrace_ml`) designed to track carbon footprint and energy consumption of machine learning model training.

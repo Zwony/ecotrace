@@ -11,9 +11,13 @@ from .report import create_gpu_usage_chart, generate_pdf_report
 class EcoTraceML:
     """Independent energy and carbon tracking engine for AI/ML models (ISO 14064 Compliant)."""
     
-    def __init__(self, model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0):
-        self.model_name = model_name
+    def __init__(self, model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0,
+                 project_name: str = None, epochs: int = None, batch_size: int = None, dataset_size: int = None):
+        self.model_name = project_name or model_name
         self.sample_interval = sample_interval
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.dataset_size = dataset_size
         self.total_gpu_energy_joules = 0.0
         self.is_running = False
         self._thread = None
@@ -92,8 +96,8 @@ class EcoTraceML:
             with open(log_file, mode='a', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["Timestamp", "Function", "Duration", "Carbon", "Region", "CPU_Avg"])
-                writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), f"ml::{self.model_name}", f"{duration:.4f}", f"{co2_emitted_g_iso:.8f}", region_str, "0.0"])
+                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region", "AvgCPU(%)", "FilePath", "Line"])
+                writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), f"ml::{self.model_name}", f"{duration:.4f}", f"{co2_emitted_g_iso:.8f}", region_str, "0.0", "N/A", "N/A"])
         except Exception as e:
             print(f"Could not write to log CSV: {e}")
 
@@ -131,14 +135,16 @@ class EcoTraceML:
 
         return False
     
-def ecotrace_ml(model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0):
+def ecotrace_ml(model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0,
+                project_name: str = None, epochs: int = None, batch_size: int = None, dataset_size: int = None):
     """
     Decorator for tracking energy and carbon emissions of AI/ML model training using EcoTraceML context manager.
     """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            with EcoTraceML(model_name=model_name, gpu_index=gpu_index, sample_interval=sample_interval):
+            with EcoTraceML(model_name=model_name, gpu_index=gpu_index, sample_interval=sample_interval,
+                            project_name=project_name, epochs=epochs, batch_size=batch_size, dataset_size=dataset_size):
                 return func(*args, **kwargs)
         return wrapper
     return decorator

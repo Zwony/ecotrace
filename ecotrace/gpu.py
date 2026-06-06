@@ -20,7 +20,7 @@ def get_gpu_info(gpu_index, gpu_tdp_defaults):
             - handle (object): NVML hardware handle if available, otherwise None.
         Returns None if no GPU is detected.
     """
-    WATTS_PER_KILOWATT = 1000
+    MILLIWATTS_PER_WATT = 1000
     
     if sys.platform == "win32":
         possible_paths = [r"C:\Program Files\NVIDIA Corporation\NVSMI", r"C:\Windows\System32"]
@@ -38,7 +38,7 @@ def get_gpu_info(gpu_index, gpu_tdp_defaults):
             name = name.decode("utf-8", errors="ignore")
             
         display_name = "".join(c for c in name if ord(c) < 128).strip()
-        tdp = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / WATTS_PER_KILOWATT
+        tdp = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / MILLIWATTS_PER_WATT
         
         return {"brand": display_name, "tdp": tdp, "type": "nvidia", "handle": handle}
     except Exception as e:

@@ -28,24 +28,38 @@ def get_ram_info():
     try:
         if os.name == 'nt':
             result = subprocess.run(
-                ['wmic', 'memorychip', 'get', 'speed', '/value'],
+                ['powershell', '-NoProfile', '-Command',
+                 'Get-CimInstance Win32_PhysicalMemory | Select-Object -ExpandProperty Speed'],
                 capture_output=True, text=True, timeout=5
             )
             if result.returncode == 0:
-                for line in result.stdout.split('\n'):
-                    if 'Speed=' in line:
-                        speed_str = line.split('=')[1].strip()
-                        if speed_str and speed_str.isdigit():
-                            speed_mhz = int(speed_str)
-                            ram_speed = str(speed_mhz)
-                            ram_type = 'DDR5' if speed_mhz >= 4800 else 'DDR4'
-                            break
+                for line in result.stdout.strip().split('\n'):
+                    speed_str = line.strip()
+                    if speed_str and speed_str.isdigit():
+                        speed_mhz = int(speed_str)
+                        ram_speed = str(speed_mhz)
+                        ram_type = 'DDR5' if speed_mhz >= 4800 else 'DDR4'
+                        break
         else:
-            result = subprocess.run(
-                ['sudo', 'dmidecode', '-t', 'memory'],
-                capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
+            result = None
+            try:
+                result = subprocess.run(
+                    ['dmidecode', '-t', 'memory'],
+                    capture_output=True, text=True, timeout=5
+                )
+            except (FileNotFoundError, PermissionError):
+                pass
+            
+            if result is None or result.returncode != 0 or not result.stdout.strip():
+                try:
+                    result = subprocess.run(
+                        ['sudo', '-n', 'dmidecode', '-t', 'memory'],
+                        capture_output=True, text=True, timeout=5
+                    )
+                except (FileNotFoundError, PermissionError):
+                    pass
+
+            if result is not None and result.returncode == 0:
                 for line in result.stdout.split('\n'):
                     if 'Speed:' in line and 'MHz' in line:
                         speed_str = line.split(':')[1].strip().replace('MHz', '').strip()

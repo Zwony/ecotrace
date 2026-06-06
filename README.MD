@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="logo.png" width="200" alt="EcoTrace Logo">
+<img src="assets/logo.png" width="200" alt="EcoTrace Logo">
 
 # EcoTrace
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.2.0 — Production/Stable Release.** Features the EcoTraceML tracking engine for machine learning, Windows NVML path discovery, and critical bug fixes.
+**v1.2.1 — Production/Stable Release.** Bug fixes, secure HTTPS endpoints, dynamic USER_AGENT, class-level atexit session summaries, and ML tracker parameter alignment.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -29,7 +29,7 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 <br>
 
-![EcoTrace Demo](demo.gif)
+![EcoTrace Demo](assets/demo.gif)
 
 *Function-level carbon measurement with real-time monitoring*
 
@@ -37,9 +37,9 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.2.0
+## Core Features in v1.2.1
 
-> **ML Tracking & Platform Support.** v1.2.0 adds the EcoTraceML tracking engine, Windows NVML path auto-discovery, FPDF/Pylance compatibility, and lazy loading fixes.
+> **Patch Release & Bug Fixes.** v1.2.1 fixes Windows RAM detection, aligns ML logging columns, secures API endpoints, and prevents duplicate summaries.
 
 - **EcoTraceML Tracking Engine** — A dedicated context manager and decorator designed specifically for measuring carbon and energy footprint of machine learning and AI model training sessions.
 - **Continuous Sampling** — Uses asynchronous multi-threaded hardware metrics polling for high-frequency CPU/GPU/RAM monitoring.
@@ -151,7 +151,7 @@ Enforce carbon budgets in your pipeline with our official GitHub Action. Add thi
 
 ```yaml
 - name: EcoTrace Carbon Gate
-  uses: Zwony/ecotrace@v1.2.0
+  uses: Zwony/ecotrace@v1.2.1
   with:
     budget: '10.0'
     region: 'US'

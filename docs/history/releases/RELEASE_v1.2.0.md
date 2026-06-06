@@ -22,7 +22,7 @@ Introducing `EcoTraceML` (available as a context manager and the `@ecotrace_ml` 
 ```python
 from ecotrace import EcoTraceML
 
-with EcoTraceML(project_name="ImageClassifier", epochs=10, batch_size=32) as tracker:
+with EcoTraceML(project_name="ImageClassifier") as tracker:
     # Your model training loop here
     pass
 ```
