@@ -113,12 +113,12 @@ ecotrace dashboard [--port 8585] [--file ecotrace_log.csv]
 
 Starts a **zero-dependency** (stdlib-only) localhost HTTP server and opens the dashboard in your browser automatically. Features:
 
-- 🔴 Live carbon timeline chart (last 50 measurements)
-- 📊 Per-function emissions bar chart (top 10)
-- 🗂 Run history table with label badges
-- 🔽 Run filter dropdown to isolate a specific session
-- ♻️ Carbon equivalence display (Google searches, LED bulb minutes, etc.)
-- ⟳ Auto-refreshes every 5 seconds via `fetch()`
+-  Live carbon timeline chart (last 50 measurements)
+-  Per-function emissions bar chart (top 10)
+-  Run history table with label badges
+-  Run filter dropdown to isolate a specific session
+-  Carbon equivalence display (Google searches, LED bulb minutes, etc.)
+-  Auto-refreshes every 5 seconds via `fetch()`
 
 No extra packages required — uses Python's built-in `http.server`, `json`, and `csv`, plus vanilla Canvas API for charts.
 
