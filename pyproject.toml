@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "1.2.1"
+version = "1.3.0"
 description = "EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting."
 keywords = ["carbon-footprint", "energy-efficiency", "green-computing", "sustainability", "metrics", "cpu-monitoring", "gpu-monitoring"]
 classifiers = [
@@ -38,6 +38,9 @@ ai = ["google-generativeai"]
 web = ["starlette", "flask", "django"]
 otel = ["opentelemetry-api", "opentelemetry-sdk"]
 celery = ["celery"]
+# ML framework callbacks — intentionally lightweight; install only what you need
+ml = ["torch"]
+keras = ["tensorflow"]
 all = ["nvidia-ml-py", "google-generativeai", "starlette", "flask", "django", "celery", "opentelemetry-api", "opentelemetry-sdk", "wmi; sys_platform == 'win32'"]
 
 [project.scripts]
@@ -48,7 +51,7 @@ Homepage = "https://github.com/Zwony/ecotrace"
 Repository = "https://github.com/Zwony/ecotrace"
 
 [tool.setuptools]
-packages = ["ecotrace", "ecotrace.middleware", "ecotrace.plugins", "ecotrace.exporters"]
+packages = ["ecotrace", "ecotrace.middleware", "ecotrace.plugins", "ecotrace.exporters", "ecotrace.callbacks"]
 
 [tool.setuptools.package-data]
 ecotrace = ["*.json", "*.csv", "cpu_spec.csv/**/*.csv"]

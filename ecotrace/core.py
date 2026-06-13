@@ -5,6 +5,7 @@ import sys
 import time
 import psutil
 import csv
+import uuid
 import inspect
 from contextlib import contextmanager
 from datetime import datetime
@@ -86,7 +87,7 @@ class EcoTrace:
 
     def __init__(self, region_code="GLOBAL", carbon_limit=None, gpu_index=0,
                  api_key=None, grid_api_key=None, check_updates=True, quiet=False,
-                 on_budget_exceeded=None, session_summary=True):
+                 on_budget_exceeded=None, session_summary=True, run_label=None):
         # --- Auto-Update Check (v6.0) ----------------------------------------
         # Runs FIRST so the user sees the update prompt before initialization.
         # Completely fail-safe — errors are silently swallowed.
@@ -114,6 +115,12 @@ class EcoTrace:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.grid_api_key = grid_api_key or os.environ.get("ECOTRACE_GRID_API_KEY")
         self.quiet = quiet
+
+        # --- Run Identity (v1.3.0) -------------------------------------------
+        # Each EcoTrace session gets a unique run ID and an optional human label.
+        # These are written into every CSV row so runs can be grouped later.
+        self._run_id = uuid.uuid4().hex[:12]
+        self._run_label = run_label or ""
 
         # --- Carbon Budget Enforcement (v1.0) --------------------------------
         # The library produces data AND enforces rules. Budget alerts and
@@ -187,17 +194,22 @@ class EcoTrace:
             
             logger.info(f"[INFO] EcoTrace instrumentation session initialized ({source_label}).")
             logger.info("-" * 53)
+            logger.info(f"Run ID        : {self._run_id}" + (f" [{self._run_label}]" if self._run_label else ""))
             logger.info(f"Region        : {self.region_code} ({intensity_metadata})")
             logger.info(f"Hardware Logic: {self.cpu_info['brand']}")
             logger.info(f"Specifications: {self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W TDP")
             
             if self.hardware.rapl_available:
                 logger.info("Energy Sensor : RAPL (Exact Hardware Mode Enabled)")
+            elif self.hardware.apple_silicon_available:
+                logger.info("Energy Sensor : Apple Silicon (powermetrics)")
             else:
-                logger.info("Energy Sensor : Boavizta Advanced Estimation")
+                logger.info("Energy Sensor : Prediction Mode (Boavizta Advanced Estimation, ~15-20% error margin)")
                 import platform
                 if platform.system() == "Linux":
                     logger.warning("RAPL access denied! Run with 'sudo' for 0% deviation exact CPU profiling.")
+                elif platform.system() == "Darwin":
+                    logger.warning("Apple Silicon powermetrics access denied! Run with 'sudo' to allow exact energy profiling (0% deviation).")
                 
             if self.ram_info:
                 logger.info(f"Memory Config : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']}")
@@ -459,43 +471,101 @@ class EcoTrace:
             return None
         return max(0.0, self.carbon_limit - self.total_carbon)
 
+    def get_summary(self) -> dict:
+        """Returns the current session metrics as a structured dictionary.
+
+        Provides programmatic access to all session data — suitable for use
+        in notebooks, dashboards, custom reporting pipelines, and test assertions.
+        Can be called at any point during or after a session.
+
+        Returns:
+            dict: Session summary with keys:
+                - ``run_id``: Short unique ID for this session.
+                - ``run_label``: Optional human-readable label.
+                - ``duration_s``: Elapsed session time in seconds.
+                - ``functions_tracked``: Number of tracked function calls.
+                - ``total_carbon_gco2``: Cumulative carbon in gCO2.
+                - ``region``: ISO region code.
+                - ``carbon_intensity``: gCO2/kWh intensity value.
+                - ``intensity_source``: ``'live'`` or ``'static'``.
+                - ``budget``: Budget status dict (``None`` if no limit set).
+                - ``equivalence``: Human-readable carbon comparison string.
+                - ``hardware``: CPU/GPU/energy sensor metadata dict.
+        """
+        session_duration = time.perf_counter() - self._session_start_time
+
+        # Determine energy sensor label
+        if self.hardware.rapl_available:
+            sensor = "RAPL (Exact Hardware)"
+        elif self.hardware.apple_silicon_available:
+            sensor = "Apple Silicon (powermetrics)"
+        else:
+            sensor = "Prediction Mode (Boavizta Estimation, ~15-20% error margin)"
+
+        budget_info = None
+        if self.carbon_limit is not None:
+            remaining = self.remaining_budget
+            used_pct = (self.total_carbon / self.carbon_limit * 100) if self.carbon_limit else 0.0
+            budget_info = {
+                "limit_gco2": self.carbon_limit,
+                "remaining_gco2": remaining,
+                "used_pct": round(used_pct, 2),
+                "status": "EXCEEDED" if remaining == 0 else "OK",
+            }
+
+        return {
+            "run_id": self._run_id,
+            "run_label": self._run_label,
+            "duration_s": round(session_duration, 4),
+            "functions_tracked": self._tracked_functions_count,
+            "total_carbon_gco2": self.total_carbon,
+            "region": self.region_code,
+            "carbon_intensity": self.carbon_intensity,
+            "intensity_source": self._intensity_source,
+            "budget": budget_info,
+            "equivalence": self.equivalence(self.total_carbon),
+            "hardware": {
+                "cpu": self.cpu_info.get("brand", "Unknown"),
+                "cores": self.cpu_info.get("cores", 0),
+                "tdp_w": self.cpu_info.get("tdp", 0),
+                "gpu": self.gpu_info["brand"] if self.gpu_info else None,
+                "energy_sensor": sensor,
+            },
+        }
+
     def _print_session_summary(self):
         """Prints a summary table when the process exits via atexit.
 
         Registered in __init__ when session_summary=True and quiet=False.
-        This is a library-side responsibility: the engine knows the data,
-        so the engine prints the summary. IDE should not duplicate this.
+        Delegates to get_summary() to avoid duplicated logic.
         """
         try:
             # Flush exporter pool before exit
             self._exporter_pool.shutdown(wait=True)
-            
-            session_duration = time.perf_counter() - self._session_start_time
+
             if self._tracked_functions_count == 0:
                 return  # No measurements taken, skip summary
+
+            s = self.get_summary()
 
             print()
             print("=" * 55)
             print("  EcoTrace — Session Summary")
             print("=" * 55)
-            print(f"  Duration       : {session_duration:.2f}s")
-            print(f"  Functions      : {self._tracked_functions_count} tracked")
-            print(f"  Total Carbon   : {self.total_carbon:.8f} gCO2")
-            print(f"  Region         : {self.region_code} ({self.carbon_intensity} gCO2/kWh)")
+            print(f"  Run ID         : {s['run_id']}" + (f" [{s['run_label']}]" if s['run_label'] else ""))
+            print(f"  Duration       : {s['duration_s']:.2f}s")
+            print(f"  Functions      : {s['functions_tracked']} tracked")
+            print(f"  Total Carbon   : {s['total_carbon_gco2']:.8f} gCO2")
+            print(f"  Region         : {s['region']} ({s['carbon_intensity']} gCO2/kWh)")
 
             # --- Carbon Budget Status ----------------------------------------
-            if self.carbon_limit is not None:
-                remaining = self.remaining_budget
-                used_pct = (self.total_carbon / self.carbon_limit) * 100
-                status = "EXCEEDED" if remaining == 0 else "OK"
-                print(f"  Budget         : {self.total_carbon:.6f} / {self.carbon_limit:.6f} gCO2 ({used_pct:.1f}%) [{status}]")
+            if s["budget"] is not None:
+                b = s["budget"]
+                print(f"  Budget         : {s['total_carbon_gco2']:.6f} / {b['limit_gco2']:.6f} gCO2 ({b['used_pct']:.1f}%) [{b['status']}]")
 
             # --- Carbon Equivalences (v1.0) ----------------------------------
-            # Makes abstract gCO2 numbers tangible for humans.
-            # Sources: IEA, EPA, peer-reviewed LCA studies.
-            equiv = self.equivalence(self.total_carbon)
-            if equiv:
-                print(f"  Equivalent     : {equiv}")
+            if s["equivalence"]:
+                print(f"  Equivalent     : {s['equivalence']}")
 
             print("=" * 55)
         except Exception:
@@ -808,17 +878,24 @@ class EcoTrace:
             with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region", "AvgCPU(%)", "FilePath", "Line"])
+                    # v1.3.0: RunID and RunLabel appended at the end so old
+                    # CSVs without these columns remain parseable (DictReader
+                    # will simply return 'N/A' for missing columns).
+                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)",
+                                     "Region", "AvgCPU(%)", "FilePath", "Line",
+                                     "RunID", "RunLabel"])
                 avg_cpu_str = f"{avg_cpu:.2f}" if avg_cpu is not None else "N/A"
                 writer.writerow([
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
-                    func_name, 
-                    f"{duration:.4f}", 
-                    f"{carbon:.8f}", 
-                    self.region_code, 
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    func_name,
+                    f"{duration:.4f}",
+                    f"{carbon:.8f}",
+                    self.region_code,
                     avg_cpu_str,
                     file_path or "N/A",
-                    line_number or "N/A"
+                    line_number or "N/A",
+                    self._run_id,
+                    self._run_label,
                 ])
         except Exception as e:
             # We must never crash the user's application solely because logging failed.
@@ -1172,6 +1249,8 @@ class EcoTrace:
         meta = {
             "version": __version__,
             "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "run_id": self._run_id,
+            "run_label": self._run_label,
             "region_code": self.region_code,
             "carbon_intensity": self.carbon_intensity,
             "intensity_source": self._intensity_source,
@@ -1224,7 +1303,9 @@ class EcoTrace:
                             "region": row.get("Region", ""),
                             "avg_cpu_pct": row.get("AvgCPU(%)", "N/A"),
                             "file_path": row.get("FilePath", "N/A"),
-                            "line": row.get("Line", "N/A")
+                            "line": row.get("Line", "N/A"),
+                            "run_id": row.get("RunID", "N/A"),
+                            "run_label": row.get("RunLabel", ""),
                         }
                         measurements.append(record)
 

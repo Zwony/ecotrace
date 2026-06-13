@@ -28,6 +28,7 @@ class EcoTraceML:
         self.eco = EcoTrace(quiet=True, check_updates=False)
         self.gpu_info = self.eco.gpu_info or get_gpu_info(gpu_index, {"intel": 15.0, "amd": 75.0, "unknown": 100.0})
         self.gpu_index = self.eco.gpu_index if self.eco.gpu_index is not None else gpu_index
+        self._epoch_snapshots = []  # List of per-epoch (energy_j, duration_s) snapshots
 
     def _monitor_gpu(self):
         last_time = time.time()
@@ -47,6 +48,65 @@ class EcoTraceML:
                 with self._lock:
                     self.total_gpu_energy_joules += current_watt * elapsed
                     self.power_history.append((current_time, current_watt))
+
+    def snapshot_energy(self):
+        """Returns a thread-safe snapshot of accumulated energy and power history.
+
+        Useful for reading intermediate values at epoch boundaries without
+        stopping the monitoring thread.
+
+        Returns:
+            tuple: ``(total_gpu_energy_joules, list_of_power_history_tuples)``
+        """
+        with self._lock:
+            return self.total_gpu_energy_joules, list(self.power_history)
+
+    def log_epoch(self, epoch: int, energy_j: float, duration_s: float, metrics: dict = None):
+        """Logs a per-epoch energy measurement to the CSV audit log.
+
+        Called by ML framework callbacks to record epoch-level carbon data
+        alongside the standard per-session logging.
+
+        Args:
+            epoch: Zero-based epoch index.
+            energy_j: GPU energy consumed during this epoch in Joules.
+            duration_s: Duration of this epoch in seconds.
+            metrics: Optional dict of framework metrics (e.g. ``{'loss': 0.42}``).
+        """
+        gpu_kwh = energy_j / 3_600_000.0
+        raw_intensity = getattr(self.eco, "carbon_intensity", 0.475)
+        carbon_intensity_g = raw_intensity * 1000.0 if raw_intensity < 10.0 else raw_intensity
+        co2_g = (gpu_kwh * carbon_intensity_g) * 1.05  # 5 % ISO uncertainty margin
+        region_str = getattr(self.eco, "region_code", "GLOBAL")
+        run_id = getattr(self.eco, "_run_id", "")
+        run_label = getattr(self.eco, "_run_label", "")
+
+        label_suffix = f", loss={metrics['loss']:.4f}" if metrics and "loss" in metrics else ""
+        func_name = f"ml::epoch_{epoch}::{self.model_name}{label_suffix}"
+
+        log_file = "ecotrace_log.csv"
+        file_exists = os.path.exists(log_file)
+        try:
+            with open(log_file, mode='a', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)",
+                                     "Region", "AvgCPU(%)", "FilePath", "Line",
+                                     "RunID", "RunLabel"])
+                writer.writerow([
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    func_name,
+                    f"{duration_s:.4f}",
+                    f"{co2_g:.8f}",
+                    region_str,
+                    "0.0",
+                    "N/A",
+                    "N/A",
+                    run_id,
+                    run_label,
+                ])
+        except Exception as e:
+            print(f"[EcoTraceML] Could not write epoch log: {e}")
 
     def __enter__(self):
         if self.gpu_info and self.gpu_info.get('brand') != 'Unknown':
@@ -91,13 +151,28 @@ class EcoTraceML:
         file_exists = os.path.exists(log_file)
         duration = power_history[-1][0] - power_history[0][0] if len(power_history) >= 2 else 0.0
         region_str = getattr(self.eco, "region_code", "GLOBAL")
+        run_id = getattr(self.eco, "_run_id", "")
+        run_label = getattr(self.eco, "_run_label", "")
 
         try:
             with open(log_file, mode='a', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)", "Region", "AvgCPU(%)", "FilePath", "Line"])
-                writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), f"ml::{self.model_name}", f"{duration:.4f}", f"{co2_emitted_g_iso:.8f}", region_str, "0.0", "N/A", "N/A"])
+                    writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)",
+                                     "Region", "AvgCPU(%)", "FilePath", "Line",
+                                     "RunID", "RunLabel"])
+                writer.writerow([
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    f"ml::{self.model_name}",
+                    f"{duration:.4f}",
+                    f"{co2_emitted_g_iso:.8f}",
+                    region_str,
+                    "0.0",
+                    "N/A",
+                    "N/A",
+                    run_id,
+                    run_label,
+                ])
         except Exception as e:
             print(f"Could not write to log CSV: {e}")
 

@@ -90,7 +90,8 @@ def _cmd_run(args):
     # check_updates=False: Auto-update prompts are unnecessary in CLI mode.
     # quiet=False: User should see the hardware detection output.
     from ecotrace.core import EcoTrace
-    eco = EcoTrace(region_code=args.region, check_updates=False, quiet=False)
+    eco = EcoTrace(region_code=args.region, check_updates=False, quiet=False,
+                   run_label=getattr(args, 'label', None))
 
     # --- Script Execution Under Monitoring ---
     # Rewrite sys.argv from the target script's perspective so it can
@@ -464,6 +465,179 @@ def _cmd_gate(args):
 
 
 # =============================================================================
+# Subcommand: history (v1.3.0)
+# =============================================================================
+# Groups CSV measurements by RunID and prints a per-run summary table.
+
+def _cmd_history(args):
+    """Prints a per-run carbon summary grouped by RunID.
+
+    Reads the audit CSV and aggregates emissions by the RunID column
+    (added in v1.3.0). Legacy rows without a RunID are grouped together
+    under the label 'legacy'.
+
+    Args:
+        args: Parsed argparse namespace with optional ``file`` and ``runs`` options.
+    """
+    csv_path = args.file
+    max_runs = args.runs
+    _print_banner()
+
+    if not os.path.isfile(csv_path):
+        print(f"[ERROR] Log file not found: {csv_path}")
+        print("[INFO]  Run 'ecotrace run <script.py>' first to create a session.")
+        sys.exit(1)
+
+    run_map = {}  # run_id -> {label, date, count, duration_s, carbon_gco2}
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    carbon = float(row.get("Carbon(gCO2)", 0))
+                    duration = float(row.get("Duration(s)", 0))
+                except (ValueError, TypeError):
+                    continue
+
+                run_id = row.get("RunID", "").strip() or "legacy"
+                run_label = row.get("RunLabel", "").strip()
+                date = row.get("Date", "")
+
+                if run_id not in run_map:
+                    run_map[run_id] = {
+                        "label": run_label,
+                        "date": date,
+                        "count": 0,
+                        "duration_s": 0.0,
+                        "carbon_gco2": 0.0,
+                    }
+                r = run_map[run_id]
+                r["count"] += 1
+                r["duration_s"] += duration
+                r["carbon_gco2"] += carbon
+                if date > r["date"]:
+                    r["date"] = date
+    except Exception as e:
+        print(f"[ERROR] CSV read error: {e}")
+        sys.exit(1)
+
+    if not run_map:
+        print("[INFO] No measurements found.")
+        return
+
+    # Sort newest first, optionally limit
+    runs = sorted(run_map.items(), key=lambda x: x[1]["date"], reverse=True)
+    if max_runs:
+        runs = runs[:max_runs]
+
+    print("=" * 72)
+    print("  EcoTrace — Run History")
+    print("=" * 72)
+    print(f"  {'Run ID':<14} {'Label':<18} {'Date':<20} {'Funcs':>5} {'Duration(s)':>12} {'Carbon(gCO2)':>14}")
+    print("  " + "-" * 68)
+    for run_id, r in runs:
+        label = r["label"][:16] if r["label"] else ""
+        print(f"  {run_id:<14} {label:<18} {r['date']:<20} {r['count']:>5} {r['duration_s']:>12.4f} {r['carbon_gco2']:>14.8f}")
+    print("=" * 72)
+    total = sum(r["carbon_gco2"] for _, r in runs)
+    print(f"  Showing {len(runs)} run(s) | Total Carbon: {total:.8f} gCO2")
+    print("=" * 72)
+
+
+# =============================================================================
+# Subcommand: trends (v1.3.0)
+# =============================================================================
+# Shows carbon per run as an ASCII sparkline for quick trend spotting.
+
+def _cmd_trends(args):
+    """Displays an ASCII carbon-per-run trend chart for the last N runs.
+
+    Reads the audit CSV, groups by RunID, and renders a minimal ASCII
+    bar chart so users can spot whether their code is getting greener
+    over time without opening a browser.
+
+    Args:
+        args: Parsed argparse namespace with optional ``file`` and ``runs`` options.
+    """
+    csv_path = args.file
+    max_runs = args.runs
+    _print_banner()
+
+    if not os.path.isfile(csv_path):
+        print(f"[ERROR] Log file not found: {csv_path}")
+        sys.exit(1)
+
+    run_map = {}
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    carbon = float(row.get("Carbon(gCO2)", 0))
+                except (ValueError, TypeError):
+                    continue
+                run_id = row.get("RunID", "").strip() or "legacy"
+                run_label = row.get("RunLabel", "").strip()
+                date = row.get("Date", "")
+                if run_id not in run_map:
+                    run_map[run_id] = {"label": run_label, "date": date, "carbon": 0.0}
+                run_map[run_id]["carbon"] += carbon
+                if date > run_map[run_id]["date"]:
+                    run_map[run_id]["date"] = date
+    except Exception as e:
+        print(f"[ERROR] CSV read error: {e}")
+        sys.exit(1)
+
+    runs = sorted(run_map.items(), key=lambda x: x[1]["date"])[-max_runs:]
+    if not runs:
+        print("[INFO] No runs found.")
+        return
+
+    # ASCII bar chart — scale to terminal width (max 40 chars wide)
+    BAR_WIDTH = 40
+    max_c = max(r["carbon"] for _, r in runs) or 1.0
+    print("=" * 60)
+    print("  EcoTrace — Carbon Trends (oldest -> newest)")
+    print("=" * 60)
+    prev_carbon = None
+    for run_id, r in runs:
+        bar_len = max(1, int((r["carbon"] / max_c) * BAR_WIDTH))
+        bar = "#" * bar_len
+        trend = ""
+        if prev_carbon is not None:
+            if r["carbon"] < prev_carbon:
+                trend = " (DOWN)"
+            elif r["carbon"] > prev_carbon:
+                trend = " (UP)"
+        label_str = f" [{r['label']}]" if r["label"] else ""
+        print(f"  {run_id}{label_str}")
+        print(f"  {bar:<{BAR_WIDTH}}  {r['carbon']:.6f} gCO2{trend}")
+        print()
+        prev_carbon = r["carbon"]
+    print("=" * 60)
+
+
+# =============================================================================
+# Subcommand: dashboard (v1.3.0)
+# =============================================================================
+# Starts the local HTTP dashboard server.
+
+def _cmd_dashboard(args):
+    """Starts the EcoTrace live dashboard on localhost.
+
+    Launches a lightweight HTTP server (stdlib only) and opens the
+    dashboard in the default browser. Auto-refreshes every 5 seconds.
+    Press Ctrl-C to stop.
+
+    Args:
+        args: Parsed argparse namespace with ``port`` and ``file`` options.
+    """
+    from ecotrace.dashboard import DashboardServer
+    server = DashboardServer(csv_path=args.file, port=args.port)
+    server.serve_forever()
+
+
+# =============================================================================
 # Subcommand: optimize (v1.0.1)
 # =============================================================================
 # Connects to Google Gemini AI to analyze a specific function's source code
@@ -562,6 +736,7 @@ def main():
     run_parser.add_argument("script_args", nargs=argparse.REMAINDER, help="Arguments for the script")
     run_parser.add_argument("-r", "--region", default="GLOBAL", help="ISO region code (default: GLOBAL)")
     run_parser.add_argument("-o", "--output", default=None, help="Write results to a JSON file")
+    run_parser.add_argument("-l", "--label", default=None, help="Human-readable label for this run (stored in CSV)")
 
     # --- analyze ---
     analyze_parser = subparsers.add_parser(
@@ -601,6 +776,39 @@ def main():
     gate_parser.add_argument("-f", "--file", default="ecotrace_log.csv",
                              help="Path to CSV log file (default: ecotrace_log.csv)")
 
+    # --- history (v1.3.0) ---
+    history_parser = subparsers.add_parser(
+        "history",
+        help="Show per-run carbon summary grouped by RunID",
+        description="Groups the audit CSV by RunID and prints a per-run carbon table."
+    )
+    history_parser.add_argument("-f", "--file", default="ecotrace_log.csv",
+                                help="Path to CSV log file (default: ecotrace_log.csv)")
+    history_parser.add_argument("-n", "--runs", type=int, default=None,
+                                help="Maximum number of recent runs to show (default: all)")
+
+    # --- trends (v1.3.0) ---
+    trends_parser = subparsers.add_parser(
+        "trends",
+        help="ASCII carbon-per-run trend chart",
+        description="Shows an ASCII bar chart of carbon emissions across the last N runs."
+    )
+    trends_parser.add_argument("-f", "--file", default="ecotrace_log.csv",
+                               help="Path to CSV log file (default: ecotrace_log.csv)")
+    trends_parser.add_argument("-n", "--runs", type=int, default=10,
+                               help="Number of most recent runs to show (default: 10)")
+
+    # --- dashboard (v1.3.0) ---
+    dashboard_parser = subparsers.add_parser(
+        "dashboard",
+        help="Start live browser dashboard on localhost",
+        description="Launches a real-time HTTP dashboard that reads from ecotrace_log.csv."
+    )
+    dashboard_parser.add_argument("-p", "--port", type=int, default=8585,
+                                  help="Port to serve the dashboard on (default: 8585)")
+    dashboard_parser.add_argument("-f", "--file", default="ecotrace_log.csv",
+                                  help="Path to CSV log file (default: ecotrace_log.csv)")
+
     # --- optimize (v1.0.1) ---
     optimize_parser = subparsers.add_parser(
         "optimize",
@@ -626,6 +834,9 @@ def main():
         "benchmark": _cmd_benchmark,
         "gate": _cmd_gate,
         "optimize": _cmd_optimize,
+        "history": _cmd_history,
+        "trends": _cmd_trends,
+        "dashboard": _cmd_dashboard,
     }
 
     handler = commands.get(args.command)
