@@ -4,7 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-06-13
+
+### Added
+- **Multi-Run History (`ecotrace history` / `ecotrace trends`):** Every `EcoTrace` session now gets a unique `RunID` and optional `run_label`. The `ecotrace history` CLI command groups the CSV audit log by run and prints a per-run carbon summary. `ecotrace trends` renders an ASCII bar chart of emissions across the last N runs, making it easy to see whether code is getting greener over time.
+- **`--label` flag for `ecotrace run`:** Tag any CLI session with a human-readable label (e.g. `ecotrace run my_script.py --label nightly-build`) that is stored in every CSV row of that run.
+- **`get_summary()` API:** New `EcoTrace.get_summary() -> dict` method returns all session metrics — run ID, duration, total carbon, budget status, hardware info, and carbon equivalence — as a structured dictionary. Enables integration with notebooks, dashboards, and custom reporting pipelines without parsing stdout or CSV.
+- **Apple Silicon `powermetrics` Support:** `HardwareMonitor` now detects Apple Silicon (M-series) Macs and reads exact CPU package energy via `sudo -n powermetrics`. Falls back to Boavizta estimation silently if `powermetrics` is unavailable — consistent with the existing RAPL fallback pattern.
+- **ML Framework Callbacks (`ecotrace.callbacks`):** New `EcoTracePyTorchCallback` and `EcoTraceKerasCallback` classes provide per-epoch carbon breakdowns for training loops. Both use **lazy imports** — neither PyTorch nor TensorFlow is required at install time. Install optionally with `pip install ecotrace[ml]` or `pip install ecotrace[keras]`.
+- **Live Dashboard (`ecotrace dashboard`):** New `ecotrace dashboard [--port 8585]` CLI command starts a lightweight localhost HTTP server (zero external dependencies — stdlib only) serving a real-time browser dashboard. Features: carbon timeline chart, per-function emissions bar chart, run history table, run filter dropdown, and carbon equivalence display. Auto-refreshes every 5 seconds.
+- **`EcoTraceML.snapshot_energy()`:** New method for reading intermediate GPU energy values during training without stopping the monitoring thread.
+- **`EcoTraceML.log_epoch()`:** Logs per-epoch energy/carbon to the CSV audit log, used internally by the ML callbacks.
+
+### Changed
+- Session summary now displays the `RunID` (and label if set).
+- `_print_session_summary()` refactored to delegate to `get_summary()`, eliminating duplicated logic.
+- CSV audit log headers updated: `RunID` and `RunLabel` columns appended at the end for full backward compatibility with existing log files.
+- `export_json()` now includes `run_id` and `run_label` in the `meta` block.
+
 ## [1.2.1] - 2026-06-03
+
 
 ### Fixed
 - **Windows RAM detection**: Replaced deprecated `wmic` with PowerShell `Get-CimInstance` for Windows RAM speed detection, preventing compatibility issues on Windows 11 24H2.

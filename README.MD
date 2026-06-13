@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.2.1 — Production/Stable Release.** Bug fixes, secure HTTPS endpoints, dynamic USER_AGENT, class-level atexit session summaries, and ML tracker parameter alignment.
+**v1.3.0 — Feature Release.** Multi-run history, programmatic `get_summary()` API, Apple Silicon energy monitoring, per-epoch ML callbacks, and a live browser dashboard — all with zero new mandatory dependencies.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -38,16 +38,17 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.2.1
+## Core Features in v1.3.0
 
-> **Patch Release & Bug Fixes.** v1.2.1 fixes Windows RAM detection, aligns ML logging columns, secures API endpoints, and prevents duplicate summaries.
+> **Feature Release.** v1.3.0 adds multi-run observability, a programmatic summary API, Apple Silicon hardware energy reading, per-epoch ML callbacks, and a live browser dashboard.
 
-- **EcoTraceML Tracking Engine** — A dedicated context manager and decorator designed specifically for measuring carbon and energy footprint of machine learning and AI model training sessions.
-- **Continuous Sampling** — Uses asynchronous multi-threaded hardware metrics polling for high-frequency CPU/GPU/RAM monitoring.
-- **Windows NVML Auto-Discovery** — Dynamically resolves and injects NVML DLL paths (`NVSMI` and `System32`) to prevent load errors on Windows platforms.
-- **NVIDIA Driver Robustness** — Adds safe fallback UTF-8 decoding for newer NVIDIA drivers returning binary GPU names.
-- **FPDF & Pylance Type Safety** — Resolves strict type checking warnings by using positional parameters in PDF report cell generation.
-- **Lazy Dependencies** — Prevents startup `ModuleNotFoundError` by lazy-loading the optional `google-generativeai` package. See [CHANGELOG.md](CHANGELOG.md).
+- **Multi-Run History** — Every session gets a unique `RunID`. Use `ecotrace history` to compare runs and `ecotrace trends` for an ASCII carbon trend chart.
+- **`get_summary()` API** — Programmatic access to all session metrics as a typed dict. Ideal for notebooks, dashboards, and CI assertions.
+- **Apple Silicon Support** — Exact CPU energy readings via `powermetrics` on M-series Macs (falls back to Boavizta silently).
+- **Per-Epoch ML Callbacks** — `EcoTracePyTorchCallback` and `EcoTraceKerasCallback` log per-epoch carbon to CSV. PyTorch and TensorFlow are optional extras.
+- **Live Dashboard** — `ecotrace dashboard` serves a real-time browser UI on `localhost:8585`. Zero extra dependencies (stdlib only).
+- **EcoTraceML Tracking Engine** — A dedicated context manager and decorator for measuring carbon and energy footprint of ML model training sessions.
+- **Windows NVML Auto-Discovery** — Dynamically resolves and injects NVML DLL paths to prevent load errors on Windows platforms. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -152,7 +153,7 @@ Enforce carbon budgets in your pipeline with our official GitHub Action. Add thi
 
 ```yaml
 - name: EcoTrace Carbon Gate
-  uses: Zwony/ecotrace@v1.2.1
+  uses: Zwony/ecotrace@v1.3.0
   with:
     budget: '10.0'
     region: 'US'

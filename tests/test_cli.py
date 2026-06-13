@@ -81,3 +81,74 @@ def test_cli_benchmark(capsys):
     assert "EcoTrace - Overhead Benchmark Results" in captured.out
     assert "Baseline (avg)" in captured.out
     assert "EcoTrace (avg)" in captured.out
+
+
+def test_cli_history_missing_file(capsys):
+    class Args:
+        file = "non_existent_history.csv"
+        runs = None
+    from ecotrace.cli import _cmd_history
+    with pytest.raises(SystemExit) as exc:
+        _cmd_history(Args())
+    assert exc.value.code == 1
+    captured = capsys.readouterr()
+    assert "[ERROR] Log file not found" in captured.out
+
+
+def test_cli_history_success(tmp_path, capsys):
+    csv_file = tmp_path / "history_test_log.csv"
+    # Write a test CSV with RunID and RunLabel
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line,RunID,RunLabel\n"
+        "2026-06-13 12:00,func_a,1.5,0.25,TR,10.0,dummy.py,1,run123,label123\n"
+        "2026-06-13 12:05,func_b,2.0,0.35,TR,12.0,dummy.py,5,run123,label123\n"
+        "2026-06-13 12:10,func_c,1.0,0.15,US,15.0,dummy.py,10,,legacy_label\n"
+    )
+    
+    class Args:
+        file = str(csv_file)
+        runs = None
+
+    from ecotrace.cli import _cmd_history
+    _cmd_history(Args())
+    captured = capsys.readouterr()
+    # Check if run123 and legacy are summarized properly
+    assert "run123" in captured.out
+    assert "label123" in captured.out
+    assert "legacy" in captured.out
+    assert "0.6000" in captured.out  # sum of carbon for run123
+    assert "0.1500" in captured.out  # carbon for legacy
+
+
+def test_cli_trends_success(tmp_path, capsys):
+    csv_file = tmp_path / "trends_test_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line,RunID,RunLabel\n"
+        "2026-06-13 12:00,func_a,1.5,0.25,TR,10.0,dummy.py,1,run123,label123\n"
+        "2026-06-13 12:05,func_b,2.0,0.75,TR,12.0,dummy.py,5,run456,label456\n"
+    )
+
+    class Args:
+        file = str(csv_file)
+        runs = 5
+
+    from ecotrace.cli import _cmd_trends
+    _cmd_trends(Args())
+    captured = capsys.readouterr()
+    assert "EcoTrace — Carbon Trends" in captured.out
+    assert "run123" in captured.out
+    assert "run456" in captured.out
+
+
+@patch("ecotrace.dashboard.DashboardServer")
+def test_cli_dashboard_success(mock_server):
+    class Args:
+        file = "dummy_log.csv"
+        port = 9000
+
+    from ecotrace.cli import _cmd_dashboard
+    _cmd_dashboard(Args())
+    
+    mock_server.assert_called_once_with(csv_path="dummy_log.csv", port=9000)
+    mock_server.return_value.serve_forever.assert_called_once()
+
