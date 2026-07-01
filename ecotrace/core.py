@@ -185,6 +185,9 @@ class EcoTrace:
         # overhead; lower frequency (like 15s) misses bursty micro-code.
         self._monitor_interval = self.MONITOR_INTERVAL_S
         self._current_process = psutil.Process()
+        self._paused = False
+        self._paused_at = None
+        self._total_paused_duration = 0.0
 
         # --- Initialization Sequence (v0.7.0) -------------------------------
         if not self.quiet:
@@ -383,14 +386,18 @@ class EcoTrace:
             line_number: Line number where the function is defined.
         """
         with self._carbon_lock:
+            if self._paused:
+                return
             self.total_carbon += carbon_emitted
             self._tracked_functions_count += 1
             self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu, file_path, line_number)
 
             # --- Emit to registered telemetry exporters ----------------------
             if self._exporters:
-                def _dispatch_exporters():
-                    for exporter in self._exporters:
+                exporters = list(self._exporters)
+
+                def _dispatch_exporters(exporters=exporters):
+                    for exporter in exporters:
                         try:
                             exporter.export(
                                 carbon_emitted=carbon_emitted,
@@ -400,11 +407,14 @@ class EcoTrace:
                             )
                         except Exception as e:
                             logger.debug(f"EcoTrace Exporter error: {e}")
-                self._exporter_pool.submit(_dispatch_exporters)
+
+                try:
+                    self._exporter_pool.submit(_dispatch_exporters)
+                except Exception as e:
+                    logger.debug(f"EcoTrace Exporter pool unavailable, falling back to synchronous dispatch: {e}")
+                    _dispatch_exporters()
 
             # --- Carbon Budget Enforcement (v1.0) ----------------------------
-            # The library enforces its own rules. If a limit was set, we check
-            # it here — not in the IDE, not in middleware, right at the source.
             self._enforce_carbon_budget(func_name)
 
     def add_exporter(self, exporter):
@@ -471,6 +481,24 @@ class EcoTrace:
             return None
         return max(0.0, self.carbon_limit - self.total_carbon)
 
+    def pause(self):
+        """Temporarily pauses carbon tracking for the session."""
+        with self._carbon_lock:
+            if not self._paused:
+                self._paused = True
+                self._paused_at = time.perf_counter()
+                logger.info("[EcoTrace] Instrumentation session paused.")
+
+    def resume(self):
+        """Resumes carbon tracking for the session."""
+        with self._carbon_lock:
+            if self._paused:
+                self._paused = False
+                if self._paused_at is not None:
+                    self._total_paused_duration += time.perf_counter() - self._paused_at
+                    self._paused_at = None
+                logger.info("[EcoTrace] Instrumentation session resumed.")
+
     def get_summary(self) -> dict:
         """Returns the current session metrics as a structured dictionary.
 
@@ -493,6 +521,10 @@ class EcoTrace:
                 - ``hardware``: CPU/GPU/energy sensor metadata dict.
         """
         session_duration = time.perf_counter() - self._session_start_time
+        current_pause = 0.0
+        if self._paused and self._paused_at is not None:
+            current_pause = time.perf_counter() - self._paused_at
+        active_duration = max(0.0, session_duration - self._total_paused_duration - current_pause)
 
         # Determine energy sensor label
         if self.hardware.rapl_available:
@@ -516,7 +548,7 @@ class EcoTrace:
         return {
             "run_id": self._run_id,
             "run_label": self._run_label,
-            "duration_s": round(session_duration, 4),
+            "duration_s": round(active_duration, 4),
             "functions_tracked": self._tracked_functions_count,
             "total_carbon_gco2": self.total_carbon,
             "region": self.region_code,
@@ -803,6 +835,20 @@ class EcoTrace:
             # Floor at 0 to avoid negative utilization from measurement jitter.
             return max(0.0, normalized - self._idle_baseline_pct)
 
+    def _get_source_location(self, func):
+        """Returns the source file path and line number for a callable.
+
+        Works for wrapped, decorated, and async functions by unwrapping the
+        original implementation before querying inspect.
+        """
+        try:
+            target = inspect.unwrap(func)
+            file_path = os.path.abspath(inspect.getfile(target))
+            line_number = inspect.getsourcelines(target)[1]
+            return file_path, line_number
+        except Exception:
+            return None, None
+
     def _get_avg_gpu_in_range(self, start_time, end_time):
         """Computes mean GPU utilization and power from samples within a time window.
 
@@ -1028,12 +1074,8 @@ class EcoTrace:
                 with self._cpu_sample_lock:
                     measurement_samples = list(self._cpu_samples)
 
-                # Capture location info
-                try:
-                    file_path = os.path.abspath(inspect.getfile(func))
-                    line_number = inspect.getsourcelines(func)[1]
-                except Exception:
-                    file_path, line_number = None, None
+                # Capture location info robustly for decorated and async functions
+                file_path, line_number = self._get_source_location(func)
 
                 energy_delta_j = None
                 if energy_start is not None and energy_end is not None:
@@ -1115,8 +1157,11 @@ class EcoTrace:
                 if energy_start is not None and energy_end is not None:
                     energy_delta_j = max(0.0, energy_end - energy_start)
 
+                # Capture location info robustly for decorated and async functions
+                file_path, line_number = self._get_source_location(func)
+
                 carbon_emitted = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration, energy_delta_j=energy_delta_j)
-                self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu)
+                self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu, file_path=file_path, line_number=line_number)
 
                 if func_success:
                     return {

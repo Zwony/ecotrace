@@ -26,6 +26,7 @@ def test_pytorch_callback_lifecycle(capsys):
     mock_tracker = MagicMock()
     mock_tracker.gpu_info = {"brand": "Test NVIDIA GPU"}
     mock_tracker.snapshot_energy.return_value = (5000.0, [])
+    mock_tracker.log_epoch.return_value = 0.0001
     mock_tracker.eco = MagicMock()
     mock_tracker.eco.carbon_intensity = 0.5
 
@@ -69,6 +70,7 @@ def test_keras_callback_lifecycle(capsys):
     mock_tracker = MagicMock()
     mock_tracker.gpu_info = {"brand": "Test AMD GPU"}
     mock_tracker.snapshot_energy.return_value = (1000.0, [])
+    mock_tracker.log_epoch.return_value = 0.0001
     mock_tracker.eco = MagicMock()
     mock_tracker.eco.carbon_intensity = 0.4
 

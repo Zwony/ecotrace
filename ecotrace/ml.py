@@ -30,6 +30,18 @@ class EcoTraceML:
         self.gpu_index = self.eco.gpu_index if self.eco.gpu_index is not None else gpu_index
         self._epoch_snapshots = []  # List of per-epoch (energy_j, duration_s) snapshots
 
+    def _carbon_intensity_gco2_per_kwh(self):
+        """Normalize carbon intensity to gCO2/kWh.
+
+        Some legacy or misconfigured intensity values can be expressed in
+        kgCO2/kWh. The main EcoTrace engine uses gCO2/kWh, so we normalize
+        values below 10 as kgCO2/kWh to preserve backward compatibility.
+        """
+        raw_intensity = getattr(self.eco, "carbon_intensity", 475.0)
+        if raw_intensity <= 0.0:
+            return 475.0
+        return raw_intensity * 1000.0 if raw_intensity < 10.0 else raw_intensity
+
     def _monitor_gpu(self):
         last_time = time.time()
 
@@ -74,8 +86,7 @@ class EcoTraceML:
             metrics: Optional dict of framework metrics (e.g. ``{'loss': 0.42}``).
         """
         gpu_kwh = energy_j / 3_600_000.0
-        raw_intensity = getattr(self.eco, "carbon_intensity", 0.475)
-        carbon_intensity_g = raw_intensity * 1000.0 if raw_intensity < 10.0 else raw_intensity
+        carbon_intensity_g = self._carbon_intensity_gco2_per_kwh()
         co2_g = (gpu_kwh * carbon_intensity_g) * 1.05  # 5 % ISO uncertainty margin
         region_str = getattr(self.eco, "region_code", "GLOBAL")
         run_id = getattr(self.eco, "_run_id", "")
@@ -107,6 +118,7 @@ class EcoTraceML:
                 ])
         except Exception as e:
             print(f"[EcoTraceML] Could not write epoch log: {e}")
+        return co2_g
 
     def __enter__(self):
         if self.gpu_info and self.gpu_info.get('brand') != 'Unknown':
@@ -132,9 +144,12 @@ class EcoTraceML:
             total_gpu_energy_joules = self.total_gpu_energy_joules
             power_history = list(self.power_history)
 
+        if not power_history:
+            print(f"[EcoTraceML] No energy monitoring data collected for {self.model_name}.")
+            return False
+
         gpu_kwh = total_gpu_energy_joules / 3600000.0
-        raw_intensity = getattr(self.eco, "carbon_intensity", 0.475)
-        carbon_intensity_g = raw_intensity * 1000.0 if raw_intensity < 10.0 else raw_intensity
+        carbon_intensity_g = self._carbon_intensity_gco2_per_kwh()
         co2_emitted_g_iso = (gpu_kwh * carbon_intensity_g) * 1.05
 
         # Update core cumulative trackers if they exist

@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-07-01
+
+### Added
+- **`ecotrace diff` command**: Side-by-side carbon footprint comparison of any two runs.
+- **CSV Export options**: Extended `ecotrace export` with `--csv` format and `--run`/`--func` filters.
+- **Pausing API**: `EcoTrace.pause()` and `EcoTrace.resume()` for temporarily disabling carbon tracking during setup/teardown.
+- **`WebhookExporter`**: Push carbon metrics to webhooks in real-time (Slack, Teams, Discord, custom API).
+- **`ecotrace clean` command**: Rotate/cleanup log CSV by run count or date, creating a backup automatically.
+- **`ecotrace reset` command**: Reset/delete CSV log file completely with verification.
+
+### Fixed
+- **Duplicate Carbon Calculations**: Fixed duplicate and fragile carbon calculation in Keras and PyTorch callbacks.
+- **Empty GPU monitoring crash**: Guarded `EcoTraceML` shutdown sequence against empty GPU monitor histories.
+- **Async Metadata propagation**: Propagated source file paths and line numbers correctly in `measure_async()`.
+- **CPU Cache Optimization**: Reused cached CPU information query in `get_cpu_info` instead of repeating py-cpuinfo parsing.
+
+## [1.3.0] - 2026-06-13
+
+### Added
+- **Multi-Run Observability**: Unique Run ID and optional Run Label assigned to every session, written to CSV.
+- **Run commands**: CLI subcommands `ecotrace history` and `ecotrace trends` for multi-run history inspection.
+- **`get_summary()` API**: Programmatic session statistics for notebooks and test assertions.
+- **Apple Silicon Support**: Direct hardware energy counter monitoring via `powermetrics`.
+- **ML Framework Callbacks**: deferred callbacks `EcoTraceKerasCallback` and `EcoTracePyTorchCallback`.
+- **Live Browser Dashboard**: Real-time HTTP dashboard served via `ecotrace dashboard` on port 8585.
+
 ## [1.2.1] - 2026-06-03
 
 ### Fixed

@@ -86,3 +86,34 @@ def test_csv_logging_does_not_crash_on_error(ecotrace_instance):
     with patch("builtins.open", side_effect=OSError("Permission denied")):
         # This should log a warning but not raise an exception
         ecotrace_instance._log_to_csv("test_func", 1.0, 0.01)
+
+def test_pause_resume(ecotrace_instance):
+    assert not ecotrace_instance._paused
+    ecotrace_instance.pause()
+    assert ecotrace_instance._paused
+    
+    # Test that _accumulate_carbon returns immediately when paused
+    initial_carbon = ecotrace_instance.total_carbon
+    ecotrace_instance._accumulate_carbon(0.5, "paused_func", 1.0)
+    assert ecotrace_instance.total_carbon == initial_carbon
+    
+    ecotrace_instance.resume()
+    assert not ecotrace_instance._paused
+    
+    ecotrace_instance._accumulate_carbon(0.5, "resumed_func", 1.0)
+    assert ecotrace_instance.total_carbon == initial_carbon + 0.5
+
+def test_async_measure_hotspot_metadata(ecotrace_instance):
+    import asyncio
+    async def async_dummy():
+        return 42
+        
+    with patch.object(ecotrace_instance, "_log_to_csv") as mock_log:
+        asyncio.run(ecotrace_instance.measure_async(async_dummy))
+        mock_log.assert_called_once()
+        args, kwargs = mock_log.call_args
+        assert args[0] == "async_dummy"
+        assert args[4] is not None
+        assert args[4].endswith("test_core.py")
+        assert args[5] is not None
+

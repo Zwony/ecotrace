@@ -14,6 +14,27 @@ def test_add_exporter_core_api():
     assert len(eco._exporters) == 1
     assert eco._exporters[0] is mock_exporter
 
+
+def test_accumulate_carbon_falls_back_to_sync_export_when_thread_pool_submit_fails():
+    """Exporter dispatch should still work if the background pool cannot accept work."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = MagicMock()
+    eco.add_exporter(exporter)
+
+    with patch.object(eco._exporter_pool, "submit", side_effect=RuntimeError("pool closed")):
+        eco._accumulate_carbon(
+            carbon_emitted=0.005,
+            func_name="test_function",
+            duration=1.2,
+        )
+
+    exporter.export.assert_called_once_with(
+        carbon_emitted=0.005,
+        func_name="test_function",
+        duration=1.2,
+        region=eco.region_code,
+    )
+
 @patch('ecotrace.exporters.otel.metrics')
 def test_otel_exporter_registration_and_export(mock_metrics):
     """Verify OTelExporter attaches to EcoTrace and exports metrics successfully."""
@@ -69,3 +90,51 @@ def test_otel_exporter_missing_dependency():
         exporter.export(0.5, "test", 1.0, "GLOBAL")
 
 # /* --- Hybrid End of File / Dosya Sonu --- */ #
+
+from ecotrace.exporters.webhook import WebhookExporter
+
+@patch('requests.post')
+def test_webhook_exporter_registration_and_export(mock_post):
+    """Verify WebhookExporter attaches to EcoTrace and POSTs metrics successfully."""
+    mock_post.return_value.status_code = 200
+
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "test_run_id"
+    eco._run_label = "test_label"
+    
+    exporter = WebhookExporter(ecotrace_instance=eco, url="http://example.com/webhook", headers={"X-Test": "Value"})
+    
+    assert len(eco._exporters) == 1
+    assert eco._exporters[0] is exporter
+    
+    eco.region_code = "US"
+    eco._accumulate_carbon(
+        carbon_emitted=0.005,
+        func_name="test_function",
+        duration=1.2
+    )
+    
+    eco._exporter_pool.shutdown(wait=True)
+    
+    # Assert requests.post was called with the correct args
+    mock_post.assert_called_once()
+    args, kwargs = mock_post.call_args
+    assert args[0] == "http://example.com/webhook"
+    assert kwargs["headers"] == {"Content-Type": "application/json", "X-Test": "Value"}
+    payload = kwargs["json"]
+    assert payload["function"] == "test_function"
+    assert payload["carbon_gco2"] == 0.005
+    assert payload["duration_s"] == 1.2
+    assert payload["region"] == "US"
+    assert payload["run_id"] == "test_run_id"
+    assert payload["run_label"] == "test_label"
+
+def test_webhook_exporter_missing_dependency():
+    """Verify WebhookExporter handles missing requests gracefully."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    
+    with patch('ecotrace.exporters.webhook.requests', None):
+        exporter = WebhookExporter(ecotrace_instance=eco, url="http://example.com")
+        assert exporter.url is None
+        exporter.export(0.5, "test", 1.0, "GLOBAL")
+

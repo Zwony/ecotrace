@@ -281,32 +281,283 @@ def _cmd_analyze(args):
 # VS Code extension will consume this JSON for its sidebar dashboard.
 
 def _cmd_export(args):
-    """Exports session data to JSON format for external tool consumption.
-
-    Creates a structured JSON file containing hardware metadata,
-    measurement history, and aggregate statistics.
-
-    Args:
-        args: Parsed argparse namespace with ``output`` and ``format`` options.
-    """
+    """Exports session data to JSON or CSV format with filters."""
     _print_banner()
 
-    if args.format != "json":
+    if args.format not in ("json", "csv"):
         print(f"[ERROR] Unsupported format: {args.format}")
-        print("[INFO]  Currently only JSON is supported: ecotrace export --json")
         sys.exit(1)
 
+    csv_path = getattr(args, "file", "ecotrace_log.csv")
     output_path = args.output
 
-    # Initialize EcoTrace quietly just for hardware metadata
-    from ecotrace.core import EcoTrace
-    eco = EcoTrace(check_updates=False, quiet=True)
+    if args.format == "json":
+        from ecotrace.core import EcoTrace
+        eco = EcoTrace(check_updates=False, quiet=True)
+        try:
+            eco.export_json(output_path, csv_path=csv_path)
+            print(f"[EXPORT] JSON report created successfully: {output_path}")
+        except Exception as e:
+            print(f"[ERROR] JSON export failed: {e}")
+            sys.exit(1)
+    elif args.format == "csv":
+        if not os.path.isfile(csv_path):
+            print(f"[ERROR] Log file not found: {csv_path}")
+            sys.exit(1)
+
+        try:
+            filtered_rows = []
+            headers = []
+            with open(csv_path, "r", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                try:
+                    headers = next(reader)
+                except StopIteration:
+                    headers = []
+
+                if headers:
+                    func_idx = headers.index("Function") if "Function" in headers else -1
+                    run_id_idx = headers.index("RunID") if "RunID" in headers else -1
+                    run_lbl_idx = headers.index("RunLabel") if "RunLabel" in headers else -1
+
+                    for row in reader:
+                        # Apply filters
+                        if args.run:
+                            row_run_id = row[run_id_idx] if run_id_idx < len(row) else ""
+                            row_run_lbl = row[run_lbl_idx] if run_lbl_idx < len(row) else ""
+                            if args.run != row_run_id and args.run != row_run_lbl:
+                                continue
+                        if args.func:
+                            row_func = row[func_idx] if func_idx < len(row) else ""
+                            if args.func != row_func:
+                                continue
+                        filtered_rows.append(row)
+
+            with open(output_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                if headers:
+                    writer.writerow(headers)
+                writer.writerows(filtered_rows)
+
+            print(f"[EXPORT] Filtered CSV report written: {output_path} ({len(filtered_rows)} records)")
+        except Exception as e:
+            print(f"[ERROR] CSV export failed: {e}")
+            sys.exit(1)
+
+
+def _cmd_diff(args):
+    """Compares carbon emissions of two runs side-by-side."""
+    csv_path = args.file
+    _print_banner()
+
+    if not os.path.isfile(csv_path):
+        print(f"[ERROR] Log file not found: {csv_path}")
+        sys.exit(1)
+
+    # Aggregate data by RunID
+    run_map = {}
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    carbon = float(row.get("Carbon(gCO2)", 0))
+                    duration = float(row.get("Duration(s)", 0))
+                except (ValueError, TypeError):
+                    continue
+
+                run_id = row.get("RunID", "").strip() or "legacy"
+                run_label = row.get("RunLabel", "").strip()
+                date = row.get("Date", "")
+
+                if run_id not in run_map:
+                    run_map[run_id] = {
+                        "run_id": run_id,
+                        "label": run_label,
+                        "date": date,
+                        "count": 0,
+                        "duration_s": 0.0,
+                        "carbon_gco2": 0.0,
+                    }
+                r = run_map[run_id]
+                r["count"] += 1
+                r["duration_s"] += duration
+                r["carbon_gco2"] += carbon
+                if date > r["date"]:
+                    r["date"] = date
+    except Exception as e:
+        print(f"[ERROR] CSV read error: {e}")
+        sys.exit(1)
+
+    if not run_map:
+        print("[INFO] No runs found in log.")
+        return
+
+    sorted_runs = sorted(run_map.values(), key=lambda x: x["date"])
+
+    run_id1 = None
+    run_id2 = None
+
+    if args.latest:
+        if len(sorted_runs) < 2:
+            print("[ERROR] At least 2 runs are required to perform a comparison.")
+            sys.exit(1)
+        run_id1 = sorted_runs[-2]["run_id"]
+        run_id2 = sorted_runs[-1]["run_id"]
+    else:
+        if not args.run_ids or len(args.run_ids) != 2:
+            print("[ERROR] Please specify exactly two Run IDs or use --latest.")
+            sys.exit(1)
+        run_id1, run_id2 = args.run_ids
+
+    if run_id1 not in run_map:
+        print(f"[ERROR] Run ID not found: {run_id1}")
+        sys.exit(1)
+    if run_id2 not in run_map:
+        print(f"[ERROR] Run ID not found: {run_id2}")
+        sys.exit(1)
+
+    r1 = run_map[run_id1]
+    r2 = run_map[run_id2]
+
+    diff_carbon = r2["carbon_gco2"] - r1["carbon_gco2"]
+    diff_duration = r2["duration_s"] - r1["duration_s"]
+    diff_funcs = r2["count"] - r1["count"]
+
+    pct_carbon = (diff_carbon / r1["carbon_gco2"] * 100) if r1["carbon_gco2"] > 0 else 0.0
+    pct_duration = (diff_duration / r1["duration_s"] * 100) if r1["duration_s"] > 0 else 0.0
+    pct_funcs = (diff_funcs / r1["count"] * 100) if r1["count"] > 0 else 0.0
+
+    print("=" * 72)
+    print("  EcoTrace — Run Comparison Report")
+    print("=" * 72)
+    print(f"  {'Metric':<15} | {'Base (Run 1)':<24} | {'Target (Run 2)':<24}")
+    print(f"  {'':<15} | {run_id1:<24} | {run_id2:<24}")
+    print(f"  {'Label':<15} | {r1['label']:<24} | {r2['label']:<24}")
+    print(f"  {'Date':<15} | {r1['date']:<24} | {r2['date']:<24}")
+    print("-" * 72)
+    
+    sign_c = "+" if diff_carbon >= 0 else ""
+    sign_d = "+" if diff_duration >= 0 else ""
+    sign_f = "+" if diff_funcs >= 0 else ""
+
+    print(f"  {'Functions':<15} | {r1['count']:<24} | {r2['count']:<24}")
+    print(f"  {'Delta (Funcs)':<15} | {sign_f}{diff_funcs} ({sign_f}{pct_funcs:.1f}%)")
+    print("-" * 72)
+    print(f"  {'Duration':<15} | {r1['duration_s']:<20.4f} s | {r2['duration_s']:<20.4f} s")
+    print(f"  {'Delta (Time)':<15} | {sign_d}{diff_duration:.4f} s ({sign_d}{pct_duration:.1f}%)")
+    print("-" * 72)
+    print(f"  {'Carbon (CO2)':<15} | {r1['carbon_gco2']:<20.8f} g | {r2['carbon_gco2']:<20.8f} g")
+    print(f"  {'Delta (CO2)':<15} | {sign_c}{diff_carbon:.8f} g ({sign_c}{pct_carbon:.1f}%)")
+    print("=" * 72)
+
+
+def _cmd_clean(args):
+    """Trims the CSV audit log by run count or date, creating a backup first."""
+    csv_path = args.file
+    _print_banner()
+
+    if not os.path.isfile(csv_path):
+        print(f"[ERROR] Log file not found: {csv_path}")
+        sys.exit(1)
+
+    import shutil
+    backup_path = csv_path + ".bak"
+    try:
+        shutil.copy(csv_path, backup_path)
+        print(f"[CLEAN] Backup created: {backup_path}")
+    except Exception as e:
+        print(f"[ERROR] Could not create backup file: {e}")
+        sys.exit(1)
 
     try:
-        eco.export_json(output_path)
-        print(f"[EXPORT] JSON report created successfully: {output_path}")
+        rows = []
+        headers = []
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            headers = reader.fieldnames
+            for row in reader:
+                rows.append(row)
     except Exception as e:
-        print(f"[ERROR] JSON export failed: {e}")
+        print(f"[ERROR] CSV read failed: {e}")
+        sys.exit(1)
+
+    if not rows:
+        print("[INFO] Log file is empty. Nothing to clean.")
+        return
+
+    original_count = len(rows)
+
+    # Filter 1: --before DATE
+    if args.before:
+        filtered_rows = []
+        for row in rows:
+            date_str = row.get("Date", "")
+            cmp_len = len(args.before)
+            if date_str[:cmp_len] < args.before:
+                continue
+            filtered_rows.append(row)
+        rows = filtered_rows
+
+    # Filter 2: --keep-runs N
+    if args.keep_runs is not None:
+        if args.keep_runs <= 0:
+            print("[ERROR] --keep-runs must be a positive integer.")
+            sys.exit(1)
+
+        run_dates = {}
+        for row in rows:
+            run_id = row.get("RunID", "").strip() or "legacy"
+            date = row.get("Date", "")
+            if run_id not in run_dates or date > run_dates[run_id]:
+                run_dates[run_id] = date
+
+        sorted_runs = sorted(run_dates.keys(), key=lambda r: run_dates[r])
+        kept_runs = set(sorted_runs[-args.keep_runs:])
+
+        filtered_rows = []
+        for row in rows:
+            run_id = row.get("RunID", "").strip() or "legacy"
+            if run_id in kept_runs:
+                filtered_rows.append(row)
+        rows = filtered_rows
+
+    try:
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+            writer.writerows(rows)
+        print(f"[CLEAN] Trimmed {original_count - len(rows)} entries. {len(rows)} remaining.")
+    except Exception as e:
+        print(f"[ERROR] Failed to write trimmed CSV: {e}")
+        sys.exit(1)
+
+
+def _cmd_reset(args):
+    """Deletes the CSV log file entirely after confirmation."""
+    csv_path = args.file
+    _print_banner()
+
+    if not os.path.exists(csv_path):
+        print(f"[RESET] Log file does not exist: {csv_path}")
+        return
+
+    if not args.yes:
+        print("WARNING: This will permanently delete the carbon emission log file!")
+        try:
+            confirm = input("Are you sure you want to proceed? (y/n): ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print("\nReset cancelled.")
+            sys.exit(1)
+        if confirm != "y":
+            print("Reset cancelled.")
+            return
+
+    try:
+        os.remove(csv_path)
+        print(f"[RESET] Successfully deleted {csv_path}")
+    except Exception as e:
+        print(f"[ERROR] Failed to delete log file: {e}")
         sys.exit(1)
 
 
@@ -749,11 +1000,16 @@ def main():
     # --- export ---
     export_parser = subparsers.add_parser(
         "export",
-        help="Export session data to JSON format",
-        description="Export hardware info and measurement history as JSON."
+        help="Export session data to JSON or CSV format",
+        description="Export hardware info and measurement history as JSON, or filtered CSV."
     )
     export_parser.add_argument("--json", dest="format", action="store_const", const="json", default="json",
                                help="Export in JSON format (default)")
+    export_parser.add_argument("--csv", dest="format", action="store_const", const="csv",
+                               help="Export in CSV format")
+    export_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to source CSV log file")
+    export_parser.add_argument("--run", default=None, help="Filter export by Run ID or Run Label")
+    export_parser.add_argument("--func", default=None, help="Filter export by function name")
     export_parser.add_argument("-o", "--output", default="ecotrace_report.json", help="Output file path")
 
     # --- benchmark ---
@@ -819,6 +1075,35 @@ def main():
     optimize_parser.add_argument("--func", required=True, help="Name of the function to optimize")
     optimize_parser.add_argument("--region", default="GLOBAL", help="ISO region code for context")
 
+    # --- diff ---
+    diff_parser = subparsers.add_parser(
+        "diff",
+        help="Compare two runs side-by-side",
+        description="Compare carbon emissions and duration between two runs."
+    )
+    diff_parser.add_argument("run_ids", nargs="*", help="Exactly two Run IDs to compare")
+    diff_parser.add_argument("--latest", action="store_true", help="Compare the latest two runs")
+    diff_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
+
+    # --- clean ---
+    clean_parser = subparsers.add_parser(
+        "clean",
+        help="Trim the CSV log file by date or run count",
+        description="Rotate/cleanup CSV logs by removing old runs."
+    )
+    clean_parser.add_argument("--keep-runs", type=int, default=None, help="Number of latest runs to keep")
+    clean_parser.add_argument("--before", default=None, help="Remove entries older than YYYY-MM-DD")
+    clean_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
+
+    # --- reset ---
+    reset_parser = subparsers.add_parser(
+        "reset",
+        help="Delete the CSV log file entirely",
+        description="Delete ecotrace_log.csv after confirmation."
+    )
+    reset_parser.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
+    reset_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
+
     # --- Parse & Dispatch ---
     args = parser.parse_args()
 
@@ -837,6 +1122,9 @@ def main():
         "history": _cmd_history,
         "trends": _cmd_trends,
         "dashboard": _cmd_dashboard,
+        "diff": _cmd_diff,
+        "clean": _cmd_clean,
+        "reset": _cmd_reset,
     }
 
     handler = commands.get(args.command)
