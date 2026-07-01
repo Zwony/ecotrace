@@ -1,5 +1,98 @@
 # Advanced Usage Guide
 
+---
+
+## Pausable Tracking (`pause()` / `resume()`)
+
+Temporarily disable carbon tracking to exclude setup, teardown, or data loading from your measurements.
+
+```python
+from ecotrace import EcoTrace
+
+eco = EcoTrace(region_code="TR")
+
+eco.pause()
+load_dataset()       # not measured
+eco.resume()
+
+@eco.track
+def run_model():
+    ...              # measured
+
+run_model()
+```
+
+The paused duration is automatically excluded from `get_summary()` totals.
+
+---
+
+## Run Comparison (`ecotrace diff`)
+
+Compare any two runs side-by-side to verify whether a code change reduced emissions.
+
+```bash
+# Compare two specific run IDs
+ecotrace diff abc123def456 789012abc345
+
+# Compare the two most recent runs (CI/CD shortcut)
+ecotrace diff --latest
+```
+
+Output shows per-function call counts, duration delta, and gCO2 delta (absolute + percentage).
+
+---
+
+## Webhook Exporter
+
+Stream carbon metrics to any webhook in real-time — Slack, MS Teams, Discord, or a custom backend.
+
+```python
+from ecotrace import EcoTrace
+from ecotrace.exporters.webhook import WebhookExporter
+
+eco = EcoTrace(region_code="TR")
+WebhookExporter(
+    eco,
+    url="https://hooks.slack.com/services/...",
+    headers={"Authorization": "Bearer token"}
+)
+```
+
+Each emission event sends a JSON payload with `function`, `carbon_gco2`, `duration_s`, `region`, `run_id`, and `run_label`.
+
+---
+
+## Log Maintenance (`ecotrace clean` & `ecotrace reset`)
+
+Keep your audit CSV lean with built-in log rotation commands.
+
+```bash
+# Keep only the last 10 runs (creates .bak backup automatically)
+ecotrace clean --keep-runs 10
+
+# Delete all entries before a specific date
+ecotrace clean --before 2026-06-01
+
+# Delete the log file entirely (non-interactive)
+ecotrace reset --yes
+```
+
+---
+
+## Filtered CSV Export
+
+Export a filtered subset of your audit log as CSV.
+
+```bash
+# Export a single run
+ecotrace export --csv -o run_report.csv --run abc123def456
+
+# Export a specific function across all runs
+ecotrace export --csv -o func_report.csv --func "run_model"
+```
+
+---
+
 ## Decorator Tracking
 
 ### `@eco.track` — Function-Level Monitoring
