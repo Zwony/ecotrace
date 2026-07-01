@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-07-01
+
+### Added
+- **Pausable Tracking API (`pause()` / `resume()`):** Temporarily disable carbon tracking during setup, teardown, or data loading phases. The paused duration is excluded from the session summary automatically.
+- **`ecotrace diff` command:** Side-by-side carbon footprint comparison of any two runs. Shows per-function call count, duration, and gCO2 deltas. Supports `--latest` shortcut for CI/CD pipelines.
+- **`WebhookExporter`:** Push carbon metrics to any webhook in real-time (Slack, MS Teams, Discord, custom APIs). Integrates with the existing `add_exporter()` API.
+- **Filtered CSV Export:** Extended `ecotrace export` with `--csv` format and `--run`/`--func` filter options for targeted data extraction.
+- **`ecotrace clean` command:** Rotate the CSV audit log by run count (`--keep-runs`) or date (`--before`). Creates an automatic `.bak` backup before trimming.
+- **`ecotrace reset` command:** Delete the CSV log file entirely with a confirmation prompt (`--yes` flag for non-interactive use).
+
+### Fixed
+- **Duplicate Carbon Calculations:** Removed duplicate and fragile carbon formulas in Keras and PyTorch callbacks — now delegates cleanly to `EcoTraceML.log_epoch()`.
+- **Empty GPU monitoring crash:** Guarded `EcoTraceML` shutdown sequence against empty GPU monitor histories to prevent `IndexError` on CPU-only machines.
+- **Async Metadata propagation:** Propagated source file paths and line numbers correctly in `measure_async()`, restoring hotspot tracking for async functions.
+- **CPU Cache Optimization:** Eliminated duplicate `cpuinfo.get_cpu_info()` calls in `get_cpu_info` by reusing the cached `fetch_raw_cpu_info()` result.
+
 ## [1.3.0] - 2026-06-13
 
 ### Added
