@@ -108,12 +108,7 @@ class EcoTracePyTorchCallback:
         current_energy_j, _ = self._tracker.snapshot_energy()
         epoch_energy_j = max(0.0, current_energy_j - self._epoch_start_energy_j)
 
-        self._tracker.log_epoch(epoch, epoch_energy_j, epoch_duration, metrics)
-
-        # Carbon estimate for console output
-        gpu_kwh = epoch_energy_j / 3_600_000.0
-        raw_intensity = getattr(self._tracker.eco, "carbon_intensity", 0.475)
-        carbon_g = (gpu_kwh * (raw_intensity * 1000.0 if raw_intensity < 10 else raw_intensity)) * 1.05
+        carbon_g = self._tracker.log_epoch(epoch, epoch_energy_j, epoch_duration, metrics)
 
         self._epoch_results.append((epoch, carbon_g, epoch_duration))
 

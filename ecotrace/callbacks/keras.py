@@ -142,11 +142,7 @@ class EcoTraceKerasCallback:
 
         # Pass Keras logs as metrics so loss appears in the CSV label
         metrics = dict(logs) if logs else {}
-        self._tracker.log_epoch(epoch, epoch_energy_j, epoch_duration, metrics)
-
-        gpu_kwh = epoch_energy_j / 3_600_000.0
-        raw_intensity = getattr(self._tracker.eco, "carbon_intensity", 0.475)
-        carbon_g = (gpu_kwh * (raw_intensity * 1000.0 if raw_intensity < 10 else raw_intensity)) * 1.05
+        carbon_g = self._tracker.log_epoch(epoch, epoch_energy_j, epoch_duration, metrics)
 
         self._epoch_results.append((epoch, carbon_g, epoch_duration))
 

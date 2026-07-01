@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.3.0 — Feature Release.** Multi-run history, programmatic `get_summary()` API, Apple Silicon energy monitoring, per-epoch ML callbacks, and a live browser dashboard — all with zero new mandatory dependencies.
+**v1.4.0 — Feature Release.** Pausable tracking API, WebhookExporter, side-by-side CLI diff comparison, filtered CSV exporting, and log maintenance commands — all with zero new mandatory dependencies.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -38,17 +38,17 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.3.0
+## Core Features in v1.4.0
 
-> **Feature Release.** v1.3.0 adds multi-run observability, a programmatic summary API, Apple Silicon hardware energy reading, per-epoch ML callbacks, and a live browser dashboard.
+> **Feature Release.** v1.4.0 adds pausable tracking, side-by-side run comparisons, webhook integrations, filtered CSV exporting, and log rotation capabilities.
 
+- **Pausing API** — Temporarily disable carbon tracking using `EcoTrace.pause()` and `EcoTrace.resume()` to exclude setup and teardown overhead.
+- **Run Comparisons (`ecotrace diff`)** — Perform side-by-side carbon and execution duration comparisons between two specific runs.
+- **Webhook Integration (`WebhookExporter`)** — Stream carbon emissions data to Slack, Teams, Discord, or a custom API in real-time.
+- **Filtered CSV Exporting** — Export filtered subsets of measurement logs with `--csv` format and `--run`/`--func` filters.
+- **Log Maintenance Commands** — Rotate and trim logs via `ecotrace clean`, and permanently delete logs using `ecotrace reset`.
 - **Multi-Run History** — Every session gets a unique `RunID`. Use `ecotrace history` to compare runs and `ecotrace trends` for an ASCII carbon trend chart.
 - **`get_summary()` API** — Programmatic access to all session metrics as a typed dict. Ideal for notebooks, dashboards, and CI assertions.
-- **Apple Silicon Support** — Exact CPU energy readings via `powermetrics` on M-series Macs (falls back to Boavizta silently).
-- **Per-Epoch ML Callbacks** — `EcoTracePyTorchCallback` and `EcoTraceKerasCallback` log per-epoch carbon to CSV. PyTorch and TensorFlow are optional extras.
-- **Live Dashboard** — `ecotrace dashboard` serves a real-time browser UI on `localhost:8585`. Zero extra dependencies (stdlib only).
-- **EcoTraceML Tracking Engine** — A dedicated context manager and decorator for measuring carbon and energy footprint of ML model training sessions.
-- **Windows NVML Auto-Discovery** — Dynamically resolves and injects NVML DLL paths to prevent load errors on Windows platforms. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 

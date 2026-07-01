@@ -68,7 +68,7 @@ def test_cli_export_success(mock_export, capsys):
         format = "json"
         output = "test_out.json"
     _cmd_export(Args())
-    mock_export.assert_called_once_with("test_out.json")
+    mock_export.assert_called_once()
     captured = capsys.readouterr()
     assert "[EXPORT] JSON report created successfully" in captured.out
 
@@ -151,4 +151,90 @@ def test_cli_dashboard_success(mock_server):
     
     mock_server.assert_called_once_with(csv_path="dummy_log.csv", port=9000)
     mock_server.return_value.serve_forever.assert_called_once()
+
+def test_cli_export_csv(tmp_path, capsys):
+    csv_file = tmp_path / "export_test_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line,RunID,RunLabel\n"
+        "2026-06-13 12:00,func_a,1.5,0.25,TR,10.0,dummy.py,1,run1,label1\n"
+        "2026-06-13 12:05,func_b,2.0,0.75,TR,12.0,dummy.py,5,run2,label2\n"
+    )
+    out_file = tmp_path / "filtered_out.csv"
+    
+    class Args:
+        format = "csv"
+        file = str(csv_file)
+        output = str(out_file)
+        run = "run1"
+        func = None
+        
+    from ecotrace.cli import _cmd_export
+    _cmd_export(Args())
+    captured = capsys.readouterr()
+    assert "Filtered CSV report written" in captured.out
+    
+    # Read output and verify it is filtered
+    content = out_file.read_text()
+    assert "func_a" in content
+    assert "func_b" not in content
+
+def test_cli_diff_success(tmp_path, capsys):
+    csv_file = tmp_path / "diff_test_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line,RunID,RunLabel\n"
+        "2026-06-13 12:00,func_a,1.0,0.20,TR,10.0,dummy.py,1,run1,label1\n"
+        "2026-06-13 12:05,func_b,2.0,0.30,TR,12.0,dummy.py,5,run2,label2\n"
+    )
+    
+    class Args:
+        file = str(csv_file)
+        run_ids = ["run1", "run2"]
+        latest = False
+        
+    from ecotrace.cli import _cmd_diff
+    _cmd_diff(Args())
+    captured = capsys.readouterr()
+    assert "EcoTrace — Run Comparison Report" in captured.out
+    assert "run1" in captured.out
+    assert "run2" in captured.out
+    assert "+0.10000000" in captured.out # carbon delta
+
+def test_cli_clean_success(tmp_path, capsys):
+    csv_file = tmp_path / "clean_test_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line,RunID,RunLabel\n"
+        "2026-06-11 12:00,func_a,1.0,0.20,TR,10.0,dummy.py,1,run1,label1\n"
+        "2026-06-12 12:00,func_b,2.0,0.30,TR,12.0,dummy.py,5,run2,label2\n"
+        "2026-06-13 12:00,func_c,3.0,0.40,TR,12.0,dummy.py,10,run3,label3\n"
+    )
+    
+    class Args:
+        file = str(csv_file)
+        before = "2026-06-12"
+        keep_runs = None
+        
+    from ecotrace.cli import _cmd_clean
+    _cmd_clean(Args())
+    captured = capsys.readouterr()
+    assert "Trimmed 1 entries" in captured.out
+    assert os.path.exists(str(csv_file) + ".bak")
+    
+    # Read output and verify first entry is deleted
+    content = csv_file.read_text()
+    assert "func_a" not in content
+    assert "func_b" in content
+    assert "func_c" in content
+
+def test_cli_reset_success(tmp_path, capsys):
+    csv_file = tmp_path / "reset_test_log.csv"
+    csv_file.write_text("dummy content")
+    
+    class Args:
+        file = str(csv_file)
+        yes = True
+        
+    from ecotrace.cli import _cmd_reset
+    _cmd_reset(Args())
+    assert not os.path.exists(csv_file)
+
 

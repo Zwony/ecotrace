@@ -57,7 +57,7 @@ def get_cpu_info(tdp_db, constants_data):
             - cores (int): Count of logical processing threads utilizing the OS scheduler.
             - tdp (float): Assigned structural TDP boundary in watts.
     """
-    info = cpuinfo.get_cpu_info()
+    info = fetch_raw_cpu_info()
     brand = info.get("brand_raw", "Unknown CPU")
     
     display_brand = "".join(c for c in brand if ord(c) < 128).replace("(R)", "").replace("(TM)", "").replace("(r)", "").replace("(tm)", "")
