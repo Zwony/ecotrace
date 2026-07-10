@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useId } from "react";
 import { TreePine, Wind, ChevronDown, Zap } from "lucide-react";
+import { motion, Variants } from "framer-motion";
 
 /* ──────────────────────────────────────────────────────────────
    Emission constants  (kgCO2 per request-ms @ median hardware)
@@ -174,6 +175,30 @@ export default function CarbonCalculator() {
   const [duration, setDuration] = useState(200); // avg ms
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "tween",
+        ease: "easeOut",
+        duration: 0.8,
+      },
+    },
+  };
+
   const metrics = useMemo(() => {
     const cfg = RUNTIME_CONFIG[runtime];
     const co2 = traffic * duration * BASE_FACTOR * cfg.efficiency;
@@ -184,9 +209,16 @@ export default function CarbonCalculator() {
   const runtimeCfg = RUNTIME_CONFIG[runtime];
 
   return (
-    <section id="calculator" className="relative z-10 w-full max-w-7xl mx-auto px-6 py-24">
+    <motion.section 
+      id="calculator" 
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.3 }}
+      className="relative z-10 w-full max-w-7xl mx-auto px-6 py-24"
+    >
       {/* Section header */}
-      <div className="flex flex-col items-center text-center mb-16 gap-4">
+      <motion.div variants={itemVariants} className="flex flex-col items-center text-center mb-16 gap-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-xs font-medium text-emerald-400 uppercase tracking-widest">
           <Zap className="w-3 h-3" />
           Canlı Hesaplayıcı
@@ -201,7 +233,7 @@ export default function CarbonCalculator() {
           Proje parametrelerinizi girin ve gerçek zamanlı olarak tahmini
           karbon ayak izinizi hesaplayın.
         </p>
-      </div>
+      </motion.div>
 
       {/* Card */}
       <div className="relative rounded-3xl border border-emerald-500/10 bg-zinc-900/40 backdrop-blur-sm overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
@@ -210,7 +242,7 @@ export default function CarbonCalculator() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
           {/* ── LEFT: Controls ─────────────────────────────────── */}
-          <div className="flex flex-col gap-8 p-8 sm:p-10 lg:border-r border-emerald-500/10">
+          <motion.div variants={itemVariants} className="flex flex-col gap-8 p-8 sm:p-10 lg:border-r border-emerald-500/10">
             {/* Section label */}
             <div className="flex items-center gap-2">
               <div className="w-1 h-4 rounded-full bg-[#00F076]" />
@@ -321,10 +353,10 @@ export default function CarbonCalculator() {
                 ölçümlerine dayanmaktadır.
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* ── RIGHT: Output panel ────────────────────────────── */}
-          <div className="relative flex flex-col justify-center p-8 sm:p-10 overflow-hidden bg-zinc-950/30">
+          <motion.div variants={itemVariants} className="relative flex flex-col justify-center p-8 sm:p-10 overflow-hidden bg-zinc-950/30">
             {/* Hex grid texture */}
             <HexGrid />
 
@@ -416,9 +448,9 @@ export default function CarbonCalculator() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
