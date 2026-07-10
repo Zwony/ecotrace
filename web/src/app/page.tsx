@@ -5,18 +5,17 @@ import CarbonCalculator from "@/components/CarbonCalculator";
 import FeaturesComparison from "@/components/FeaturesComparison";
 import SiteFooter from "@/components/SiteFooter";
 import Image from "next/image";
-import { 
-  Copy, 
-  Check, 
-  Terminal, 
-  ArrowRight, 
-  BookOpen, 
+import {
+  Copy,
+  Check,
+  Terminal,
+  ArrowRight,
+  BookOpen,
   Leaf
 } from "lucide-react";
 
 export default function Home() {
   const [copied, setCopied] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
   const command = "pip install ecotrace";
 
   const handleCopy = async () => {
@@ -52,20 +51,17 @@ export default function Home() {
           <a href="#features" className="hover:text-[#00F076] transition-colors">
             Özellikler
           </a>
-          <a href="#docs" className="hover:text-[#00F076] transition-colors">
+          <a href="https://ecotrace.readthedocs.io/en/latest/" className="hover:text-[#00F076] transition-colors">
             Dokümantasyon
-          </a>
-          <a href="#pricing" className="hover:text-[#00F076] transition-colors">
-            Ücretlendirme
           </a>
         </nav>
 
         {/* CTA Button */}
         <div className="flex items-center gap-4">
-          <a 
-            href="https://github.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <a
+            href="https://github.com/Zwony/ecotrace"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-zinc-400 hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -73,11 +69,14 @@ export default function Home() {
               <path d="M9 18c-4.51 2-5-2-7-2" />
             </svg>
           </a>
-          <button 
-            id="nav-get-started"
-            className="relative overflow-hidden px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(0,240,118,0.4)]"
-          >
-            Başlayın
+
+          <button>
+            <a href="https://pypi.org/project/ecotrace/"
+              id="nav-get-started"
+              className="relative overflow-hidden px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(0,240,118,0.4)]"
+            >
+              Başlayın
+            </a>
           </button>
         </div>
       </header>
@@ -85,10 +84,10 @@ export default function Home() {
       {/* Hero Section */}
       <main className="relative z-10 flex-1 flex items-center max-w-7xl w-full mx-auto px-6 py-12 md:py-20 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full">
-          
+
           {/* Left Column: Content */}
           <div className="lg:col-span-7 flex flex-col items-start text-left space-y-8">
-            
+
             {/* Version Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-xs font-medium text-emerald-400">
               <span className="relative flex h-2 w-2">
@@ -114,26 +113,28 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-              <button 
+              <a
                 id="hero-get-started"
-                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_25px_rgba(0,240,118,0.5)] group"
+                href="#calculator"
+                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_25px_rgba(0,240,118,0.5)] group cursor-pointer"
               >
                 Başla
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-              
-              <button 
+              </a>
+
+              <a
                 id="hero-view-docs"
-                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-sm"
+                href="https://ecotrace.readthedocs.io/en/latest/"
+                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-sm cursor-pointer"
               >
                 <BookOpen className="w-4 h-4 text-emerald-400" />
                 Dokümantasyonu Görüntüle
-              </button>
+              </a>
             </div>
 
             {/* Copyable Pip Command */}
             <div className="w-full sm:w-auto">
-              <div 
+              <div
                 onClick={handleCopy}
                 className="group flex items-center justify-between gap-4 pl-4 pr-3 py-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/30 cursor-pointer transition-all duration-300 backdrop-blur-sm shadow-inner"
               >
@@ -142,13 +143,13 @@ export default function Home() {
                   <span>{command}</span>
                 </div>
                 <div className="relative">
-                  <button 
+                  <button
                     id="copy-pip-command"
                     className={`p-1.5 rounded-md ${copied ? "bg-emerald-500/20 text-[#00F076]" : "bg-zinc-800 text-zinc-400 hover:text-white"} transition-colors`}
                   >
                     {copied ? <Check className="w-4 h-4 copy-pulse" /> : <Copy className="w-4 h-4" />}
                   </button>
-                  
+
                   {/* Tooltip Alert */}
                   <div className={`absolute -top-11 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 text-black text-xs font-semibold rounded-md shadow-lg transition-all duration-200 pointer-events-none whitespace-nowrap ${copied ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                     Kopyalandı!
@@ -163,7 +164,7 @@ export default function Home() {
           <div className="lg:col-span-5 relative flex justify-center w-full">
             {/* Background Glow behind terminal */}
             <div className="absolute inset-0 bg-emerald-500/10 blur-[80px] rounded-full -z-10 transform scale-75 lg:scale-100" />
-            
+
             {/* macOS Futuristic Terminal */}
             <div className="glass-terminal rounded-2xl w-full max-w-lg overflow-hidden flex flex-col relative z-10 transition-transform duration-500 hover:scale-[1.02]">
               {/* Terminal Window Header */}
@@ -181,30 +182,15 @@ export default function Home() {
               </div>
 
               {/* Terminal Content Box */}
-              <div className="relative bg-black/45 aspect-[4/3] w-full flex items-center justify-center overflow-hidden">
-                {/* Loader State */}
-                {!imgLoaded && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 font-mono text-xs text-emerald-400 p-6 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full border border-emerald-400 border-t-transparent animate-spin" />
-                      <span>ecotrace yükleniyor...</span>
-                    </div>
-                    <div className="w-40 h-1 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 animate-[pulse_1.5s_infinite] w-2/3 rounded-full" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Placeholder Image tag playing the GIF */}
+              <div className="relative bg-zinc-950 aspect-[4/3] w-full overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src="/demo.gif" 
-                  alt="EcoTrace Demo" 
-                  className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-                  onLoad={() => setImgLoaded(true)}
+                <img
+                  src="/demo.gif"
+                  alt="EcoTrace Demo"
+                  className="w-full h-full object-cover"
                 />
 
-                {/* Cybernetic overlays */}
+                {/* Cybernetic overlay */}
                 <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/30 text-[9px] font-mono text-[#00F076] uppercase tracking-widest pointer-events-none">
                   Live Preview
                 </div>
