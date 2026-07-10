@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Terminal, Shield, Check, X, Minus } from "lucide-react";
+import { motion, Variants } from "framer-motion";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  GitHub SVG Icon (inline, no package dependency)              */
@@ -140,13 +141,43 @@ function CellDisplay({ cell }: { cell: CellValue }) {
 /*  Main Component                                               */
 /* ────────────────────────────────────────────────────────────── */
 export default function FeaturesComparison() {
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "tween",
+        ease: "easeOut",
+        duration: 0.8,
+      },
+    },
+  };
+
   return (
     <section id="features" className="relative z-10 w-full max-w-7xl mx-auto px-6 py-24 flex flex-col gap-20">
 
       {/* ── PART 1: Features Grid ──────────────────────────────── */}
-      <div className="flex flex-col gap-10">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        className="flex flex-col gap-10"
+      >
         {/* Section header */}
-        <div className="flex flex-col items-center text-center gap-4">
+        <motion.div variants={itemVariants} className="flex flex-col items-center text-center gap-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-xs font-medium text-emerald-400 uppercase tracking-widest">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00F076]" />
             Temel Özellikler
@@ -161,7 +192,7 @@ export default function FeaturesComparison() {
             Üretime hazır projelerde çalışmak için tasarlandı — kurulum yok,
             ek bağımlılık yok.
           </p>
-        </div>
+        </motion.div>
 
         {/* Cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -169,7 +200,8 @@ export default function FeaturesComparison() {
             const Icon = feat.icon;
             const IconCustom = feat.iconCustom;
             return (
-              <div
+              <motion.div
+                variants={itemVariants}
                 key={feat.id}
                 className="group relative flex flex-col gap-5 p-7 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,240,118,0.05)] cursor-default overflow-hidden"
               >
@@ -207,16 +239,22 @@ export default function FeaturesComparison() {
 
                 {/* Bottom edge glow on hover */}
                 <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
+              </motion.div>
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
       {/* ── PART 2: Comparison Table ───────────────────────────── */}
-      <div className="flex flex-col gap-10">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        className="flex flex-col gap-10"
+      >
         {/* Section header */}
-        <div className="flex flex-col items-center text-center gap-3">
+        <motion.div variants={itemVariants} className="flex flex-col items-center text-center gap-3">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
             Why{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
@@ -227,10 +265,10 @@ export default function FeaturesComparison() {
             Açık kaynaklı alternatiflere kıyasla gerçek zamanlı, süreç bazlı
             izolasyon ve bütçe yönetimi.
           </p>
-        </div>
+        </motion.div>
 
         {/* Table card */}
-        <div className="rounded-2xl border border-zinc-800/60 bg-zinc-950/60 backdrop-blur-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+        <motion.div variants={itemVariants} className="rounded-2xl border border-zinc-800/60 bg-zinc-950/60 backdrop-blur-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
           {/* Top edge accent */}
           <div className="h-px w-full bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
 
@@ -309,13 +347,13 @@ export default function FeaturesComparison() {
 
           {/* Bottom edge */}
           <div className="h-px w-full bg-gradient-to-r from-transparent via-zinc-700/30 to-transparent" />
-        </div>
+        </motion.div>
 
         {/* Table footnote */}
-        <p className="text-right text-[11px] text-zinc-600 italic">
+        <motion.p variants={itemVariants} className="text-right text-[11px] text-zinc-600 italic">
           * Data reflects base configurations and architectural differences as of the documented releases.
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
     </section>
   );
 }

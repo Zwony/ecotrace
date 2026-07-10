@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ExternalLink, BookOpen, Code2, Scale, GitMerge, Heart } from "lucide-react";
+import { motion, Variants } from "framer-motion";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Inline GitHub SVG                                            */
@@ -46,8 +47,8 @@ const FOOTER_COLS = [
     heading: "Legal",
     links: [
       { label: "MIT License", href: "https://github.com/Zwony/ecotrace/blob/main/LICENSE", icon: Scale, iconCustom: null },
-      { label: "Privacy", href: "#", icon: null, iconCustom: null },
-      { label: "Terms", href: "#", icon: null, iconCustom: null },
+      { label: "Privacy", href: "/privacy", icon: null, iconCustom: null },
+      { label: "Terms", href: "/terms", icon: null, iconCustom: null },
     ],
   },
 ];
@@ -56,12 +57,42 @@ const FOOTER_COLS = [
 /*  Main Footer Component                                        */
 /* ────────────────────────────────────────────────────────────── */
 export default function SiteFooter() {
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "tween",
+        ease: "easeOut",
+        duration: 0.8,
+      },
+    },
+  };
+
   return (
     <footer className="relative z-10 w-full">
 
       {/* ── CTA Banner ──────────────────────────────────────────── */}
-      <div className="w-full max-w-7xl mx-auto px-6 pb-16">
-        <div className="relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800/60 px-8 sm:px-12 py-10 flex flex-col gap-8">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        className="w-full max-w-7xl mx-auto px-6 pb-16"
+      >
+        <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800/60 px-8 sm:px-12 py-10 flex flex-col gap-8">
           {/* Ambient glows */}
           <div className="absolute -left-24 top-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/8 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute -right-24 top-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/6 blur-[80px] rounded-full pointer-events-none" />
@@ -104,16 +135,22 @@ export default function SiteFooter() {
               <ExternalLink className="w-3 h-3 opacity-50 group-hover:opacity-80 transition-opacity" />
             </a>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ── Links grid + signature ───────────────────────────────── */}
-      <div className="w-full max-w-7xl mx-auto px-6 border-t border-zinc-800/50">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        className="w-full max-w-7xl mx-auto px-6 border-t border-zinc-800/50"
+      >
 
         {/* 3-column link grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 py-12">
           {FOOTER_COLS.map((col) => (
-            <div key={col.heading} className="flex flex-col gap-4">
+            <motion.div variants={itemVariants} key={col.heading} className="flex flex-col gap-4">
               <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                 {col.heading}
               </h4>
@@ -141,12 +178,12 @@ export default function SiteFooter() {
                   );
                 })}
               </ul>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Bottom signature row */}
-        <div className="py-6 border-t border-zinc-800/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <motion.div variants={itemVariants} className="py-6 border-t border-zinc-800/40 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-600 font-medium">
             © 2026 EcoTrace.{" "}
             <a
@@ -170,8 +207,8 @@ export default function SiteFooter() {
               Canpolat Kaya
             </a>
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </footer>
   );
 }
