@@ -53,3 +53,27 @@ body {
   animation: copyPulse 0.3s ease-in-out;
 }
 
+/* Custom range input — hide native thumb so our styled div thumb shows */
+.slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+.slider-thumb::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+}
+.slider-thumb::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.slider-thumb::-moz-range-track {
+  background: transparent;
+}
+

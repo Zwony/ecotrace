@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import CarbonCalculator from "@/components/CarbonCalculator";
 import Image from "next/image";
 import { 
   Copy, 
@@ -213,6 +214,17 @@ export default function Home() {
 
         </div>
       </main>
+
+      {/* Carbon Budget Calculator Section */}
+      <div className="relative z-10">
+        <div className="w-full max-w-7xl mx-auto px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-emerald-900/40 to-transparent" />
+        </div>
+        <CarbonCalculator />
+        <div className="w-full max-w-7xl mx-auto px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-emerald-900/40 to-transparent" />
+        </div>
+      </div>
 
       {/* Footer / Meta info */}
       <footer className="relative z-10 w-full max-w-7xl mx-auto px-6 py-8 border-t border-emerald-950/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-medium">
