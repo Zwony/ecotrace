@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import CarbonCalculator from "@/components/CarbonCalculator";
 import FeaturesComparison from "@/components/FeaturesComparison";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
+import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import {
   Copy,
@@ -11,12 +13,68 @@ import {
   Terminal,
   ArrowRight,
   BookOpen,
-  Leaf
+  Zap,
+  Globe,
+  Scale,
+  GitMerge,
 } from "lucide-react";
 
 export default function Home() {
   const [copied, setCopied] = useState(false);
   const command = "pip install ecotrace";
+
+  // Framer Motion variants for premium, smooth fade-up stagger
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15, // Sırayla gelme (stagger)
+        delayChildren: 2.2,    // Başlangıçta splash screen bitene kadar bekle
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30 }, // Aşağıdan yukarı süzülme (fade-up)
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "tween",
+        ease: "easeOut", // Çok akıcı, oyuncaklı olmayan (spring yok) ciddi geçiş
+        duration: 0.8,
+      },
+    },
+  };
+
+  const terminalVariants: Variants = {
+    hidden: { opacity: 0, x: 20 },
+    show: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        type: "tween",
+        ease: "easeOut",
+        duration: 1,
+        delay: 2.7,
+      },
+    },
+  };
+
+  // Sürekli yavaş yukarı-aşağı yüzme animasyonu (Floating Chips için)
+  const floatVariantsA = {
+    animate: {
+      y: [0, -10, 0],
+      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const },
+    },
+  };
+  const floatVariantsB = {
+    animate: {
+      y: [0, 8, 0],
+      transition: { duration: 3.4, repeat: Infinity, ease: "easeInOut" as const, delay: 0.6 },
+    },
+  };
 
   const handleCopy = async () => {
     try {
@@ -30,89 +88,58 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between overflow-hidden">
-      {/* Background Top Glow Effect */}
-      <div className="top-glow-glow" />
+      {/* Çok katmanlı yeşil ortam ışıkları — Eco hissiyatı */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        {/* Ana üst glow */}
+        <div className="top-glow-glow" />
+        {/* Sol orta yeşil orb */}
+        <div className="absolute top-1/3 -left-32 w-[400px] h-[400px] bg-emerald-500/8 blur-[120px] rounded-full" />
+        {/* Sağ alt yeşil orb */}
+        <div className="absolute bottom-0 right-0 w-[350px] h-[350px] bg-emerald-400/6 blur-[100px] rounded-full" />
+        {/* Merkez çok soluk halo */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-emerald-500/4 blur-[160px] rounded-full" />
+      </div>
 
       {/* Header / Navbar */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 h-20 flex items-center justify-between border-b border-emerald-950/20">
-        <div className="flex items-center gap-3">
-          {/* Custom Bio-mimesis Logo Icon */}
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-950/50 border border-emerald-500/30 overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-            <Leaf className="w-5 h-5 text-[#00F076]" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white font-sans">
-            Ecotrace
-          </span>
-        </div>
-
-        {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-          <a href="#features" className="hover:text-[#00F076] transition-colors">
-            Özellikler
-          </a>
-          <a href="https://ecotrace.readthedocs.io/en/latest/" className="hover:text-[#00F076] transition-colors">
-            Dokümantasyon
-          </a>
-        </nav>
-
-        {/* CTA Button */}
-        <div className="flex items-center gap-4">
-          <a
-            href="https://github.com/Zwony/ecotrace"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-400 hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-              <path d="M9 18c-4.51 2-5-2-7-2" />
-            </svg>
-          </a>
-
-          <button>
-            <a href="https://pypi.org/project/ecotrace/"
-              id="nav-get-started"
-              className="relative overflow-hidden px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(0,240,118,0.4)]"
-            >
-              Başlayın
-            </a>
-          </button>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Hero Section */}
       <main className="relative z-10 flex-1 flex items-center max-w-7xl w-full mx-auto px-6 py-12 md:py-20 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full">
 
           {/* Left Column: Content */}
-          <div className="lg:col-span-7 flex flex-col items-start text-left space-y-8">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="lg:col-span-7 flex flex-col items-start text-left space-y-8"
+          >
 
             {/* Version Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-xs font-medium text-emerald-400">
+            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-xs font-medium text-emerald-400">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F076] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00F076]"></span>
               </span>
-              v3.0 Hyper-Efficiency Engine Aktif
-            </div>
+              v1.4.0 Feature Release
+            </motion.div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
+            <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
               Yüksek Hassasiyetli <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-[#00F076] to-emerald-500 drop-shadow-[0_0_30px_rgba(0,240,118,0.2)]">
                 Enerji ve Emisyon
               </span> <br />
               Enstrümantasyonu
-            </h1>
+            </motion.h1>
 
             {/* Subtitle */}
-            <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed">
+            <motion.p variants={itemVariants} className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed">
               Granüler karbon ayak izi ölçümü için hafif bir Python kütüphanesi. Sıfır konfigürasyon ile projelerinizin dijital ayak izini takip edin.
-            </p>
+            </motion.p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
               <a
                 id="hero-get-started"
                 href="#calculator"
@@ -130,10 +157,10 @@ export default function Home() {
                 <BookOpen className="w-4 h-4 text-emerald-400" />
                 Dokümantasyonu Görüntüle
               </a>
-            </div>
+            </motion.div>
 
             {/* Copyable Pip Command */}
-            <div className="w-full sm:w-auto">
+            <motion.div variants={itemVariants} className="w-full sm:w-auto">
               <div
                 onClick={handleCopy}
                 className="group flex items-center justify-between gap-4 pl-4 pr-3 py-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/30 cursor-pointer transition-all duration-300 backdrop-blur-sm shadow-inner"
@@ -156,14 +183,41 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-          </div>
+            {/* Social Proof Row */}
+            <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                <Scale className="w-3.5 h-3.5 text-zinc-600" />
+                MIT Lisanslı
+              </span>
+              <span className="w-px h-3 bg-zinc-800" />
+              <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                <svg className="w-3.5 h-3.5 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 0v20M2 12h20"/>
+                </svg>
+                Python 3.9+
+              </span>
+              <span className="w-px h-3 bg-zinc-800" />
+              <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                <Globe className="w-3.5 h-3.5 text-zinc-600" />
+                50+ Global Bölge
+              </span>
+            </motion.div>
+
+          </motion.div>
 
           {/* Right Column: Terminal Visualization */}
-          <div className="lg:col-span-5 relative flex justify-center w-full">
-            {/* Background Glow behind terminal */}
-            <div className="absolute inset-0 bg-emerald-500/10 blur-[80px] rounded-full -z-10 transform scale-75 lg:scale-100" />
+          <motion.div 
+            variants={terminalVariants}
+            initial="hidden"
+            animate="show"
+            className="lg:col-span-5 relative flex justify-center w-full"
+          >
+            {/* Ambient glow — derin, geniş, bulanık zümrüt ortam ışığı */}
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-3xl opacity-20" />
+            </div>
 
             {/* macOS Futuristic Terminal */}
             <div className="glass-terminal rounded-2xl w-full max-w-lg overflow-hidden flex flex-col relative z-10 transition-transform duration-500 hover:scale-[1.02]">
@@ -196,7 +250,26 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Floating Chip A — Sol alt köşe (50ms Örnekleme) */}
+            <motion.div
+              animate={floatVariantsA.animate}
+              className="absolute -bottom-4 -left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-zinc-700/60 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.4)] pointer-events-none"
+            >
+              <Zap className="w-3.5 h-3.5 text-[#00F076]" />
+              <span className="text-[11px] font-semibold text-zinc-200 whitespace-nowrap">50ms Örnekleme</span>
+            </motion.div>
+
+            {/* Floating Chip B — Sağ üst köşe (CI/CD Uyumlu) */}
+            <motion.div
+              animate={floatVariantsB.animate}
+              className="absolute -top-4 -right-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-emerald-500/20 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.4)] pointer-events-none"
+            >
+              <GitMerge className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-[11px] font-semibold text-zinc-200 whitespace-nowrap">CI/CD Uyumlu</span>
+            </motion.div>
+
+          </motion.div>
 
         </div>
       </main>
