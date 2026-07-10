@@ -29,26 +29,26 @@ function GitHubIcon({ className }: { className?: string }) {
 /* ────────────────────────────────────────────────────────────── */
 const FOOTER_COLS = [
   {
-    heading: "Resources",
+    heading: "Kaynaklar",
     links: [
-      { label: "Docs", href: "https://ecotrace.readthedocs.io/en/latest/", icon: BookOpen, iconCustom: null },
-      { label: "Architecture", href: "https://ecotrace.readthedocs.io/en/latest/ARCHITECTURE/", icon: null, iconCustom: null },
-      { label: "API Reference", href: "https://ecotrace.readthedocs.io/en/latest/api/", icon: null, iconCustom: null },
+      { label: "Dokümanlar", href: "https://ecotrace.readthedocs.io/en/latest/", icon: BookOpen, iconCustom: null },
+      { label: "Mimari", href: "https://ecotrace.readthedocs.io/en/latest/ARCHITECTURE/", icon: null, iconCustom: null },
+      { label: "API Referansı", href: "https://ecotrace.readthedocs.io/en/latest/api/", icon: null, iconCustom: null },
     ],
   },
   {
-    heading: "Community",
+    heading: "Topluluk",
     links: [
       { label: "GitHub", href: "https://github.com/Zwony/ecotrace", icon: null, iconCustom: GitHubIcon },
-      { label: "VS Code Extension", href: "https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor", icon: Code2, iconCustom: null },
+      { label: "VS Code Eklentisi", href: "https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor", icon: Code2, iconCustom: null },
     ],
   },
   {
-    heading: "Legal",
+    heading: "Yasal",
     links: [
-      { label: "MIT License", href: "https://github.com/Zwony/ecotrace/blob/main/LICENSE", icon: Scale, iconCustom: null },
-      { label: "Privacy", href: "/privacy", icon: null, iconCustom: null },
-      { label: "Terms", href: "/terms", icon: null, iconCustom: null },
+      { label: "MIT Lisansı", href: "https://github.com/Zwony/ecotrace/blob/main/LICENSE", icon: Scale, iconCustom: null },
+      { label: "Gizlilik", href: "/privacy", icon: null, iconCustom: null },
+      { label: "Şartlar", href: "/terms", icon: null, iconCustom: null },
     ],
   },
 ];
@@ -100,11 +100,11 @@ export default function SiteFooter() {
 
           {/* Headline */}
           <p className="relative text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-snug max-w-xl">
-            Enforce carbon budgets in your{" "}
+            Karbon bütçelerinizi hemen bugün{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
               CI/CD pipeline
-            </span>{" "}
-            today.
+            </span>
+            &apos;ınızda zorunlu kılın.
           </p>
 
           {/* Two action buttons side-by-side */}
@@ -197,7 +197,7 @@ export default function SiteFooter() {
             .
           </p>
           <p className="text-xs font-medium">
-            <span className="text-zinc-600">Designed &amp; Developed by </span>
+            <span className="text-zinc-600">Tasarlayan &amp; Geliştiren: </span>
             <a
               href="https://github.com/CanKStar0"
               target="_blank"

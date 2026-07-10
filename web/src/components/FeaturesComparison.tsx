@@ -41,7 +41,7 @@ const FEATURES = [
     id: "budget",
     icon: Shield,
     iconCustom: null,
-    title: "Carbon Budget Mode",
+    title: "Karbon Bütçesi Modu",
     description:
       "Projelerinize kesin bir karbon limiti koyun. Limit aşılırsa sistem sizi otomatik uyarsın.",
     badge: "Yeni",
@@ -50,7 +50,7 @@ const FEATURES = [
     id: "cicd",
     icon: null,
     iconCustom: GitHubIcon,
-    title: "CI/CD Gate Integration",
+    title: "CI/CD Gate Entegrasyonu",
     description:
       "Karbon bütçenizi GitHub Actions pipeline'ınız içinde otomatik olarak denetleyin ve karbon yoğun kodların merge edilmesini engelleyin.",
     badge: null,
@@ -61,7 +61,7 @@ const FEATURES = [
 /*  Comparison Table data                                         */
 /* ────────────────────────────────────────────────────────────── */
 const TABLE_COLUMNS = [
-  { key: "feature", label: "Feature", isFeature: true },
+  { key: "feature", label: "Özellik", isFeature: true },
   { key: "ecotrace", label: "EcoTrace", version: "v1.4.0", highlight: true },
   { key: "codecarbon", label: "CodeCarbon", version: "v3.2.8", highlight: false },
   {
@@ -86,19 +86,19 @@ interface TableRow {
 
 const TABLE_ROWS: TableRow[] = [
   {
-    feature: "Sampling Interval",
+    feature: "Örnekleme Sıklığı",
     ecotrace: { type: "text", value: "50ms", green: true },
     codecarbon: { type: "text", value: "15s" },
-    carbontracker: { type: "text", value: "Per Epoch" },
+    carbontracker: { type: "text", value: "Epoch Başına" },
   },
   {
-    feature: "Isolation",
+    feature: "İzolasyon",
     ecotrace: { type: "text", value: "Process-scoped", green: true },
-    codecarbon: { type: "text", value: "System-wide" },
-    carbontracker: { type: "text", value: "System-wide" },
+    codecarbon: { type: "text", value: "Sistem Geneli" },
+    carbontracker: { type: "text", value: "Sistem Geneli" },
   },
   {
-    feature: "Budget Enforcement",
+    feature: "Bütçe Sınırlandırma",
     ecotrace: { type: "check" },
     codecarbon: { type: "cross" },
     carbontracker: { type: "cross" },
@@ -256,7 +256,7 @@ export default function FeaturesComparison() {
         {/* Section header */}
         <motion.div variants={itemVariants} className="flex flex-col items-center text-center gap-3">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            Why{" "}
+            Neden{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
               EcoTrace?
             </span>
@@ -351,7 +351,7 @@ export default function FeaturesComparison() {
 
         {/* Table footnote */}
         <motion.p variants={itemVariants} className="text-right text-[11px] text-zinc-600 italic">
-          * Data reflects base configurations and architectural differences as of the documented releases.
+          * Veriler, belgelenen sürümler itibarıyla temel konfigürasyonları ve mimari farkları yansıtmaktadır.
         </motion.p>
       </motion.div>
     </section>
