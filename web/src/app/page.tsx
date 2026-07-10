@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import CarbonCalculator from "@/components/CarbonCalculator";
+import FeaturesComparison from "@/components/FeaturesComparison";
+import SiteFooter from "@/components/SiteFooter";
 import Image from "next/image";
 import { 
   Copy, 
@@ -9,8 +11,6 @@ import {
   Terminal, 
   ArrowRight, 
   BookOpen, 
-  Activity,
-  Cpu,
   Leaf
 } from "lucide-react";
 
@@ -226,20 +226,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer / Meta info */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto px-6 py-8 border-t border-emerald-950/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-medium">
-        <p>© 2026 Ecotrace Inc. Tüm hakları saklıdır.</p>
-        <div className="flex items-center gap-6">
-          <span className="flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-emerald-600" />
-            %100 Yeşil Enerjili Sunucu
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-emerald-600" />
-            Sistem Durumu: Çevrimiçi
-          </span>
-        </div>
-      </footer>
+      {/* Features & Comparison Section */}
+      <div className="relative z-10">
+        <FeaturesComparison />
+      </div>
+
+      {/* Site Footer */}
+      <SiteFooter />
     </div>
   );
 }
