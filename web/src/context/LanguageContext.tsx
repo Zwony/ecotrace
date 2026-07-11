@@ -66,6 +66,16 @@ interface TranslationDictionary {
     moreTrees: string;
     activeRuntime: string;
   };
+  compatibility: {
+    titleBadge: string;
+    titlePart1: string;
+    titleGlow: string;
+    desc: string;
+    cardPlatformTitle: string;
+    cardPlatformDesc: string;
+    cardSamplingTitle: string;
+    cardSamplingDesc: string;
+  };
   features: {
     badge: string;
     titlePart1: string;
@@ -250,6 +260,16 @@ const translations: Record<Language, TranslationDictionary> = {
       moreTrees: "more",
       activeRuntime: "Active Runtime",
     },
+    compatibility: {
+      titleBadge: "Compatibility & Precision",
+      titlePart1: "Cross-Platform &",
+      titleGlow: "Continuous Sampling",
+      desc: "Compared to other profiling tools, EcoTrace is uniquely engineered for high portability and high frequency.",
+      cardPlatformTitle: "Lightweight & Cross-Platform",
+      cardPlatformDesc: "While other popular measurement tools have high and heavy dependencies and offer single-platform support, EcoTrace is lightweight and runs easily on Windows, Linux, and macOS.",
+      cardSamplingTitle: "Continuous Precision",
+      cardSamplingDesc: "Contains more precise results by performing continuous, high-frequency energy sampling instead of coarse intervals.",
+    },
     features: {
       badge: "Key Features",
       titlePart1: "Developer-First",
@@ -431,6 +451,16 @@ const translations: Record<Language, TranslationDictionary> = {
       offsetUnit: "ağaç/yıl",
       moreTrees: "daha",
       activeRuntime: "Aktif Runtime",
+    },
+    compatibility: {
+      titleBadge: "Uyumluluk ve Hassasiyet",
+      titlePart1: "Çoklu Platform ve",
+      titleGlow: "Sürekli Örnekleme",
+      desc: "Diğer profil oluşturma araçlarıyla karşılaştırıldığında, EcoTrace yüksek taşınabilirlik ve hassasiyet için özel olarak tasarlanmıştır.",
+      cardPlatformTitle: "Hafif ve Çoklu Platform",
+      cardPlatformDesc: "Diğer popüler ölçüm araçları yüksek ve ağır bağımlılık içerip tek platform desteği sunarken, EcoTrace lightweight olup Windows, Linux ve Apple gibi platformlarda rahatça çalışmaktadır.",
+      cardSamplingTitle: "Sürekli ve Kesin Sonuçlar",
+      cardSamplingDesc: "Seyrek ölçüm aralıkları yerine sürekli örnekleme yaparak çok daha kesin ve gerçekçi sonuçlar içerir.",
     },
     features: {
       badge: "Temel Özellikler",

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import CarbonCalculator from "@/components/CarbonCalculator";
 import FeaturesComparison from "@/components/FeaturesComparison";
+import CompatibilityInfo from "@/components/CompatibilityInfo";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { motion, Variants } from "framer-motion";
@@ -282,6 +283,14 @@ export default function Home() {
           <div className="h-px bg-gradient-to-r from-transparent via-emerald-900/40 to-transparent" />
         </div>
         <CarbonCalculator />
+        <div className="w-full max-w-7xl mx-auto px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-emerald-900/40 to-transparent" />
+        </div>
+      </div>
+
+      {/* Compatibility & Precision Section */}
+      <div className="relative z-10">
+        <CompatibilityInfo />
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="h-px bg-gradient-to-r from-transparent via-emerald-900/40 to-transparent" />
         </div>
