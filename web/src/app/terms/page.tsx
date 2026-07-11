@@ -3,9 +3,12 @@
 import React from "react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { Scale, FileText, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
+import { Scale, CheckCircle, AlertTriangle } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function TermsPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="relative min-h-screen flex flex-col justify-between overflow-hidden">
       {/* Background Top Glow Effect */}
@@ -23,10 +26,10 @@ export default function TermsPage() {
             <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Kullanım Şartları
+            {t("terms.title")}
           </h1>
           <p className="text-zinc-500 text-sm font-medium">
-            Son Güncelleme: 10 Temmuz 2026
+            {t("terms.lastUpdated")}
           </p>
         </div>
 
@@ -38,10 +41,10 @@ export default function TermsPage() {
           {/* Section 1 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">1.</span> Kabul Edilme
+              {t("terms.sec1Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              Bu web sitesini veya EcoTrace açık kaynaklı Python kütüphanesini kullanarak, burada belirtilen tüm kullanım koşullarını kabul etmiş bulunmaktasınız. Şartları kısmen veya tamamen kabul etmiyorsanız, yazılımı veya web sitesini kullanmamalısınız.
+              {t("terms.sec1Desc")}
             </p>
           </section>
 
@@ -52,8 +55,8 @@ export default function TermsPage() {
                 <CheckCircle className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white">MIT Lisanslı</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">Özgürce modifiye edebilir, dağıtabilir ve ticari projelerinizde kullanabilirsiniz.</p>
+                <h3 className="text-sm font-bold text-white">{t("terms.highlight1Title")}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{t("terms.highlight1Desc")}</p>
               </div>
             </div>
 
@@ -62,8 +65,8 @@ export default function TermsPage() {
                 <AlertTriangle className="w-5 h-5 text-amber-400" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white">Sorumluluk Sınırı</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">Hesaplamalar tahmini değerlerdir, ticari garantiler veya mutlak doğruluk taahhüt edilmez.</p>
+                <h3 className="text-sm font-bold text-white">{t("terms.highlight2Title")}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{t("terms.highlight2Desc")}</p>
               </div>
             </div>
           </div>
@@ -71,17 +74,17 @@ export default function TermsPage() {
           {/* Section 2 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">2.</span> Lisans ve Açık Kaynak İzinleri
+              {t("terms.sec2Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              EcoTrace Python kütüphanesi ve ilişkili tüm araçlar <strong className="text-zinc-200">MIT Lisansı</strong> ile lisanslanmıştır. Bu lisans kapsamında:
+              {t("terms.sec2Desc")}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-zinc-400 text-sm sm:text-base">
               <li>
-                Yazılımı ticari ve ticari olmayan amaçlarla ücretsiz olarak kullanabilir, kopyalayabilir, değiştirebilir ve dağıtabilirsiniz.
+                {t("terms.sec2Bullet1")}
               </li>
               <li>
-                Telif hakkı bildirimi ve izin bildirimi, yazılımın tüm kopyalarına veya önemli bölümlerine dahil edilmelidir.
+                {t("terms.sec2Bullet2")}
               </li>
             </ul>
           </section>
@@ -89,20 +92,20 @@ export default function TermsPage() {
           {/* Section 3 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">3.</span> Kullanım Sorumlulukları ve Sınırları
+              {t("terms.sec3Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              EcoTrace, yazılım projelerinizin karbon emisyonlarını ve enerji tüketimlerini tahmin etmek için tasarlanmıştır. Ancak:
+              {t("terms.sec3Desc")}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-zinc-400 text-sm sm:text-base">
               <li>
-                <strong className="text-zinc-200">Tahmini Değerler:</strong> Hesaplanan değerler donanım mimarinize, işletim sisteminize ve kullanılan veri setlerine bağlı olarak değişkenlik gösterebilir. Sunulan tüm sonuçlar bilgilendirme amaçlı "tahmini" değerlerdir.
+                <strong className="text-zinc-200">{t("terms.sec3Bullet1Title")}</strong> {t("terms.sec3Bullet1Desc")}
               </li>
               <li>
-                <strong className="text-zinc-200">Garanti Yoktur:</strong> Yazılım, "olduğu gibi" (as is) esasıyla sunulur. Hata içermeme, kesintisiz çalışma veya belirli bir amaca uygunluk konusunda açık veya zımni hiçbir garanti verilmez.
+                <strong className="text-zinc-200">{t("terms.sec3Bullet2Title")}</strong> {t("terms.sec3Bullet2Desc")}
               </li>
               <li>
-                <strong className="text-zinc-200">Yükümlülük Sınırı:</strong> EcoTrace ekibi veya katkıda bulunanlar; yazılımın kullanımından veya kullanılamamasından kaynaklanan hiçbir zarardan (veri kaybı, kâr kaybı veya sistem kesintileri dahil) sorumlu tutulamaz.
+                <strong className="text-zinc-200">{t("terms.sec3Bullet3Title")}</strong> {t("terms.sec3Bullet3Desc")}
               </li>
             </ul>
           </section>
@@ -110,30 +113,30 @@ export default function TermsPage() {
           {/* Section 4 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">4.</span> Fikri Mülkiyet
+              {t("terms.sec4Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              EcoTrace markası, logoları, web sitesi tasarımı ve içeriği EcoTrace projesine ve geliştiricilerine aittir. MIT lisanslı kaynak kodlar haricindeki marka ve tasarımlar izinsiz kopyalanamaz veya EcoTrace ekibinin resmi temsilcisi gibi kullanılamaz.
+              {t("terms.sec4Desc")}
             </p>
           </section>
 
           {/* Section 5 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">5.</span> Değişiklikler ve Güncellemeler
+              {t("terms.sec5Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              Bu kullanım şartlarını zaman zaman güncelleme hakkını saklı tutarız. Güncellemeler bu sayfada yayınlandığı andan itibaren geçerlilik kazanır. Web sitemizi veya kütüphanemizi kullanmaya devam etmeniz, güncellenen şartları kabul ettiğiniz anlamına gelir.
+              {t("terms.sec5Desc")}
             </p>
           </section>
 
           {/* Section 6 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">6.</span> İletişim
+              {t("terms.sec6Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              Kullanım şartları hakkında her türlü soru, bildirim veya lisans sorgularınız için GitHub üzerindeki resmi kanallarımız veya issue şablonlarımız aracılığıyla bize ulaşabilirsiniz.
+              {t("terms.sec6Desc")}
             </p>
           </section>
         </div>

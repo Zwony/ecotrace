@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Terminal, Shield, Check, X, Minus } from "lucide-react";
+import { Terminal, Shield, Check, X } from "lucide-react";
 import { motion, Variants } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  GitHub SVG Icon (inline, no package dependency)              */
@@ -24,92 +25,10 @@ function GitHubIcon({ className }: { className?: string }) {
   );
 }
 
-/* ────────────────────────────────────────────────────────────── */
-/*  Feature Card data                                            */
-/* ────────────────────────────────────────────────────────────── */
-const FEATURES = [
-  {
-    id: "zero-code",
-    icon: Terminal,
-    iconCustom: null,
-    title: "Zero-Code Profiling",
-    description:
-      "Hiçbir kod değiştirmeden veya arka plan servisi kurmadan Python betiklerinizi ölçün.",
-    badge: null,
-  },
-  {
-    id: "budget",
-    icon: Shield,
-    iconCustom: null,
-    title: "Karbon Bütçesi Modu",
-    description:
-      "Projelerinize kesin bir karbon limiti koyun. Limit aşılırsa sistem sizi otomatik uyarsın.",
-    badge: "Yeni",
-  },
-  {
-    id: "cicd",
-    icon: null,
-    iconCustom: GitHubIcon,
-    title: "CI/CD Gate Entegrasyonu",
-    description:
-      "Karbon bütçenizi GitHub Actions pipeline'ınız içinde otomatik olarak denetleyin ve karbon yoğun kodların merge edilmesini engelleyin.",
-    badge: null,
-  },
-];
-
-/* ────────────────────────────────────────────────────────────── */
-/*  Comparison Table data                                         */
-/* ────────────────────────────────────────────────────────────── */
-const TABLE_COLUMNS = [
-  { key: "feature", label: "Özellik", isFeature: true },
-  { key: "ecotrace", label: "EcoTrace", version: "v1.4.0", highlight: true },
-  { key: "codecarbon", label: "CodeCarbon", version: "v3.2.8", highlight: false },
-  {
-    key: "carbontracker",
-    label: "CarbonTracker",
-    version: "v2.4.5",
-    highlight: false,
-  },
-];
-
 type CellValue =
   | { type: "text"; value: string; green?: boolean }
   | { type: "check" }
   | { type: "cross" };
-
-interface TableRow {
-  feature: string;
-  ecotrace: CellValue;
-  codecarbon: CellValue;
-  carbontracker: CellValue;
-}
-
-const TABLE_ROWS: TableRow[] = [
-  {
-    feature: "Örnekleme Sıklığı",
-    ecotrace: { type: "text", value: "50ms", green: true },
-    codecarbon: { type: "text", value: "15s" },
-    carbontracker: { type: "text", value: "Epoch Başına" },
-  },
-  {
-    feature: "İzolasyon",
-    ecotrace: { type: "text", value: "Process-scoped", green: true },
-    codecarbon: { type: "text", value: "Sistem Geneli" },
-    carbontracker: { type: "text", value: "Sistem Geneli" },
-  },
-  {
-    feature: "Bütçe Sınırlandırma",
-    ecotrace: { type: "check" },
-    codecarbon: { type: "cross" },
-    carbontracker: { type: "cross" },
-  },
-  {
-    feature: "CI/CD Gate",
-    ecotrace: { type: "check" },
-    codecarbon: { type: "cross" },
-    carbontracker: { type: "cross" },
-  },
-];
 
 function CellDisplay({ cell }: { cell: CellValue }) {
   if (cell.type === "check") {
@@ -141,6 +60,69 @@ function CellDisplay({ cell }: { cell: CellValue }) {
 /*  Main Component                                               */
 /* ────────────────────────────────────────────────────────────── */
 export default function FeaturesComparison() {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      id: "zero-code",
+      icon: Terminal,
+      iconCustom: null,
+      title: t("features.feat1Title"),
+      description: t("features.feat1Desc"),
+      badge: null,
+    },
+    {
+      id: "budget",
+      icon: Shield,
+      iconCustom: null,
+      title: t("features.feat2Title"),
+      description: t("features.feat2Desc"),
+      badge: t("features.newBadge"),
+    },
+    {
+      id: "cicd",
+      icon: null,
+      iconCustom: GitHubIcon,
+      title: t("features.feat3Title"),
+      description: t("features.feat3Desc"),
+      badge: null,
+    },
+  ];
+
+  const tableColumns = [
+    { key: "feature", label: t("features.colFeature"), isFeature: true },
+    { key: "ecotrace", label: t("features.colEco"), version: "v1.4.0", highlight: true },
+    { key: "codecarbon", label: t("features.colCode"), version: "v3.2.8", highlight: false },
+    { key: "carbontracker", label: t("features.colCarbon"), version: "v2.4.5", highlight: false },
+  ];
+
+  const tableRows = [
+    {
+      feature: t("features.rowFreq"),
+      ecotrace: { type: "text" as const, value: t("features.rowFreqValEco"), green: true },
+      codecarbon: { type: "text" as const, value: t("features.rowFreqValCode") },
+      carbontracker: { type: "text" as const, value: t("features.rowFreqValCarbon") },
+    },
+    {
+      feature: t("features.rowIso"),
+      ecotrace: { type: "text" as const, value: t("features.rowIsoValEco"), green: true },
+      codecarbon: { type: "text" as const, value: t("features.rowIsoValCode") },
+      carbontracker: { type: "text" as const, value: t("features.rowIsoValCarbon") },
+    },
+    {
+      feature: t("features.rowLimit"),
+      ecotrace: { type: "check" as const },
+      codecarbon: { type: "cross" as const },
+      carbontracker: { type: "cross" as const },
+    },
+    {
+      feature: t("features.rowGate"),
+      ecotrace: { type: "check" as const },
+      codecarbon: { type: "cross" as const },
+      carbontracker: { type: "cross" as const },
+    },
+  ];
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
@@ -180,23 +162,22 @@ export default function FeaturesComparison() {
         <motion.div variants={itemVariants} className="flex flex-col items-center text-center gap-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-xs font-medium text-emerald-400 uppercase tracking-widest">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00F076]" />
-            Temel Özellikler
+            {t("features.badge")}
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            Geliştirici Öncelikli{" "}
+            {t("features.titlePart1")}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
-              Ölçüm Araçları
+              {t("features.titleGlow")}
             </span>
           </h2>
           <p className="text-zinc-400 max-w-xl text-base leading-relaxed">
-            Üretime hazır projelerde çalışmak için tasarlandı — kurulum yok,
-            ek bağımlılık yok.
+            {t("features.desc")}
           </p>
         </motion.div>
 
         {/* Cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {FEATURES.map((feat) => {
+          {features.map((feat) => {
             const Icon = feat.icon;
             const IconCustom = feat.iconCustom;
             return (
@@ -256,14 +237,13 @@ export default function FeaturesComparison() {
         {/* Section header */}
         <motion.div variants={itemVariants} className="flex flex-col items-center text-center gap-3">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            Neden{" "}
+            {t("features.whyTitle")}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
-              EcoTrace?
+              {t("features.whyGlow")}
             </span>
           </h2>
           <p className="text-zinc-500 text-sm max-w-md leading-relaxed">
-            Açık kaynaklı alternatiflere kıyasla gerçek zamanlı, süreç bazlı
-            izolasyon ve bütçe yönetimi.
+            {t("features.whyDesc")}
           </p>
         </motion.div>
 
@@ -277,7 +257,7 @@ export default function FeaturesComparison() {
               {/* Head */}
               <thead>
                 <tr>
-                  {TABLE_COLUMNS.map((col) => (
+                  {tableColumns.map((col) => (
                     <th
                       key={col.key}
                       className={`px-6 py-4 text-left first:rounded-tl-none ${
@@ -309,7 +289,7 @@ export default function FeaturesComparison() {
 
               {/* Body */}
               <tbody>
-                {TABLE_ROWS.map((row, rowIdx) => (
+                {tableRows.map((row, rowIdx) => (
                   <tr
                     key={rowIdx}
                     className="border-t border-zinc-800/40 hover:bg-white/[0.015] transition-colors duration-150 group/row"
@@ -351,7 +331,7 @@ export default function FeaturesComparison() {
 
         {/* Table footnote */}
         <motion.p variants={itemVariants} className="text-right text-[11px] text-zinc-600 italic">
-          * Veriler, belgelenen sürümler itibarıyla temel konfigürasyonları ve mimari farkları yansıtmaktadır.
+          {t("features.footnote")}
         </motion.p>
       </motion.div>
     </section>

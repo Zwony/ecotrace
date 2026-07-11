@@ -3,6 +3,7 @@
 import React from "react";
 import { motion, Variants } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -67,6 +68,8 @@ const vp = { once: true, amount: 0.2 };
 /*  Main Component                                               */
 /* ────────────────────────────────────────────────────────────── */
 export default function OurStory() {
+  const { t, language } = useLanguage();
+
   return (
     <section className="relative w-full overflow-hidden bg-[#050806]">
 
@@ -95,7 +98,7 @@ export default function OurStory() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/20 text-xs font-semibold text-emerald-400 uppercase tracking-widest"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#00F076]" />
-            Hikayemiz
+            {t("story.badge")}
           </motion.div>
 
           {/* Devasa başlık */}
@@ -103,11 +106,11 @@ export default function OurStory() {
             variants={fadeUpVariants}
             className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.08] text-white"
           >
-            Bulut Diye Bir Şey Yok.{" "}
+            {t("story.heroHeadlinePart1")}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-300 via-[#00F076] to-emerald-600 drop-shadow-[0_0_40px_rgba(0,240,118,0.2)]">
-              Sadece Tüketilen
+              {t("story.heroHeadlineGlow")}
             </span>{" "}
-            Gerçek Enerji Var.
+            {t("story.heroHeadlinePart2")}
           </motion.h1>
 
           {/* Alt metin */}
@@ -115,9 +118,7 @@ export default function OurStory() {
             variants={fadeUpVariants}
             className="text-zinc-400 text-lg sm:text-xl leading-relaxed max-w-2xl"
           >
-            Yazdığımız her satır kodun, sunucularda çalışan her döngünün fiziksel
-            bir ağırlığı var. Yazılım dünyası görünmez olduğu için masum sanılıyor;
-            ancak gerçekler çok daha karanlık.
+            {t("story.heroSubtitle")}
           </motion.p>
 
           {/* Süslü ayırıcı çizgi */}
@@ -147,16 +148,16 @@ export default function OurStory() {
               className="inline-flex w-fit items-center gap-2 px-3 py-1 rounded-full bg-red-950/30 border border-red-500/20 text-xs font-semibold text-red-400 uppercase tracking-widest"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-              Kritik Gerçek
+              {t("story.factBadge")}
             </motion.div>
 
             <motion.h2
               variants={fadeLeftVariants}
               className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight"
             >
-              Havacılık Sektöründen{" "}
+              {t("story.factTitlePart1")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
-                Daha Büyük Bir Tehdit
+                {t("story.factTitleGlow")}
               </span>
             </motion.h2>
 
@@ -164,19 +165,14 @@ export default function OurStory() {
               variants={fadeLeftVariants}
               className="text-zinc-400 text-base leading-relaxed"
             >
-              Küresel veri merkezleri ve yazılım altyapıları, bugün tüm havacılık
-              sektöründen daha fazla karbon emisyonu (CO2) üretiyor. İnternet her yıl
-              <span className="text-zinc-200 font-semibold"> 416 Terawatt-saat </span>
-              elektrik yutuyor ve bunun büyük kısmı fosil yakıtlardan elde ediliyor.
-              Optimizasyon yapılmayan her kod, sadece sunucu masrafı değil, çevreye
-              atılan dijital bir çöptür.
+              {t("story.factDesc")}
             </motion.p>
 
             {/* İstatistik kartları */}
             <motion.div variants={fadeLeftVariants} className="grid grid-cols-2 gap-4 mt-2">
               {[
-                { value: "416 TWh", label: "Yıllık internet enerji tüketimi" },
-                { value: "%4+", label: "Global CO₂'nin yazılım payı" },
+                { value: t("story.factStat1Val"), label: t("story.factStat1Lbl") },
+                { value: t("story.factStat2Val"), label: t("story.factStat2Lbl") },
               ].map((stat) => (
                 <div
                   key={stat.label}
@@ -207,7 +203,7 @@ export default function OurStory() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1000&auto=format&fit=crop"
-                alt="Veri merkezi sunucu rafları"
+                alt="Data center server racks"
                 className="w-full h-72 sm:h-96 object-cover"
               />
               {/* Zümrüt temayla uyum için karanlık-yeşil overlay */}
@@ -215,7 +211,7 @@ export default function OurStory() {
               {/* Alt köşe bilgi kartı */}
               <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-zinc-950/80 border border-zinc-700/40 backdrop-blur-sm">
                 <p className="text-[11px] font-mono text-zinc-400">
-                  📍 Global veri merkezi — 7/24 aktif
+                  {t("story.factImgLabel")}
                 </p>
               </div>
             </div>
@@ -242,7 +238,7 @@ export default function OurStory() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop"
-                alt="Doğa ve teknoloji birlikteliği — dünya görünümü"
+                alt="Nature and technology - earth view"
                 className="w-full h-72 sm:h-96 object-cover"
               />
               {/* Yeşil-karanlık filtre overlay */}
@@ -250,7 +246,7 @@ export default function OurStory() {
               {/* Köşe etiketi */}
               <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-sm">
                 <p className="text-[11px] font-mono text-[#00F076] font-semibold tracking-wide">
-                  🌍 Sürdürülebilir Yazılım
+                  {language === "tr" ? "Sürdürülebilir Yazılım" : "Sustainable Software"}
                 </p>
               </div>
             </div>
@@ -269,16 +265,16 @@ export default function OurStory() {
               className="inline-flex w-fit items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/20 text-xs font-semibold text-emerald-400 uppercase tracking-widest"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#00F076]" />
-              Misyon
+              {t("story.missionBadge")}
             </motion.div>
 
             <motion.h2
               variants={fadeRightVariants}
               className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight"
             >
-              EcoTrace&apos;in Misyonu:{" "}
+              {t("story.missionTitlePart1")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
-                Görünmezi Ölçmek
+                {t("story.missionTitleGlow")}
               </span>
             </motion.h2>
 
@@ -286,19 +282,12 @@ export default function OurStory() {
               variants={fadeRightVariants}
               className="text-zinc-400 text-base leading-relaxed"
             >
-              Geliştiricilerin çevreye zarar vermek gibi bir amacı yok, sadece
-              ellerinde doğru metrikler yok.
-              <span className="text-zinc-200 font-medium"> EcoTrace</span>&apos;i tam
-              olarak bunun için inşa ettik. Karbon ölçümünü
-              <span className="text-zinc-200 font-medium"> birim testi (unit test) </span>
-              kadar standart, zahmetsiz ve şeffaf hale getirmek. Yazılımın geleceği
-              sadece hızlı değil, aynı zamanda
-              <span className="text-[#00F076] font-semibold"> yeşil olmak zorunda.</span>
+              {t("story.missionDesc")}
             </motion.p>
 
             {/* Değer pilleri */}
             <motion.div variants={fadeRightVariants} className="flex flex-wrap gap-2.5">
-              {["Sıfır Konfigürasyon", "CI/CD Ready", "Process-Scoped", "Açık Kaynak"].map(
+              {[t("story.missionTag1"), t("story.missionTag2"), t("story.missionTag3"), t("story.missionTag4")].map(
                 (tag) => (
                   <span
                     key={tag}
@@ -357,14 +346,13 @@ export default function OurStory() {
 
             <motion.div variants={fadeUpVariants} className="flex flex-col gap-3">
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                Sen de değişimin{" "}
+                {t("story.ctaTitlePart1")}{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
-                  bir parçası ol.
+                  {t("story.ctaTitleGlow")}
                 </span>
               </h2>
               <p className="text-zinc-400 text-base leading-relaxed max-w-lg">
-                Projenize tek satır kod ekleyerek yazılım karbon ölçümünü standart hale
-                getirin. Daha yeşil bir dijital gelecek mümkün.
+                {t("story.ctaDesc")}
               </p>
             </motion.div>
 
@@ -377,7 +365,7 @@ export default function OurStory() {
                 href="/"
                 className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl font-semibold text-sm bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_4px_20px_rgba(16,185,129,0.35)] hover:shadow-[0_4px_28px_rgba(0,240,118,0.55)] group"
               >
-                Hemen Kur
+                {t("story.ctaBtnInstall")}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </a>
 
@@ -388,13 +376,13 @@ export default function OurStory() {
                 className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl font-semibold text-sm bg-white/5 text-zinc-200 hover:text-white hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-sm group"
               >
                 <GitHubIcon className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                GitHub&apos;da İncele
+                {t("story.ctaBtnGit")}
               </a>
             </motion.div>
 
             {/* Alt imza */}
             <motion.p variants={fadeUpVariants} className="text-xs text-zinc-600">
-              MIT Lisanslı · Tamamen Açık Kaynak · 0 Veri Toplama
+              {t("story.ctaFooter")}
             </motion.p>
           </motion.div>
         </motion.div>

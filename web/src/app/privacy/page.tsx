@@ -3,9 +3,12 @@
 import React from "react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { Shield, Lock, EyeOff, Server, Globe } from "lucide-react";
+import { Shield, Lock, EyeOff } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function PrivacyPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="relative min-h-screen flex flex-col justify-between overflow-hidden">
       {/* Background Top Glow Effect */}
@@ -23,10 +26,10 @@ export default function PrivacyPage() {
             <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Gizlilik Politikası
+            {t("privacy.title")}
           </h1>
           <p className="text-zinc-500 text-sm font-medium">
-            Son Güncelleme: 10 Temmuz 2026
+            {t("privacy.lastUpdated")}
           </p>
         </div>
 
@@ -38,10 +41,10 @@ export default function PrivacyPage() {
           {/* Section 1 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">1.</span> Giriş
+              {t("privacy.sec1Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              EcoTrace ekibi olarak, gizliliğinize büyük önem veriyoruz. EcoTrace, Python tabanlı projelerinizin CPU ve RAM enerji tüketimini ölçerek karbon ayak izinizi hesaplayan açık kaynaklı bir kütüphanedir. Bu politika, web sitemiz ve kütüphanemiz aracılığıyla işlenen veya işlenmeyen veriler hakkında sizi bilgilendirmeyi amaçlar.
+              {t("privacy.sec1Desc")}
             </p>
           </section>
 
@@ -52,8 +55,8 @@ export default function PrivacyPage() {
                 <Lock className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white">Tamamen Yerel</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">Tüm hesaplamalar ve ölçümler kendi bilgisayarınızda veya sunucunuzda gerçekleşir.</p>
+                <h3 className="text-sm font-bold text-white">{t("privacy.highlight1Title")}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{t("privacy.highlight1Desc")}</p>
               </div>
             </div>
 
@@ -62,8 +65,8 @@ export default function PrivacyPage() {
                 <EyeOff className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white">Sıfır Telemetri</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">Kodlarınız, değişkenleriniz veya enerji metrikleriniz asla dışarıya sızdırılmaz.</p>
+                <h3 className="text-sm font-bold text-white">{t("privacy.highlight2Title")}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{t("privacy.highlight2Desc")}</p>
               </div>
             </div>
           </div>
@@ -71,20 +74,20 @@ export default function PrivacyPage() {
           {/* Section 2 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">2.</span> Sıfır Veri Toplama Politikası (Zero Telemetry)
+              {t("privacy.sec2Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              Kütüphanemizin mimarisi, gizliliği varsayılan olarak koruyacak şekilde tasarlanmıştır:
+              {t("privacy.sec2Desc")}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-zinc-400 text-sm sm:text-base">
               <li>
-                <strong className="text-zinc-200">Yerel Çalışma:</strong> EcoTrace kütüphanesi çalıştırıldığında, donanım kaynaklarınızın (CPU, RAM) anlık güç tüketim verilerini işletim sistemi API'leri üzerinden yerel olarak sorgular.
+                <strong className="text-zinc-200">{t("privacy.sec2Bullet1Title")}</strong> {t("privacy.sec2Bullet1Desc")}
               </li>
               <li>
-                <strong className="text-zinc-200">Veri Gönderimi Yoktur:</strong> Bu veriler hiçbir şekilde bizim tarafımızdan işletilen bir bulut sunucusuna veya üçüncü şahıs analiz araçlarına iletilmez.
+                <strong className="text-zinc-200">{t("privacy.sec2Bullet2Title")}</strong> {t("privacy.sec2Bullet2Desc")}
               </li>
               <li>
-                <strong className="text-zinc-200">Kullanıcı Kontrolü:</strong> Üretilen raporlar (JSON veya HTML formatındaki emisyon çıktıları) tamamen sizin denetiminiz altındadır ve yerel diskinizde depolanır.
+                <strong className="text-zinc-200">{t("privacy.sec2Bullet3Title")}</strong> {t("privacy.sec2Bullet3Desc")}
               </li>
             </ul>
           </section>
@@ -92,17 +95,17 @@ export default function PrivacyPage() {
           {/* Section 3 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">3.</span> Web Sitesi Ziyaretçi Verileri
+              {t("privacy.sec3Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              Web sitemizi ziyaret ettiğinizde gizliliğiniz korunmaya devam eder:
+              {t("privacy.sec3Desc")}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-zinc-400 text-sm sm:text-base">
               <li>
-                <strong className="text-zinc-200">Anonim Analitik:</strong> Web portalımızda kullanıcıların ilgisini çeken bölümleri anlamak amacıyla yalnızca çerez içermeyen, IP adreslerini maskeleyen ve kişisel bilgi barındırmayan anonim trafik analizi yapılabilir.
+                <strong className="text-zinc-200">{t("privacy.sec3Bullet1Title")}</strong> {t("privacy.sec3Bullet1Desc")}
               </li>
               <li>
-                <strong className="text-zinc-200">Yerel Tarayıcı Depolama:</strong> Karbon bütçesi hesaplama aracımızda girdiğiniz değerler, sayfayı yenilediğinizde kaybolmaması adına sadece tarayıcınızın <code className="text-emerald-400 font-mono text-xs">localStorage</code> özelliğinde yerel olarak tutulabilir. Sunucularımıza gönderilmez.
+                <strong className="text-zinc-200">{t("privacy.sec3Bullet2Title")}</strong> {t("privacy.sec3Bullet2Desc")}
               </li>
             </ul>
           </section>
@@ -110,30 +113,30 @@ export default function PrivacyPage() {
           {/* Section 4 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">4.</span> Üçüncü Taraf Bağlantıları
+              {t("privacy.sec4Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              Portalımız GitHub, PyPI (Python Package Index) ve ReadTheDocs gibi platformlara bağlantılar içerebilir. Bu platformlar kendilerine ait gizlilik ve kullanım sözleşmelerine tabidir. İlgili bağlantılara tıkladığınızda o servislerin veri politikalarını incelemenizi öneririz.
+              {t("privacy.sec4Desc")}
             </p>
           </section>
 
           {/* Section 5 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">5.</span> Açık Kaynak Şeffaflığı
+              {t("privacy.sec5Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              EcoTrace projesinin şeffaflığı bizim en büyük güvencemizdir. Kodlarımızın hiçbir gizli izleme veya veri toplama mekanizması içermediğini doğrulamak için dilediğiniz zaman GitHub üzerindeki açık kaynak kodlarımızı denetleyebilirsiniz.
+              {t("privacy.sec5Desc")}
             </p>
           </section>
 
           {/* Section 6 */}
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-[#00F076]">6.</span> İletişim
+              {t("privacy.sec6Title")}
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed sm:text-base">
-              Bu gizlilik politikası ile ilgili herhangi bir sorunuz, öneriniz veya endişeniz olması durumunda lütfen resmi GitHub depomuz üzerinden bir issue açarak bizimle iletişime geçmekten çekinmeyin.
+              {t("privacy.sec6Desc")}
             </p>
           </section>
         </div>

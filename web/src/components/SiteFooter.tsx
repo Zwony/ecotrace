@@ -3,6 +3,7 @@
 import React from "react";
 import { ExternalLink, BookOpen, Code2, Scale, GitMerge, Heart } from "lucide-react";
 import { motion, Variants } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Inline GitHub SVG                                            */
@@ -25,38 +26,37 @@ function GitHubIcon({ className }: { className?: string }) {
 }
 
 /* ────────────────────────────────────────────────────────────── */
-/*  Footer link columns                                          */
-/* ────────────────────────────────────────────────────────────── */
-const FOOTER_COLS = [
-  {
-    heading: "Kaynaklar",
-    links: [
-      { label: "Dokümanlar", href: "https://ecotrace.readthedocs.io/en/latest/", icon: BookOpen, iconCustom: null },
-      { label: "Mimari", href: "https://ecotrace.readthedocs.io/en/latest/ARCHITECTURE/", icon: null, iconCustom: null },
-      { label: "API Referansı", href: "https://ecotrace.readthedocs.io/en/latest/api/", icon: null, iconCustom: null },
-    ],
-  },
-  {
-    heading: "Topluluk",
-    links: [
-      { label: "GitHub", href: "https://github.com/Zwony/ecotrace", icon: null, iconCustom: GitHubIcon },
-      { label: "VS Code Eklentisi", href: "https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor", icon: Code2, iconCustom: null },
-    ],
-  },
-  {
-    heading: "Yasal",
-    links: [
-      { label: "MIT Lisansı", href: "https://github.com/Zwony/ecotrace/blob/main/LICENSE", icon: Scale, iconCustom: null },
-      { label: "Gizlilik", href: "/privacy", icon: null, iconCustom: null },
-      { label: "Şartlar", href: "/terms", icon: null, iconCustom: null },
-    ],
-  },
-];
-
-/* ────────────────────────────────────────────────────────────── */
 /*  Main Footer Component                                        */
 /* ────────────────────────────────────────────────────────────── */
 export default function SiteFooter() {
+  const { t } = useLanguage();
+
+  const footerCols = [
+    {
+      heading: t("footer.resources"),
+      links: [
+        { label: t("footer.docs"), href: "https://ecotrace.readthedocs.io/en/latest/", icon: BookOpen, iconCustom: null },
+        { label: t("footer.architecture"), href: "https://ecotrace.readthedocs.io/en/latest/ARCHITECTURE/", icon: null, iconCustom: null },
+        { label: t("footer.apiRef"), href: "https://ecotrace.readthedocs.io/en/latest/api/", icon: null, iconCustom: null },
+      ],
+    },
+    {
+      heading: t("footer.community"),
+      links: [
+        { label: "GitHub", href: "https://github.com/Zwony/ecotrace", icon: null, iconCustom: GitHubIcon },
+        { label: t("footer.vsCodeExt"), href: "https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor", icon: Code2, iconCustom: null },
+      ],
+    },
+    {
+      heading: t("footer.legal"),
+      links: [
+        { label: t("footer.mitLicense"), href: "https://github.com/Zwony/ecotrace/blob/main/LICENSE", icon: Scale, iconCustom: null },
+        { label: t("footer.privacy"), href: "/privacy", icon: null, iconCustom: null },
+        { label: t("footer.terms"), href: "/terms", icon: null, iconCustom: null },
+      ],
+    },
+  ];
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
@@ -100,11 +100,7 @@ export default function SiteFooter() {
 
           {/* Headline */}
           <p className="relative text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-snug max-w-xl">
-            Karbon bütçelerinizi hemen bugün{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
-              CI/CD pipeline
-            </span>
-            &apos;ınızda zorunlu kılın.
+            {t("footer.ctaText")}
           </p>
 
           {/* Two action buttons side-by-side */}
@@ -118,7 +114,7 @@ export default function SiteFooter() {
               className="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_4px_20px_rgba(16,185,129,0.25)] hover:shadow-[0_4px_30px_rgba(0,240,118,0.45)] group"
             >
               <GitMerge className="w-4 h-4 flex-shrink-0" />
-              Projeye Katkı Sağlayın
+              {t("footer.contribute")}
               <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
             </a>
 
@@ -131,7 +127,7 @@ export default function SiteFooter() {
               className="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm bg-white/5 text-zinc-200 hover:text-white hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-sm group"
             >
               <Heart className="w-4 h-4 flex-shrink-0 text-pink-400 group-hover:text-pink-300 transition-colors" />
-              Sponsor Olun
+              {t("footer.sponsor")}
               <ExternalLink className="w-3 h-3 opacity-50 group-hover:opacity-80 transition-opacity" />
             </a>
           </div>
@@ -149,7 +145,7 @@ export default function SiteFooter() {
 
         {/* 3-column link grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 py-12">
-          {FOOTER_COLS.map((col) => (
+          {footerCols.map((col) => (
             <motion.div variants={itemVariants} key={col.heading} className="flex flex-col gap-4">
               <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                 {col.heading}
@@ -192,12 +188,12 @@ export default function SiteFooter() {
               rel="noopener noreferrer"
               className="hover:text-zinc-400 transition-colors duration-200"
             >
-              MIT License
+              {t("footer.mitLicense")}
             </a>
             .
           </p>
           <p className="text-xs font-medium">
-            <span className="text-zinc-600">Tasarlayan &amp; Geliştiren: </span>
+            <span className="text-zinc-600">{t("footer.designedBy")}: </span>
             <a
               href="https://github.com/CanKStar0"
               target="_blank"

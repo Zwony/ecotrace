@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SplashScreen from "@/components/SplashScreen";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 export const metadata: Metadata = {
   title: "Ecotrace - Yazılım Projeleri İçin Yüksek Hassasiyetli Karbon Ayak İzi Ölçümü",
@@ -20,8 +21,10 @@ export default function RootLayout({
       className="h-full antialiased dark"
     >
       <body className="min-h-full flex flex-col bg-[#050806] text-zinc-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
-        <SplashScreen />
-        {children}
+        <LanguageProvider>
+          <SplashScreen />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

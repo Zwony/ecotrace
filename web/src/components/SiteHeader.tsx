@@ -4,8 +4,11 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, Variants } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SiteHeader() {
+  const { language, setLanguage, t } = useLanguage();
+
   const headerVariants: Variants = {
     hidden: { opacity: 0, y: -20 },
     show: {
@@ -41,10 +44,10 @@ export default function SiteHeader() {
       {/* Desktop Menu */}
       <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
         <Link href="/story" className="hover:text-[#00F076] transition-colors">
-          Hikayemiz
+          {t("header.story")}
         </Link>
         <Link href="/#features" className="hover:text-[#00F076] transition-colors">
-          Özellikler
+          {t("header.features")}
         </Link>
         <a 
           href="https://ecotrace.readthedocs.io/en/latest/" 
@@ -52,12 +55,42 @@ export default function SiteHeader() {
           rel="noopener noreferrer"
           className="hover:text-[#00F076] transition-colors"
         >
-          Dokümantasyon
+          {t("header.docs")}
         </a>
       </nav>
 
       {/* CTA Button */}
       <div className="flex items-center gap-4">
+        {/* Language Switcher TR/EN */}
+        <div className="flex items-center bg-zinc-900/80 border border-zinc-800/80 rounded-lg p-1 relative select-none">
+          <button
+            onClick={() => setLanguage("tr")}
+            className={`relative z-10 w-9 py-1 text-[11px] font-bold tracking-wider rounded-md text-center transition-colors duration-300 cursor-pointer ${
+              language === "tr" ? "text-black" : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            TR
+          </button>
+          <button
+            onClick={() => setLanguage("en")}
+            className={`relative z-10 w-9 py-1 text-[11px] font-bold tracking-wider rounded-md text-center transition-colors duration-300 cursor-pointer ${
+              language === "en" ? "text-black" : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            EN
+          </button>
+          {/* Sliding background pill */}
+          <motion.div
+            className="absolute top-1 bottom-1 rounded-md bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+            layout
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            style={{
+              left: language === "tr" ? "4px" : "40px",
+              width: "36px",
+            }}
+          />
+        </div>
+
         <a
           href="https://github.com/Zwony/ecotrace"
           target="_blank"
@@ -78,7 +111,7 @@ export default function SiteHeader() {
           id="nav-get-started"
           className="relative overflow-hidden px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(0,240,118,0.4)]"
         >
-          Başlayın
+          {t("header.getStarted")}
         </a>
       </div>
     </motion.header>

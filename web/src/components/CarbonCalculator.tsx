@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useId } from "react";
 import { TreePine, Wind, ChevronDown, Zap } from "lucide-react";
 import { motion, Variants } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 /* ──────────────────────────────────────────────────────────────
    Emission constants  (kgCO2 per request-ms @ median hardware)
@@ -170,6 +171,7 @@ function MetricValue({ value, unit }: { value: string; unit: string }) {
 /* ────────────────────────────────────────────────────────────── */
 export default function CarbonCalculator() {
   const uid = useId();
+  const { t, language } = useLanguage();
   const [runtime, setRuntime] = useState("python");
   const [traffic, setTraffic] = useState(500_000); // monthly requests
   const [duration, setDuration] = useState(200); // avg ms
@@ -221,17 +223,16 @@ export default function CarbonCalculator() {
       <motion.div variants={itemVariants} className="flex flex-col items-center text-center mb-16 gap-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-xs font-medium text-emerald-400 uppercase tracking-widest">
           <Zap className="w-3 h-3" />
-          Canlı Hesaplayıcı
+          {t("calculator.titleBadge")}
         </div>
         <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-          İnteraktif Karbon{" "}
+          {t("calculator.titlePart1")}{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#00F076]">
-            Bütçe Hesaplayıcı
+            {t("calculator.titleGlow")}
           </span>
         </h2>
         <p className="text-zinc-400 max-w-xl text-base leading-relaxed">
-          Proje parametrelerinizi girin ve gerçek zamanlı olarak tahmini
-          karbon ayak izinizi hesaplayın.
+          {t("calculator.desc")}
         </p>
       </motion.div>
 
@@ -247,14 +248,14 @@ export default function CarbonCalculator() {
             <div className="flex items-center gap-2">
               <div className="w-1 h-4 rounded-full bg-[#00F076]" />
               <span className="text-xs font-bold uppercase tracking-widest text-[#00F076]">
-                Proje Parametreleri
+                {t("calculator.panelLabel")}
               </span>
             </div>
 
             {/* Runtime dropdown */}
             <div className="flex flex-col gap-2.5">
               <label className="text-sm font-medium text-zinc-300">
-                Kullanılan Dil / Runtime
+                {t("calculator.runtimeLabel")}
               </label>
               <div className="relative">
                 <button
@@ -269,15 +270,15 @@ export default function CarbonCalculator() {
                     />
                     <span>{runtimeCfg.label}</span>
                     <span className="text-xs text-zinc-500 font-normal ml-1">
-                      (Verimlilik:{" "}
+                      ({t("calculator.efficiency")}:{" "}
                       <span
                         className="font-semibold"
                         style={{ color: runtimeCfg.color }}
                       >
-                        {Math.round((1 - runtimeCfg.efficiency) * 100)}% daha az CO2
+                        {Math.round((1 - runtimeCfg.efficiency) * 100)}% {t("calculator.lessCO2")}
                       </span>
-                      {runtime !== "python" && " vs Python"}
-                      {runtime === "python" && " — baz çizgi"}
+                      {runtime !== "python" && t("calculator.vsPython")}
+                      {runtime === "python" && ` — ${t("calculator.baseline")}`}
                     </span>
                   </div>
                   <ChevronDown
@@ -320,8 +321,8 @@ export default function CarbonCalculator() {
             <div className="flex flex-col gap-6 pt-2">
               <Slider
                 id={`${uid}-traffic`}
-                label="Aylık Trafik (İstek)"
-                unit="istek/ay"
+                label={t("calculator.monthlyTraffic")}
+                unit={t("calculator.trafficUnit")}
                 min={10_000}
                 max={50_000_000}
                 step={10_000}
@@ -331,7 +332,7 @@ export default function CarbonCalculator() {
               />
               <Slider
                 id={`${uid}-duration`}
-                label="Ortalama Çalışma Süresi"
+                label={t("calculator.avgExecTime")}
                 unit="ms"
                 min={1}
                 max={5000}
@@ -347,10 +348,7 @@ export default function CarbonCalculator() {
                 <span className="text-[#00F076] text-xs font-bold">i</span>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Tahminler, ortalama{" "}
-                <span className="text-zinc-200 font-medium">350 gCO₂/kWh</span>{" "}
-                şebeke karbon yoğunluğu ve doğrulama yapılmış üretici TDP
-                ölçümlerine dayanmaktadır.
+                {t("calculator.estimatesNote")}
               </p>
             </div>
           </motion.div>
@@ -371,7 +369,7 @@ export default function CarbonCalculator() {
                 <div className="flex items-center gap-2">
                   <Wind className="w-4 h-4 text-emerald-500" />
                   <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-                    Tahmini Aylık CO₂
+                    {t("calculator.estMonthlyCO2")}
                   </span>
                 </div>
                 <MetricValue
@@ -390,8 +388,8 @@ export default function CarbonCalculator() {
                   />
                 </div>
                 <p className="text-xs text-zinc-600">
-                  Maks. eşik:{" "}
-                  <span className="text-zinc-400 font-medium">500 kg/ay</span>
+                  {t("calculator.maxThreshold")}:{" "}
+                  <span className="text-zinc-400 font-medium">500 {t("calculator.thresholdUnit")}</span>
                 </p>
               </div>
 
@@ -403,12 +401,12 @@ export default function CarbonCalculator() {
                 <div className="flex items-center gap-2">
                   <TreePine className="w-4 h-4 text-emerald-500" />
                   <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-                    Ofset İçin Gereken Ağaç
+                    {t("calculator.treesOffset")}
                   </span>
                 </div>
                 <MetricValue
                   value={formatNumber(metrics.trees, 0)}
-                  unit="ağaç/yıl"
+                  unit={t("calculator.offsetUnit")}
                 />
                 {/* Tree icons row */}
                 <div className="flex items-center gap-1 flex-wrap mt-1" aria-hidden>
@@ -422,7 +420,7 @@ export default function CarbonCalculator() {
                   )}
                   {metrics.trees > 20 && (
                     <span className="text-xs text-zinc-500 font-mono ml-1">
-                      +{formatNumber(metrics.trees - 20, 0)} daha
+                      +{formatNumber(metrics.trees - 20, 0)} {t("calculator.moreTrees")}
                     </span>
                   )}
                 </div>
@@ -433,7 +431,7 @@ export default function CarbonCalculator() {
 
               {/* Runtime badge */}
               <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-600">Aktif Runtime</span>
+                <span className="text-xs text-zinc-600">{t("calculator.activeRuntime")}</span>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/80 border border-zinc-700/40">
                   <div
                     className="w-2 h-2 rounded-full"

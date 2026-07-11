@@ -6,6 +6,7 @@ import FeaturesComparison from "@/components/FeaturesComparison";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { motion, Variants } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 import Image from "next/image";
 import {
   Copy,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const command = "pip install ecotrace";
 
@@ -121,21 +123,21 @@ export default function Home() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F076] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00F076]"></span>
               </span>
-              v1.4.0 Feature Release
+              {t("home.vBadge")}
             </motion.div>
 
             {/* Headline */}
             <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
-              Yüksek Hassasiyetli <br className="hidden sm:inline" />
+              {t("home.headlinePart1")} <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-[#00F076] to-emerald-500 drop-shadow-[0_0_30px_rgba(0,240,118,0.2)]">
-                Enerji ve Emisyon
+                {t("home.headlineGlow")}
               </span> <br />
-              Enstrümantasyonu
+              {t("home.headlinePart2")}
             </motion.h1>
 
             {/* Subtitle */}
             <motion.p variants={itemVariants} className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed">
-              Granüler karbon ayak izi ölçümü için hafif bir Python kütüphanesi. Sıfır konfigürasyon ile projelerinizin dijital ayak izini takip edin.
+              {t("home.subtitle")}
             </motion.p>
 
             {/* CTA Buttons */}
@@ -145,7 +147,7 @@ export default function Home() {
                 href="#calculator"
                 className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-emerald-500 text-black hover:bg-[#00F076] transition-all duration-300 shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_25px_rgba(0,240,118,0.5)] group cursor-pointer"
               >
-                Başla
+                {t("home.btnStart")}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </a>
 
@@ -155,7 +157,7 @@ export default function Home() {
                 className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-sm cursor-pointer"
               >
                 <BookOpen className="w-4 h-4 text-emerald-400" />
-                Dokümantasyonu Görüntüle
+                {t("home.btnDocs")}
               </a>
             </motion.div>
 
@@ -179,7 +181,7 @@ export default function Home() {
 
                   {/* Tooltip Alert */}
                   <div className={`absolute -top-11 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 text-black text-xs font-semibold rounded-md shadow-lg transition-all duration-200 pointer-events-none whitespace-nowrap ${copied ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
-                    Kopyalandı!
+                    {t("home.copied")}
                   </div>
                 </div>
               </div>
@@ -189,19 +191,19 @@ export default function Home() {
             <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <span className="flex items-center gap-1.5 text-xs text-zinc-500">
                 <Scale className="w-3.5 h-3.5 text-zinc-600" />
-                MIT Lisanslı
+                {t("home.licence")}
               </span>
               <span className="w-px h-3 bg-zinc-800" />
               <span className="flex items-center gap-1.5 text-xs text-zinc-500">
                 <svg className="w-3.5 h-3.5 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 0v20M2 12h20"/>
                 </svg>
-                Python 3.9+
+                {t("home.python")}
               </span>
               <span className="w-px h-3 bg-zinc-800" />
               <span className="flex items-center gap-1.5 text-xs text-zinc-500">
                 <Globe className="w-3.5 h-3.5 text-zinc-600" />
-                50+ Global Bölge
+                {t("home.regions")}
               </span>
             </motion.div>
 
@@ -246,7 +248,7 @@ export default function Home() {
 
                 {/* Cybernetic overlay */}
                 <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/30 text-[9px] font-mono text-[#00F076] uppercase tracking-widest pointer-events-none">
-                  Live Preview
+                  {t("home.livePreview")}
                 </div>
               </div>
             </div>
@@ -257,7 +259,7 @@ export default function Home() {
               className="absolute -bottom-4 -left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-zinc-700/60 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.4)] pointer-events-none"
             >
               <Zap className="w-3.5 h-3.5 text-[#00F076]" />
-              <span className="text-[11px] font-semibold text-zinc-200 whitespace-nowrap">50ms Örnekleme</span>
+              <span className="text-[11px] font-semibold text-zinc-200 whitespace-nowrap">{t("home.sampling")}</span>
             </motion.div>
 
             {/* Floating Chip B — Sağ üst köşe (CI/CD Uyumlu) */}
@@ -266,7 +268,7 @@ export default function Home() {
               className="absolute -top-4 -right-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-emerald-500/20 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.4)] pointer-events-none"
             >
               <GitMerge className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[11px] font-semibold text-zinc-200 whitespace-nowrap">CI/CD Uyumlu</span>
+              <span className="text-[11px] font-semibold text-zinc-200 whitespace-nowrap">{t("home.cicd")}</span>
             </motion.div>
 
           </motion.div>
