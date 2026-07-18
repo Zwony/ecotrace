@@ -291,6 +291,10 @@ def _cmd_export(args):
     csv_path = getattr(args, "file", "ecotrace_log.csv")
     output_path = args.output
 
+    # Default output path matches the chosen format
+    if output_path is None:
+        output_path = "ecotrace_report.json" if args.format == "json" else "ecotrace_export.csv"
+
     if args.format == "json":
         from ecotrace.core import EcoTrace
         eco = EcoTrace(check_updates=False, quiet=True)
@@ -1010,7 +1014,7 @@ def main():
     export_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to source CSV log file")
     export_parser.add_argument("--run", default=None, help="Filter export by Run ID or Run Label")
     export_parser.add_argument("--func", default=None, help="Filter export by function name")
-    export_parser.add_argument("-o", "--output", default="ecotrace_report.json", help="Output file path")
+    export_parser.add_argument("-o", "--output", default=None, help="Output file path (default: based on format)")
 
     # --- benchmark ---
     benchmark_parser = subparsers.add_parser(
