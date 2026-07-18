@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-07-18
+
+### Fixed
+- **`track_block()` exception safety**: Restructured with `try/finally` so carbon is always logged even when user code raises exceptions inside the block, matching the behavior of `measure()` and `track_gpu()`.
+- **GPU chart 3-tuple crash**: Normalized GPU samples to 2-tuples `(timestamp, utilization)` in `generate_pdf_report()` before passing to chart functions, preventing data format mismatches with the core engine's 3-tuple `(timestamp, utilization, power)` samples.
+- **Django middleware naming**: Renamed `EcoTraceMiddleware` in `middleware/django.py` to `EcoTraceDjangoMiddleware` as documented in the v1.1.2 changelog. A backward-compatible alias is preserved for migration.
+- **`plistlib` top-level import**: Moved the `plistlib` import from top-level in `hardware.py` into the macOS-only methods where it is actually used, following the project's established lazy-import pattern.
+- **Dashboard stale version**: The live dashboard footer now dynamically resolves version from `ecotrace.__version__` instead of displaying a hardcoded `v1.3.0`.
+- **CSV export default filename**: `ecotrace export --csv` now defaults output to `ecotrace_export.csv` instead of the format-mismatched `ecotrace_report.json`.
+- **ML energy accumulation**: Added `total_energy_kwh` attribute to `EcoTrace.__init__` so `EcoTraceML` can correctly accumulate GPU energy across sessions.
+
 ## [1.4.0] - 2026-07-01
 
 ### Added

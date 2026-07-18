@@ -1,6 +1,7 @@
 import os
 import json
 import csv
+import time
 import pytest
 from unittest.mock import patch, MagicMock
 from ecotrace.core import EcoTrace
@@ -116,4 +117,35 @@ def test_async_measure_hotspot_metadata(ecotrace_instance):
         assert args[4] is not None
         assert args[4].endswith("test_core.py")
         assert args[5] is not None
+
+def test_track_block_exception_safety(ecotrace_instance):
+    """Verify track_block registers metrics even when wrapped block raises an exception."""
+    initial_calls = ecotrace_instance._tracked_functions_count
+    try:
+        with ecotrace_instance.track_block("test_failing_block"):
+            raise ValueError("Deliberate failure inside track_block")
+    except ValueError:
+        pass
+    
+    assert ecotrace_instance._tracked_functions_count == initial_calls + 1
+
+def test_generate_pdf_report_with_3_tuples(ecotrace_instance, tmp_path):
+    """Verify generate_pdf_report successfully processes 3-tuple GPU samples."""
+    pdf_path = tmp_path / "test_report.pdf"
+    
+    # 3-tuples (timestamp, utilization, power) as stored in core monitor
+    gpu_samples = [(time.time() - 2, 5.0, 50.0), (time.time() - 1, 10.0, 55.0)]
+    
+    # Mock create_gpu_usage_chart and create_cpu_usage_chart to prevent actual chart rendering/saving
+    with patch("ecotrace.report.create_gpu_usage_chart", return_value=None), \
+         patch("ecotrace.report.create_cpu_usage_chart", return_value=None):
+        ecotrace_instance.generate_pdf_report(filename=str(pdf_path), gpu_samples=gpu_samples)
+        
+    assert os.path.exists(pdf_path)
+
+def test_django_middleware_naming_compatibility():
+    """Verify that both class names are importable and reference the same class."""
+    from ecotrace.middleware.django import EcoTraceDjangoMiddleware, EcoTraceMiddleware
+    assert EcoTraceDjangoMiddleware is EcoTraceMiddleware
+
 

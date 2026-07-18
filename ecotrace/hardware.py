@@ -1,7 +1,6 @@
 import os
 import platform
 import subprocess
-import plistlib
 from .logger import logger
 
 class HardwareMonitor:
@@ -55,6 +54,7 @@ class HardwareMonitor:
             )
             # Exit code 0 means we got data; non-zero means permission denied
             if result.returncode == 0 and result.stdout:
+                import plistlib
                 plistlib.loads(result.stdout)  # Validate parse succeeds
                 return True
         except Exception as e:
@@ -77,6 +77,7 @@ class HardwareMonitor:
             )
             if result.returncode != 0 or not result.stdout:
                 return None
+            import plistlib
             data = plistlib.loads(result.stdout)
             # 'CPU Energy (mJ)' is the total package energy for the sample
             # interval; convert millijoules → joules.

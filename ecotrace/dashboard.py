@@ -190,7 +190,7 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
   </div>
 </main>
 
-<footer>EcoTrace v1.3.0 — <a href="https://github.com/Zwony/ecotrace" style="color:var(--green-hi)">github.com/Zwony/ecotrace</a></footer>
+<footer>EcoTrace v{ecotrace_version} — <a href="https://github.com/Zwony/ecotrace" style="color:var(--green-hi)">github.com/Zwony/ecotrace</a></footer>
 
 <script>
 // ── Tiny charting library (vanilla Canvas — no deps) ───────────────────────
@@ -420,7 +420,12 @@ class _DashboardHandler(BaseHTTPRequestHandler):
         if self.path == "/api/data":
             self._send_json(self._build_data())
         elif self.path in ("/", "/index.html"):
-            self._send_html(_DASHBOARD_HTML)
+            try:
+                from ecotrace import __version__
+            except ImportError:
+                __version__ = "unknown"
+            html = _DASHBOARD_HTML.replace("{ecotrace_version}", __version__)
+            self._send_html(html)
         else:
             self.send_response(404)
             self.end_headers()

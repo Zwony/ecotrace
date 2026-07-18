@@ -5,14 +5,17 @@ from typing import Optional
 logger = logging.getLogger("ecotrace.middleware.django")
 
 try:
-    from asgiref.sync import iscoroutinefunction, markcoroutinefunction
+    import importlib
+    asgiref_sync = importlib.import_module("asgiref.sync")
+    iscoroutinefunction = asgiref_sync.iscoroutinefunction
+    markcoroutinefunction = asgiref_sync.markcoroutinefunction
 except ImportError:
     iscoroutinefunction = None
     markcoroutinefunction = None
 
 from ecotrace.core import EcoTrace
 
-class EcoTraceMiddleware:
+class EcoTraceDjangoMiddleware:
     """Django middleware for tracking carbon emissions per request.
     
     Supports both WSGI (synchronous) and ASGI (asynchronous) views seamlessly.
@@ -27,21 +30,25 @@ class EcoTraceMiddleware:
 
     def __init__(self, get_response):
         if iscoroutinefunction is None:
-            msg = "EcoTraceMiddleware requires 'django' (which includes asgiref). Run: pip install ecotrace[web]"
+            msg = "EcoTraceDjangoMiddleware requires 'django' (which includes asgiref). Run: pip install ecotrace[web]"
             logger.error(msg)
             
         self.get_response = get_response
-        self.is_async = iscoroutinefunction and iscoroutinefunction(self.get_response)
+        self.is_async = False
+        if iscoroutinefunction is not None:
+            self.is_async = iscoroutinefunction(self.get_response)
         
-        if self.is_async and markcoroutinefunction:
+        if self.is_async and markcoroutinefunction is not None:
             markcoroutinefunction(self)
             
         # Try to load configuration from Django settings safely
         try:
-            from django.conf import settings
+            import importlib
+            django_conf = importlib.import_module("django.conf")
+            settings = django_conf.settings
             ecotrace_instance = getattr(settings, 'ECOTRACE_INSTANCE', None)
             self.log_to_csv = getattr(settings, 'ECOTRACE_LOG_CSV', False)
-        except ImportError:
+        except (ImportError, AttributeError):
             ecotrace_instance = None
             self.log_to_csv = False
 
@@ -102,6 +109,9 @@ class EcoTraceMiddleware:
         except Exception as e:
             # Objective: Never crash the main request cycle if measurement fails
             logger.debug(f"EcoTrace Django measurement failed: {e}")
+
+# Backward-compatible alias (renamed in v1.1.2, alias kept for migration)
+EcoTraceMiddleware = EcoTraceDjangoMiddleware
 
 # /* --- Hybrid End of File / Dosya Sonu --- */ #
 # // EcoTrace Django Middleware Integration // #

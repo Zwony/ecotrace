@@ -111,6 +111,7 @@ class EcoTrace:
 
         self.carbon_limit = carbon_limit
         self.total_carbon = 0.0
+        self.total_energy_kwh = 0.0
         self.gpu_index = gpu_index
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.grid_api_key = grid_api_key or os.environ.get("ECOTRACE_GRID_API_KEY")
@@ -1223,13 +1224,14 @@ class EcoTrace:
             with self._cpu_sample_lock:
                 final_cpu_samples = list(self._cpu_samples)
                 
-        # GPU Samples snapshot
+        # GPU Samples snapshot — normalize 3-tuples (ts, util, power) to
+        # 2-tuples (ts, util) expected by report chart functions.
         final_gpu_samples = None
         if gpu_samples is not None:
-            final_gpu_samples = list(gpu_samples)
+            final_gpu_samples = [(item[0], item[1]) for item in gpu_samples]
         elif self.gpu_info:
             with self._gpu_sample_lock:
-                final_gpu_samples = list(self._gpu_samples)
+                final_gpu_samples = [(item[0], item[1]) for item in self._gpu_samples]
 
         generate_pdf(
             filename=filename,
@@ -1413,13 +1415,14 @@ class EcoTrace:
             None: Control flow continues within the context.
         """
         start_time = time.perf_counter()
-        with self.cpu_monitor():
-            if self.gpu_info:
-                with self.gpu_monitor():
+        try:
+            with self.cpu_monitor():
+                if self.gpu_info:
+                    with self.gpu_monitor():
+                        yield
+                else:
                     yield
-            else:
-                yield
-            
+        finally:
             end_time = time.perf_counter()
             duration = end_time - start_time
             
