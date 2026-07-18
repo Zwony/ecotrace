@@ -1,7 +1,6 @@
 """Authentication helpers for the EcoTrace dashboard.
 
-Authentication is OAuth-only (Google and GitHub).
-Password-based sign-up and login are not supported.
+Supports both email/password and OAuth (Google, GitHub).
 """
 import hashlib
 import secrets
@@ -12,10 +11,12 @@ from authlib.integrations.starlette_client import OAuth
 from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 from config import settings
 from database import User, database, initialize_development_database
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
 oauth = OAuth()
 
@@ -42,6 +43,14 @@ if settings.github_oauth_configured:
 
 def initialize_database() -> None:
     initialize_development_database()
+
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: Optional[str]) -> bool:
+    return bool(hashed_password) and pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(data: dict) -> str:
@@ -88,18 +97,19 @@ def hash_ingestion_key(key: str) -> str:
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
-def _create_oauth_user(email: str, name: str, oauth_provider: str) -> None:
-    """Create a new OAuth user with a fresh ingestion key."""
+def create_user(email: str, name: str, password: Optional[str] = None,
+                oauth_provider: Optional[str] = None) -> str:
     key = new_ingestion_key()
     with database() as db:
         db.add(User(
             email=email.lower(),
             name=name,
-            password_hash=None,
+            password_hash=get_password_hash(password) if password else None,
             oauth_provider=oauth_provider,
             api_key_hash=hash_ingestion_key(key),
             created_at=time.time(),
         ))
+    return key
 
 
 def register_or_login_oauth_user(email: str, name: str, provider: str) -> str:
@@ -108,7 +118,7 @@ def register_or_login_oauth_user(email: str, name: str, provider: str) -> str:
     with database() as db:
         user = db.get(User, email)
     if not user:
-        _create_oauth_user(email, name, provider)
+        create_user(email, name, oauth_provider=provider)
     return create_access_token({"sub": email, "name": name})
 
 

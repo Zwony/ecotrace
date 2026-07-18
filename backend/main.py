@@ -2,9 +2,6 @@
 
 Dashboard data is only sourced from measurements sent by a user's own
 EcoTrace process to ``POST /api/metrics/ingest``; it never fabricates data.
-
-Authentication is OAuth-only (Google and GitHub). The email/password
-endpoints have been removed.
 """
 import time
 from collections import defaultdict
@@ -15,13 +12,14 @@ from typing import List, Optional
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from starlette.middleware.sessions import SessionMiddleware
 
-from auth import (create_access_token, database, get_current_user_from_token,
+from auth import (create_access_token, create_user, database, get_current_user_from_token,
                   initialize_database, oauth, oauth2_scheme, register_or_login_oauth_user,
-                  user_from_ingestion_key)
+                  user_from_ingestion_key, verify_password)
 from config import settings
 from database import Measurement, User
 from sqlalchemy import select
@@ -39,6 +37,12 @@ app = FastAPI(title="EcoTrace Dashboard API", version="2.0.0", lifespan=lifespan
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False,
                    allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type", "X-EcoTrace-Key"])
 app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret_key, https_only=settings.environment.lower() == "production", same_site="lax")
+
+
+class SignUpRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
 
 
 class TokenResponse(BaseModel):
@@ -82,6 +86,26 @@ class MetricsResponse(BaseModel):
     delta: float
     chart_points: List[float]
     functions: List[FunctionEmissions]
+
+
+@app.post("/api/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+async def signup(body: SignUpRequest):
+    email = str(body.email).lower()
+    with database() as db:
+        existing = db.get(User, email)
+    if existing:
+        raise HTTPException(status_code=409, detail="An account with this email address already exists.")
+    create_user(email, body.name.strip(), password=body.password)
+    return {"access_token": create_access_token({"sub": email, "name": body.name.strip()})}
+
+
+@app.post("/api/token", response_model=TokenResponse)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    with database() as db:
+        user = db.get(User, form_data.username.lower())
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect email or password.")
+    return {"access_token": create_access_token({"sub": user.email, "name": user.name})}
 
 
 @app.get("/api/me", response_model=UserProfileResponse)
