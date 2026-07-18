@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>EcoTrace — Live Carbon Dashboard</title>
+<meta name="theme-color" content="#0F1F15" />
+<link rel="icon" type="image/svg+xml" href="./imgs/logo.svg" />
+
+<!-- Preconnect for performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+
+<!-- Load separated modular CSS stylesheet -->
+<link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body style="background: var(--forest-900);">
+
+<!-- Scroll progress bar -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- ======================== NAV ======================== -->
+<nav class="nav is-scrolled" id="nav" style="background: rgba(15, 31, 21, .85);">
+  <div class="container nav__inner">
+    <a href="./index.html" class="nav__brand">
+      <img src="./imgs/logo-transparent.png" alt="EcoTrace" onerror="this.style.display='none'" />
+      <span style="color: var(--cream-50);">EcoTrace</span>
+      <small>v1.4</small>
+    </a>
+    <ul class="nav__links">
+      <li><a href="./index.html#features" style="color: rgba(246, 242, 231, .8);">Features</a></li>
+      <li><a href="#dashboard" style="color: var(--cream-50);">Dashboard</a></li>
+      <li><a href="./index.html#start" style="color: rgba(246, 242, 231, .8);">Quick start</a></li>
+      <li><a href="./index.html#compare" style="color: rgba(246, 242, 231, .8);">Compare</a></li>
+      <li><a href="./index.html#resources" style="color: rgba(246, 242, 231, .8);">Docs</a></li>
+    </ul>
+    <div class="nav__actions">
+      <a class="nav__sponsor" href="https://github.com/sponsors/Zwony" target="_blank" rel="noopener">
+        <svg class="heart-pulse" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        Sponsor
+      </a>
+      <a class="nav__cta" href="https://github.com/Zwony/ecotrace" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.13c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 015.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.83 1.18 3.09 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.06.78 2.15v3.19c0 .31.21.68.8.56C20.21 21.38 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+        Star on GitHub
+      </a>
+      <!-- Logged-in profile -->
+      <div class="nav__user" id="navUser" onclick="toggleUserDropdown()">
+        <div class="nav__user-avatar" id="navUserAvatar">EO</div>
+        <span id="navUserName" style="color: var(--cream-50);">User</span>
+        <div class="nav__user-dropdown" id="navUserDropdown">
+          <a href="./index.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home Page
+          </a>
+          <a href="https://ecotrace.readthedocs.io/en/latest/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Documentation
+          </a>
+          <button onclick="signOut()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+          </button>
+        </div>
+      </div>
+      <!-- Hamburger -->
+      <button class="nav__hamburger" id="hamburger" onclick="toggleMobileNav()" aria-label="Toggle menu">
+        <span style="background: var(--cream-50);"></span>
+        <span style="background: var(--cream-50);"></span>
+        <span style="background: var(--cream-50);"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Nav Overlay -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="./index.html#features" onclick="closeMobileNav()">Features</a>
+  <a href="#dashboard" onclick="closeMobileNav()">Dashboard</a>
+  <a href="./index.html#start" onclick="closeMobileNav()">Quick Start</a>
+  <a href="./index.html#compare" onclick="closeMobileNav()">Compare</a>
+  <a href="./index.html#resources" onclick="closeMobileNav()">Docs</a>
+  <a href="https://github.com/sponsors/Zwony" target="_blank" rel="noopener" onclick="closeMobileNav()" style="color:var(--amber-400);">♥ Sponsor</a>
+  <a href="https://github.com/Zwony/ecotrace" target="_blank" rel="noopener" onclick="closeMobileNav()">GitHub</a>
+</div>
+
+<!-- ======================== LIVE DASHBOARD CONTENT ======================== -->
+<section class="section dashboard" id="dashboard" style="min-height: 100vh; padding-top: 8rem;">
+  <canvas class="dashboard__particles" id="dashParticles"></canvas>
+  <div class="container">
+    <div class="section__head">
+      <div class="eyebrow on-dark">Live Dashboard</div>
+      <h2 style="color:var(--cream-50);">Your carbon footprint, <em>in real time</em>.</h2>
+      <p style="color:rgba(246,242,231,.7);">Monitor your functions, visualize emission trends, and track your budget — all from a single pane of glass.</p>
+    </div>
+
+    <div class="dashboard__content is-visible" id="dashboardContent">
+      <!-- 4 metric cards -->
+      <div class="dashboard__metrics">
+        <div class="metric-card">
+          <div class="metric-card__label">Total Carbon Emitted</div>
+          <div class="metric-card__value"><span id="metricCarbon">0.000000</span> <span class="unit">gCO₂</span></div>
+          <div class="metric-card__change up" id="metricCarbonChange">↑ +0.000000 /2s window</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card__label">Active Sessions</div>
+          <div class="metric-card__value" id="metricSessions">1</div>
+          <div class="metric-card__change down">● running</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card__label">Functions Tracked</div>
+          <div class="metric-card__value" id="metricFunctions">8</div>
+          <div class="metric-card__change down">↓ 2 idle</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card__label">Budget Usage</div>
+          <div class="progress-ring-wrap">
+            <svg class="progress-ring" viewBox="0 0 56 56">
+              <circle class="bg" cx="28" cy="28" r="24" />
+              <circle class="fg" id="budgetRing" cx="28" cy="28" r="24"
+                stroke-dasharray="150.8"
+                stroke-dashoffset="150.8"
+                transform="rotate(-90 28 28)" />
+            </svg>
+            <div>
+              <div class="metric-card__value" style="font-size:1.5rem;" id="metricBudget">0%</div>
+              <div class="metric-card__change down">of 5.0 gCO₂</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart + Table row -->
+      <div class="dashboard__main">
+        <div class="dashboard__chart-card">
+          <div class="dashboard__chart-header">
+            <h4>Carbon Emission Trend</h4>
+            <span class="live-dot">LIVE</span>
+          </div>
+          <div class="dashboard__chart-body">
+            <canvas id="emissionChart"></canvas>
+          </div>
+        </div>
+        <div class="dashboard__table-card">
+          <div class="dashboard__table-header">
+            <h4>Tracked Functions</h4>
+          </div>
+          <div class="dashboard__table-body">
+            <table class="fn-table">
+              <thead>
+                <tr>
+                  <th>Function</th>
+                  <th>gCO₂</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="fnTableBody">
+                <!-- Filled by dashboard.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Code Preview -->
+      <div class="dashboard__code-card">
+        <div class="dashboard__code-header">
+          <h4>Your Code <span class="file-tag">main.py</span></h4>
+          <button class="btn btn--ghost" type="button" onclick="generateIngestionKey()">Generate dashboard key</button>
+        </div>
+        <div class="dashboard__code-body">
+<p id="ingestionKeyHelp" style="margin:0 0 1rem;color:rgba(246,242,231,.72);font-size:.85rem;">Generate a personal key once, then add it to the WebhookExporter in your own project. This panel never uses sample measurements.</p>
+<pre id="ingestionKeyOutput" hidden></pre>
+<pre><span class="line"><span class="tok-kw">from</span> <span class="tok-fn">ecotrace</span> <span class="tok-kw">import</span> EcoTrace</span>
+<span class="line"></span>
+<span class="line">eco = <span class="tok-fn">EcoTrace</span>(region_code=<span class="tok-st">"TR"</span>, carbon_limit=<span class="tok-nm">5.0</span>)</span>
+<span class="line"></span>
+<span class="line highlight"><span class="tok-kw">@eco</span>.track</span>
+<span class="line highlight"><span class="tok-kw">def</span> <span class="tok-fn">train_model</span>(data):</span>
+<span class="line highlight">    model = <span class="tok-fn">load_pretrained</span>(<span class="tok-st">"bert-base"</span>)</span>
+<span class="line highlight">    model.<span class="tok-fn">fit</span>(data, epochs=<span class="tok-nm">10</span>)</span>
+<span class="line highlight">    <span class="tok-kw">return</span> model</span>
+<span class="line"></span>
+<span class="line"><span class="tok-kw">@eco</span>.track</span>
+<span class="line"><span class="tok-kw">def</span> <span class="tok-fn">preprocess</span>(raw):</span>
+<span class="line">    <span class="tok-kw">return</span> [<span class="tok-fn">tokenize</span>(r) <span class="tok-kw">for</span> r <span class="tok-kw">in</span> raw]</span>
+<span class="line"></span>
+<span class="line"><span class="tok-kw">@eco</span>.track</span>
+<span class="line"><span class="tok-kw">def</span> <span class="tok-fn">evaluate</span>(model, test_data):</span>
+<span class="line">    <span class="tok-kw">return</span> model.<span class="tok-fn">score</span>(test_data)</span>
+<span class="line"></span>
+<span class="line"><span class="tok-cm"># Pipeline</span></span>
+<span class="line">data = <span class="tok-fn">preprocess</span>(<span class="tok-fn">load_data</span>(<span class="tok-st">"dataset.csv"</span>))</span>
+<span class="line">model = <span class="tok-fn">train_model</span>(data)</span>
+<span class="line"><span class="tok-fn">print</span>(<span class="tok-st">f"Accuracy: </span>{<span class="tok-fn">evaluate</span>(model, data)}<span class="tok-st">"</span>)</span>
+<span class="line"><span class="tok-fn">print</span>(<span class="tok-st">f"Carbon: </span>{eco.total_carbon:.4f}<span class="tok-st"> gCO2"</span>)</span>
+<span class="line">eco.<span class="tok-fn">generate_pdf_report</span>(<span class="tok-st">"audit.pdf"</span>)</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== FOOTER ======================== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__bottom" style="border-top: none; padding-top: 0;">
+      <span>© 2026 EcoTrace Team. <em>Developed for sustainable software development practices.</em></span>
+      <span>Built with quiet forests and too much coffee.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Load scripts -->
+<script src="./js/app.js"></script>
+<script src="./js/dashboard.js"></script>
+</body>
+</html>
