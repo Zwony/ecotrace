@@ -19,10 +19,8 @@ import weakref
 import atexit
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
-import tempfile
 
 from .logger import logger
-from .exceptions import EcoTraceConfigurationError
 
 from .ram import get_ram_info, RAM_WATT_FACTORS
 from .cpu import get_cpu_info, load_tdp_database
@@ -174,7 +172,6 @@ class EcoTrace:
         self._gpu_monitor_thread = None
         self._gpu_samples = deque(maxlen=self.SAMPLE_BUFFER_SIZE)
         self._gpu_sample_lock = threading.Lock()
-        self._gpu_monitor_samples = []
         self._cpu_monitor_active = False
         self._cpu_monitor_thread = None
         self._cpu_samples = deque(maxlen=self.SAMPLE_BUFFER_SIZE)
@@ -200,8 +197,11 @@ class EcoTrace:
             logger.info("-" * 53)
             logger.info(f"Run ID        : {self._run_id}" + (f" [{self._run_label}]" if self._run_label else ""))
             logger.info(f"Region        : {self.region_code} ({intensity_metadata})")
-            logger.info(f"Hardware Logic: {self.cpu_info['brand']}")
-            logger.info(f"Specifications: {self.cpu_info['cores']} Cores | {self.cpu_info['tdp']}W TDP")
+            cpu_brand = self.cpu_info.get('brand', 'Unknown') if isinstance(self.cpu_info, dict) else 'Unknown'
+            cpu_cores = self.cpu_info.get('cores', 1) if isinstance(self.cpu_info, dict) else 1
+            cpu_tdp = self.cpu_info.get('tdp', 65.0) if isinstance(self.cpu_info, dict) else 65.0
+            logger.info(f"Hardware Logic: {cpu_brand}")
+            logger.info(f"Specifications: {cpu_cores} Cores | {cpu_tdp}W TDP")
             
             if self.hardware.rapl_available:
                 logger.info("Energy Sensor : RAPL (Exact Hardware Mode Enabled)")
@@ -215,11 +215,15 @@ class EcoTrace:
                 elif platform.system() == "Darwin":
                     logger.warning("Apple Silicon powermetrics access denied! Run with 'sudo' to allow exact energy profiling (0% deviation).")
                 
-            if self.ram_info:
-                logger.info(f"Memory Config : {self.ram_info['total_gb']:.1f} GB {self.ram_info['type']}")
+            if self.ram_info and isinstance(self.ram_info, dict):
+                ram_gb = self.ram_info.get('total_gb', 0.0)
+                ram_type_str = self.ram_info.get('type', 'DDR4')
+                logger.info(f"Memory Config : {ram_gb:.1f} GB {ram_type_str}")
                 
-            if self.gpu_info:
-                logger.info(f"GPU Accelerator: {self.gpu_info['brand']} ({self.gpu_info['tdp']}W TDP)")
+            if self.gpu_info and isinstance(self.gpu_info, dict):
+                gpu_brand_str = self.gpu_info.get('brand', 'Unknown')
+                gpu_tdp_val = self.gpu_info.get('tdp', 0.0)
+                logger.info(f"GPU Accelerator: {gpu_brand_str} ({gpu_tdp_val}W TDP)")
             
             logger.info("-" * 53)
             logger.info("[INFO] Instrumentation sequence finalized.\n")
@@ -239,7 +243,7 @@ class EcoTrace:
             EcoTrace._instances.add(self)
 
     # ========================================================================
-    # Live Grid API — Intensity Resolution (v6.0)
+    # Live Grid API — Intensity Resolution 
     # ========================================================================
 
     def _resolve_intensity_with_live_fallback(self):
@@ -363,7 +367,15 @@ class EcoTrace:
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             ram_usage_gb = 0.0
             
-        ram_watt_factor = RAM_WATT_FACTORS.get(self.ram_info['type'], RAM_WATT_FACTORS['DDR4'])
+        ram_type = 'DDR4'
+        if self.ram_info and isinstance(self.ram_info, dict):
+            raw_ram_type = self.ram_info.get('type')
+            if raw_ram_type and isinstance(raw_ram_type, str):
+                ram_type = raw_ram_type.upper()
+        default_ram_watt = RAM_WATT_FACTORS.get('DDR4', 0.375)
+        ram_watt_factor = RAM_WATT_FACTORS.get(ram_type, default_ram_watt)
+        if ram_watt_factor is None:
+            ram_watt_factor = default_ram_watt
         ram_power_wh = (ram_watt_factor * ram_usage_gb) * duration_s / self.SECONDS_PER_HOUR
         
         # Total energy consumption
@@ -390,6 +402,8 @@ class EcoTrace:
             if self._paused:
                 return
             self.total_carbon += carbon_emitted
+            if self.carbon_intensity and self.carbon_intensity > 0:
+                self.total_energy_kwh += (carbon_emitted / self.carbon_intensity)
             self._tracked_functions_count += 1
             self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu, file_path, line_number)
 
@@ -921,7 +935,7 @@ class EcoTrace:
             line_number: Source line number.
         """
         try:
-            file_exists = os.path.isfile("ecotrace_log.csv")
+            file_exists = os.path.isfile("ecotrace_log.csv") and os.path.getsize("ecotrace_log.csv") > 0
             with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not file_exists:
@@ -968,12 +982,14 @@ class EcoTrace:
         if inspect.iscoroutinefunction(func):
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs):
-                return (await self.measure_async(func, *args, **kwargs))["result"]
+                res = await self.measure_async(func, *args, **kwargs)
+                return res["result"] if isinstance(res, dict) else res
             return async_wrapper
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            return self.measure(func, *args, **kwargs)["result"]
+            res = self.measure(func, *args, **kwargs)
+            return res["result"] if isinstance(res, dict) else res
 
         return wrapper
 
@@ -1010,25 +1026,27 @@ class EcoTrace:
 
             start_time = time.perf_counter()
             try:
-                with self.gpu_monitor():
-                    result = func(*args, **kwargs)
+                with self.cpu_monitor():
+                    with self.gpu_monitor():
+                        result = func(*args, **kwargs)
                 return result
             finally:
                 end_time = time.perf_counter()
                 try:
                     duration = end_time - start_time
-                    avg_gpu_util, avg_gpu_pwr = self._get_avg_gpu_in_range(start_time, end_time)
+                    avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
+                    cpu_carbon = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
                     
+                    avg_gpu_util, avg_gpu_pwr = self._get_avg_gpu_in_range(start_time, end_time)
                     if avg_gpu_pwr is not None:
-                        # EXACT GPU MODE (NVML hardware reading)
                         gpu_energy_wh = (avg_gpu_pwr * duration) / self.SECONDS_PER_HOUR
-                        carbon_emitted = (gpu_energy_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
+                        gpu_carbon = (gpu_energy_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
                     else:
-                        # ESTIMATION MODE (Fallback for unsupported GPUs)
-                        carbon_emitted = self._compute_carbon(self.gpu_info['tdp'], avg_gpu_util, duration, is_gpu=True)
+                        gpu_carbon = self._compute_carbon((self.gpu_info or {}).get('tdp', 100.0), avg_gpu_util, duration, is_gpu=True)
 
-                    self._accumulate_carbon(carbon_emitted, func.__name__, duration, file_path=file_path, line_number=line_number)
-                    logger.info(f"GPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
+                    carbon_emitted = cpu_carbon + gpu_carbon
+                    self._accumulate_carbon(carbon_emitted, func.__name__, duration, avg_cpu=avg_cpu, file_path=file_path, line_number=line_number)
+                    logger.info(f"GPU/CPU Carbon Emissions: {carbon_emitted:.8f} gCO2")
                     logger.info(f"Duration     : {duration:.4f} sec")
                     logger.info(f"GPU Usage    : {avg_gpu_util:.1f}%")
                     logger.info(f"CO2          : {carbon_emitted:.8f} gCO2")
@@ -1054,6 +1072,7 @@ class EcoTrace:
         start_time = time.perf_counter()
         result_data = None
         func_success = False
+        energy_start = None
 
         try:
             energy_start = self.hardware.get_cpu_energy_j()
@@ -1105,7 +1124,6 @@ class EcoTrace:
                         "cpu_samples": [],
                         "result": result_data
                     }
-                raise  # Re-raise the original exception if function failed
 
     async def measure_async(self, func, *args, **kwargs):
         """Executes an async function and measures its CPU carbon emissions.
@@ -1130,6 +1148,7 @@ class EcoTrace:
         start_time = time.perf_counter()
         result_data = None
         func_success = False
+        energy_start = None
 
         try:
             energy_start = self.hardware.get_cpu_energy_j()
@@ -1184,7 +1203,6 @@ class EcoTrace:
                         "cpu_samples": [],
                         "result": result_data
                     }
-                raise
 
     def compare(self, func1, func2):
         """Runs two functions sequentially and compares their carbon footprints.
@@ -1199,9 +1217,10 @@ class EcoTrace:
         """
         result1 = self.measure(func1)
         result2 = self.measure(func2)
-        logger.info(f"Comparison Results:")
-        logger.info(f"Function 1: {result1['func_name']} - Duration: {result1['duration']:.4f} sec - CO2: {result1['carbon']:.8f} gCO2")
-        logger.info(f"Function 2: {result2['func_name']} - Duration: {result2['duration']:.4f} sec - CO2: {result2['carbon']:.8f} gCO2")
+        if isinstance(result1, dict) and isinstance(result2, dict):
+            logger.info(f"Comparison Results:")
+            logger.info(f"Function 1: {result1['func_name']} - Duration: {result1['duration']:.4f} sec - CO2: {result1['carbon']:.8f} gCO2")
+            logger.info(f"Function 2: {result2['func_name']} - Duration: {result2['duration']:.4f} sec - CO2: {result2['carbon']:.8f} gCO2")
         return {"func1": result1, "func2": result2}
 
     # ========================================================================
@@ -1293,6 +1312,43 @@ class EcoTrace:
         # --- Build metadata block ---
         # Captures the full hardware profile so the JSON is self-contained.
         # Consumers don't need to re-detect hardware to interpret the data.
+        ram_dict = None
+        if self.ram_info and isinstance(self.ram_info, dict):
+            ram_total_gb = self.ram_info.get("total_gb")
+            ram_type_val = self.ram_info.get("type")
+            ram_dict = {
+                "total_gb": round(float(ram_total_gb if ram_total_gb is not None else 0.0), 2),
+                "type": str(ram_type_val if ram_type_val is not None else "DDR4")
+            }
+
+        gpu_dict = None
+        if self.gpu_info and isinstance(self.gpu_info, dict):
+            gpu_brand = self.gpu_info.get("brand")
+            gpu_tdp = self.gpu_info.get("tdp")
+            gpu_type = self.gpu_info.get("type")
+            gpu_dict = {
+                "brand": str(gpu_brand if gpu_brand is not None else "Unknown"),
+                "tdp_w": float(gpu_tdp if gpu_tdp is not None else 0.0),
+                "type": str(gpu_type if gpu_type is not None else "Unknown")
+            }
+
+        cpu_dict = {}
+        if self.cpu_info and isinstance(self.cpu_info, dict):
+            cpu_brand = self.cpu_info.get("brand")
+            cpu_cores = self.cpu_info.get("cores")
+            cpu_tdp = self.cpu_info.get("tdp")
+            cpu_dict = {
+                "brand": str(cpu_brand if cpu_brand is not None else "Unknown"),
+                "cores": int(cpu_cores if cpu_cores is not None else 1),
+                "tdp_w": float(cpu_tdp if cpu_tdp is not None else 65.0)
+            }
+        else:
+            cpu_dict = {
+                "brand": "Unknown",
+                "cores": 1,
+                "tdp_w": 65.0
+            }
+
         meta = {
             "version": __version__,
             "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -1301,27 +1357,10 @@ class EcoTrace:
             "region_code": self.region_code,
             "carbon_intensity": self.carbon_intensity,
             "intensity_source": self._intensity_source,
-            "cpu": {
-                "brand": self.cpu_info["brand"],
-                "cores": self.cpu_info["cores"],
-                "tdp_w": self.cpu_info["tdp"]
-            },
-            "ram": None,
-            "gpu": None
+            "cpu": cpu_dict,
+            "ram": ram_dict,
+            "gpu": gpu_dict
         }
-
-        if self.ram_info:
-            meta["ram"] = {
-                "total_gb": round(self.ram_info["total_gb"], 2),
-                "type": self.ram_info["type"]
-            }
-
-        if self.gpu_info:
-            meta["gpu"] = {
-                "brand": self.gpu_info["brand"],
-                "tdp_w": self.gpu_info["tdp"],
-                "type": self.gpu_info["type"]
-            }
 
         # --- Parse CSV audit log ---
         # Read the existing measurement history. If the CSV doesn't exist yet,
@@ -1451,10 +1490,8 @@ class EcoTrace:
 
     def __del__(self):
         """Ensures all background monitoring threads are stopped and resources released."""
-        self._stop_cpu_monitor()
-        self._stop_gpu_monitor()
         try:
-            import pynvml  # type: ignore
-            pynvml.nvmlShutdown()
-        except (ImportError, Exception) as e:
-            logger.debug(f"nvmlShutdown bypassed or failed: {e}")
+            self._stop_cpu_monitor()
+            self._stop_gpu_monitor()
+        except Exception:
+            pass

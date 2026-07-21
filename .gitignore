@@ -22,3 +22,15 @@ demo_*.py
 .agents/
 .gemini/
 site/
+
+# Local databases, secrets, and editor files
+*.db
+.env.local
+.vscode/
+
+# Private Web Application and Server Deployment
+ecotrace-website/
+docker-compose.yml
+DEPLOY_CHECKLIST.md
+ecotrace.zip
+tools/
