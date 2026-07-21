@@ -70,10 +70,11 @@ def _is_newer_version(current, latest):
         from packaging.version import parse  # type: ignore
         return parse(latest) > parse(current)
     except Exception as e:
-        # If packaging is unavailable, fall back to simple string comparison
         from .logger import logger
         logger.debug(f"Semantic version comparison fallback due to: {e}")
-        return latest != current
+        def _to_tuple(v):
+            return tuple(int(x) for x in v.split('.') if x.isdigit())
+        return _to_tuple(latest) > _to_tuple(current)
 
 
 def _run_pip_upgrade():
@@ -149,7 +150,6 @@ def check_for_updates(current_version):
             if _run_pip_upgrade():
                 logger.info(f"[SUCCESS] v{latest_version} installed. Please restart session.")
             else:
-                from .exceptions import EcoTraceUpdateError
                 logger.warning("[ERROR] Automated upgrade failed. Manual intervention required:")
                 logger.warning(f"  pip install --upgrade {PYPI_PACKAGE_NAME}")
         else:

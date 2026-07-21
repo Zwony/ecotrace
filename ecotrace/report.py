@@ -1,7 +1,7 @@
 import os
 import csv
 import tempfile
-from fpdf import FPDF
+from fpdf.fpdf import FPDF
 import matplotlib.pyplot as plt
 
 from .logger import logger
@@ -118,8 +118,12 @@ def get_gemini_insights(api_key, cpu_info, gpu_info, history, region_code):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
             import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        configure_fn = getattr(genai, "configure", None)
+        model_cls = getattr(genai, "GenerativeModel", None)
+        if not configure_fn or not model_cls:
+            return None
+        configure_fn(api_key=api_key)
+        model = model_cls('gemini-1.5-flash')
 
         # Limit history to last 5 entries for prompt efficiency
         recent_history = history[-5:]
@@ -163,32 +167,14 @@ def generate_pdf_report(
     comparison=None, 
     cpu_samples=None,
     gpu_samples=None,
-    api_key=None
+    api_key=None,
+    log_file="ecotrace_log.csv"
 ):
-    """Generates a comprehensive PDF audit report covering energy footprint data.
-
-    Aggregates hardware profile insights, execution CSV history, AI-assisted performance
-    diagnostics, CPU usage charts, and comparison statistics into a standalone PDF.
-
-    Args:
-        filename (str): Desired output trajectory path for the PDF document.
-        cpu_info (dict): Hardware definitions dictionary detailing cores, brand, and TDP.
-        gpu_info (dict): Hardware definitions dictionary detailing GPU statistics.
-        region_code (str): Carbon regional intensity modifier identifier.
-        comparison (dict): Context mappings when processing paired run analyses.
-        cpu_samples (list): Captured process thread state samples for visualization rendering.
-        gpu_samples (list): Captured GPU utilization samples for visualization rendering.
-        api_key (str): Optional Google Gemini API key.
-
-    Returns:
-        None: Operations output side-effects to the disk format system, with CLI feedbacks.
-    """
     if cpu_info is None:
         cpu_info = {"brand": "Unknown", "cores": 1, "tdp": 65.0}
         
     try:
         history = []
-        log_file = "ecotrace_log.csv"
         if os.path.exists(log_file):
             with open(log_file, mode='r', encoding='utf-8') as f:
                 reader = csv.reader(f)
@@ -203,7 +189,7 @@ def generate_pdf_report(
         pdf.set_font("helvetica", 'B', 20)
         pdf.set_text_color(46, 139, 87)
         pdf.cell(200, 15, "EcoTrace Analysis Report", ln=True, align='C')
-        pdf.ln(5)
+        pdf.ln()
 
         pdf.set_fill_color(245, 245, 245)
         pdf.set_font("helvetica", 'B', 12)
@@ -219,11 +205,11 @@ def generate_pdf_report(
             gpu_display = sanitize_for_pdf(gpu_info.get('brand', 'Unknown'))
             pdf.cell(100, 8, f"GPU: {gpu_display}", ln=False)
             pdf.cell(100, 8, f"GPU TDP: {gpu_info.get('tdp', 0)}W", ln=True)
-        pdf.ln(10)
+        pdf.ln()
 
         pdf.set_font("helvetica", 'B', 12)
         pdf.cell(0, 10, " Function History", ln=True, fill=True)
-        pdf.ln(2)
+        pdf.ln()
         pdf.set_font("helvetica", 'B', 9)
         pdf.set_fill_color(200, 220, 200)
         pdf.cell(40, 10, "Date", border=1, fill=True)
@@ -246,18 +232,22 @@ def generate_pdf_report(
             except ValueError:
                 pass
 
-        # CPU Chart Section
         if cpu_samples:
-            core_count = cpu_info.get("cores", 1)
-            normalized_samples = [(item[0], min(item[1] / core_count, 100.0)) for item in cpu_samples]
+            try:
+                core_count = int(cpu_info.get("cores", 1)) if isinstance(cpu_info, dict) and cpu_info.get("cores") else 1
+                if core_count <= 0:
+                    core_count = 1
+            except (ValueError, TypeError):
+                core_count = 1
+            normalized_samples = [(item[0], min(float(item[1]) / float(core_count), 100.0)) for item in cpu_samples]
             chart_path = create_cpu_usage_chart(normalized_samples, core_count)
             if chart_path:
                 pdf.add_page()
                 pdf.set_font("helvetica", 'B', 12)
                 pdf.cell(0, 10, " CPU Usage Over Time (Core-Normalized)", ln=True, fill=True)
-                pdf.ln(5)
+                pdf.ln()
                 pdf.image(chart_path, x=10, y=50, w=190)
-                pdf.ln(120)
+                pdf.ln()
 
                 normalized_values = [item[1] for item in normalized_samples]
                 avg_cpu = sum(normalized_values) / len(normalized_values) if normalized_values else 0.0
@@ -275,9 +265,9 @@ def generate_pdf_report(
                 pdf.add_page()
                 pdf.set_font("helvetica", 'B', 12)
                 pdf.cell(0, 10, " GPU Utilization Over Time", ln=True, fill=True)
-                pdf.ln(5)
+                pdf.ln()
                 pdf.image(gpu_chart_path, x=10, y=50, w=190)
-                pdf.ln(120)
+                pdf.ln()
 
                 gpu_values = [item[1] for item in gpu_samples]
                 avg_gpu = sum(gpu_values) / len(gpu_values) if gpu_values else 0.0
@@ -287,7 +277,7 @@ def generate_pdf_report(
                 pdf.cell(0, 8, f"Average GPU Usage: {avg_gpu:.1f}% | Peak Usage: {peak_gpu:.1f}%", ln=True)
                 if os.path.exists(gpu_chart_path): os.unlink(gpu_chart_path)
 
-        pdf.ln(10)
+        pdf.ln()
         pdf.set_font("helvetica", 'B', 14)
         pdf.set_fill_color(46, 139, 87)
         pdf.set_text_color(255, 255, 255)
@@ -296,7 +286,7 @@ def generate_pdf_report(
         if comparison is not None:
             r1 = comparison.get("func1", {})
             r2 = comparison.get("func2", {})
-            pdf.ln(10)
+            pdf.ln()
             pdf.set_font("helvetica", 'B', 12)
             pdf.set_text_color(0, 0, 0)
             pdf.cell(0, 10, "Comparison Analysis", ln=True, fill=True)
@@ -317,7 +307,7 @@ def generate_pdf_report(
             pdf.cell(50, 8, f"{r2.get('carbon', 0):.8f}", border=1, ln=True)
 
         if history:
-            pdf.ln(15)
+            pdf.ln()
             pdf.set_font("helvetica", 'B', 12)
             pdf.set_text_color(0, 0, 0)
             pdf.cell(0, 10, "Performance Insights", ln=True, fill=True)
@@ -329,9 +319,13 @@ def generate_pdf_report(
             pdf.cell(50, 10, "Recommendation", border=1, fill=True, ln=True)
             pdf.set_font("helvetica", size=8)
             
-            # Logic: Scale thresholds by core count for accurate reporting
-            core_count = cpu_info.get("cores", 1)
-            single_core_threshold = 100.0 / core_count
+            try:
+                core_count = int(cpu_info.get("cores", 1)) if isinstance(cpu_info, dict) and cpu_info.get("cores") else 1
+                if core_count <= 0:
+                    core_count = 1
+            except (ValueError, TypeError):
+                core_count = 1
+            single_core_threshold = 100.0 / float(core_count)
             
             for row in history[-5:]:
                 try:
@@ -374,7 +368,7 @@ def generate_pdf_report(
                 pdf.set_font("helvetica", 'B', 16)
                 pdf.set_text_color(46, 139, 87)
                 pdf.cell(0, 15, "EcoTrace AI Insights (Beta)", ln=True, align='C')
-                pdf.ln(5)
+                pdf.ln()
                 pdf.set_fill_color(240, 255, 240)
                 pdf.set_font("helvetica", 'I', 10)
                 pdf.set_text_color(40, 40, 40)

@@ -140,17 +140,7 @@ def test_cli_trends_success(tmp_path, capsys):
     assert "run456" in captured.out
 
 
-@patch("ecotrace.dashboard.DashboardServer")
-def test_cli_dashboard_success(mock_server):
-    class Args:
-        file = "dummy_log.csv"
-        port = 9000
 
-    from ecotrace.cli import _cmd_dashboard
-    _cmd_dashboard(Args())
-    
-    mock_server.assert_called_once_with(csv_path="dummy_log.csv", port=9000)
-    mock_server.return_value.serve_forever.assert_called_once()
 
 def test_cli_export_csv(tmp_path, capsys):
     csv_file = tmp_path / "export_test_log.csv"

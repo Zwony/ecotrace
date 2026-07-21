@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-07-21
+
+### Fixed
+- **`ram_info` null safety**: Guarded `_compute_carbon` against `NoneType` `ram_info` returns to prevent crash loops.
+- **`nvmlShutdown` global scope isolation**: Removed `pynvml.nvmlShutdown()` from instance `__del__` destructor to preserve global NVML state for concurrent instances.
+- **Exception propagation in `measure()` & `measure_async()`**: Fixed exception handling in measurement teardown to prevent user function exceptions from being masked.
+- **Dashboard Stored XSS**: Sanitized user inputs before DOM rendering in live web dashboard.
+- **Dashboard CORS origin restriction**: Restricted `Access-Control-Allow-Origin` from wildcard `*` to localhost origin.
+- **GitHub Action CLI integration**: Added `--region` flag support to `ecotrace gate` subcommand required by `action.yml`.
+- **Updater fallback logic**: Replaced naive string inequality with integer tuple parsing for version comparison when `packaging` is absent.
+- **Middleware lazy loading**: Implemented module `__getattr__` in `middleware/__init__.py` to avoid eager imports of web frameworks.
+- **RAM power modeling**: Added watt factors for DDR3, LPDDR4, LPDDR5 and UNKNOWN RAM types.
+- **PDF Report log path parameter**: Added configurable `log_file` parameter to `generate_pdf_report`.
+
 ## [1.4.1] - 2026-07-18
 
 ### Fixed

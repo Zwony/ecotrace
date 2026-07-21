@@ -3,8 +3,12 @@ import psutil
 import subprocess
 
 RAM_WATT_FACTORS = {
+    'DDR3': 0.500,
     'DDR4': 0.375,
-    'DDR5': 0.285
+    'DDR5': 0.285,
+    'LPDDR4': 0.200,
+    'LPDDR5': 0.150,
+    'UNKNOWN': 0.375
 }
 
 def get_ram_info():
