@@ -18,7 +18,7 @@ def load_tdp_database(csv_path):
     """Parses the Boavizta CPU specification dataset into a TDP lookup table.
 
     Args:
-        csv_path (str): File system path targeting the Boavizta 'cpu_specs.csv'.
+        csv_path (str): File system path targeting 'cpu_data.csv'.
 
     Returns:
         dict: Hash map linking lowercase exact CPU model strings to their float TDP values.
@@ -76,11 +76,17 @@ def get_cpu_info(tdp_db, constants_data):
                 break
     else:
         found_tdp = 65.0
+        clean_brand_search = clean_brand.replace(" cpu ", " ").replace(" processor", "")
+        clean_brand_search = " ".join(clean_brand_search.split())
+
         if clean_brand in tdp_db:
             found_tdp = tdp_db[clean_brand]
+        elif clean_brand_search in tdp_db:
+            found_tdp = tdp_db[clean_brand_search]
         else:
-            for model_name, tdp in tdp_db.items():
-                if clean_brand in model_name and len(clean_brand) > 10:
+            sorted_models = sorted(tdp_db.items(), key=lambda x: len(x[0]), reverse=True)
+            for model_name, tdp in sorted_models:
+                if len(model_name) > 4 and (model_name in clean_brand_search or clean_brand_search in model_name):
                     found_tdp = tdp
                     break
 

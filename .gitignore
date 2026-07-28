@@ -34,3 +34,28 @@ docker-compose.yml
 DEPLOY_CHECKLIST.md
 ecotrace.zip
 tools/
+
+# BoaviztAPI Node.js files (only CSV data is used)
+ecotrace/cpu_spec.csv/package-lock.json
+ecotrace/cpu_spec.csv/package.json
+ecotrace/cpu_spec.csv/node_modules/
+ecotrace/cpu_spec.csv/docs/
+ecotrace/cpu_spec.csv/tests/
+# But keep the CPU specs data file (used by core.py)
+!ecotrace/cpu_spec.csv/tests/data/crowdsourcing/cpu_specs.csv
+ecotrace/cpu_spec.csv/.github/
+ecotrace/cpu_spec.csv/.pre-commit-config.yaml
+ecotrace/cpu_spec.csv/.dockerignore
+ecotrace/cpu_spec.csv/.gitignore
+ecotrace/cpu_spec.csv/Dockerfile
+ecotrace/cpu_spec.csv/Makefile
+ecotrace/cpu_spec.csv/poetry.lock
+ecotrace/cpu_spec.csv/serverless.yml
+ecotrace/cpu_spec.csv/compose*.yaml
+ecotrace/cpu_spec.csv/pyproject.toml
+ecotrace/cpu_spec.csv/validate_csv.py
+ecotrace/cpu_spec.csv/MANIFEST.in
+ecotrace/cpu_spec.csv/*.md
+ecotrace/cpu_spec.csv/*.png
+ecotrace/cpu_spec.csv/*.svg
+ecotrace/cpu_spec.csv/LICENSE

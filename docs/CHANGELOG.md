@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2026-07-28
+
+### Fixed
+- **CPU TDP Database Path Resolution**: Fixed invalid file path in `core.py` targeting non-existent `boaviztapi/data/crowdsourcing/` path. Redirected to `cpu_data.csv` (1,806 CPU dataset) to ensure TDP database is actually loaded into memory instead of silently falling back to generic 65W for all x86 chips.
+- **Enhanced CPU Model Matching Algorithm**: Upgraded string resolution in `cpu.py` to support bidirectional containment checks, noise word stripping (`cpu`, `processor`), and length-descending model sorting so specific chips (e.g. `i7-10700K`, `EPYC 7B12`, `i7-13700H`) match their exact TDP boundaries.
+
+### Changed
+- **Repository Cleanup**: Removed 164 unused BoaviztAPI documentation, test, and build artifacts from git index, updating `.gitignore` to prevent tracking non-runtime assets.
+
+## [1.4.2] - 2026-07-21
+
+### Fixed
+- **`ram_info` null safety**: Guarded `_compute_carbon` against `NoneType` `ram_info` returns to prevent crash loops.
+- **`nvmlShutdown` global scope isolation**: Removed `pynvml.nvmlShutdown()` from instance `__del__` destructor to preserve global NVML state for concurrent instances.
+- **Exception propagation in `measure()` & `measure_async()`**: Fixed exception handling in measurement teardown to prevent user function exceptions from being masked.
+- **Dashboard Stored XSS**: Sanitized user inputs before DOM rendering in live web dashboard.
+- **Dashboard CORS origin restriction**: Restricted `Access-Control-Allow-Origin` from wildcard `*` to localhost origin.
+- **GitHub Action CLI integration**: Added `--region` flag support to `ecotrace gate` subcommand required by `action.yml`.
+- **Updater fallback logic**: Replaced naive string inequality with integer tuple parsing for version comparison when `packaging` is absent.
+- **Middleware lazy loading**: Implemented module `__getattr__` in `middleware/__init__.py` to avoid eager imports of web frameworks.
+- **RAM power modeling**: Added watt factors for DDR3, LPDDR4, LPDDR5 and UNKNOWN RAM types.
+- **PDF Report log path parameter**: Added configurable `log_file` parameter to `generate_pdf_report`.
+
 ## [1.4.1] - 2026-07-18
 
 ### Fixed

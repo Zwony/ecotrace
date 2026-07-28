@@ -19,6 +19,7 @@ Example::
     cb.on_train_end()
 """
 
+from typing import Optional, List, Tuple
 import time
 from ecotrace.ml import EcoTraceML
 
@@ -50,10 +51,10 @@ class EcoTracePyTorchCallback:
         model_name: str = "PyTorch Model",
         gpu_index: int = 0,
         sample_interval: float = 1.0,
-        project_name: str = None,
-        epochs: int = None,
-        batch_size: int = None,
-        dataset_size: int = None,
+        project_name: Optional[str] = None,
+        epochs: Optional[int] = None,
+        batch_size: Optional[int] = None,
+        dataset_size: Optional[int] = None,
         verbose: bool = True,
     ):
         self.model_name = project_name or model_name
@@ -64,10 +65,10 @@ class EcoTracePyTorchCallback:
         self.dataset_size = dataset_size
         self.verbose = verbose
 
-        self._tracker: EcoTraceML = None
-        self._epoch_start_time: float = None
+        self._tracker: Optional[EcoTraceML] = None
+        self._epoch_start_time: Optional[float] = None
         self._epoch_start_energy_j: float = 0.0
-        self._epoch_results: list = []  # [(epoch, carbon_g, duration_s)]
+        self._epoch_results: List[Tuple[int, float, float]] = []  # [(epoch, carbon_g, duration_s)]
 
     def on_train_begin(self):
         """Called once before training starts. Initialises EcoTraceML and GPU monitor."""
@@ -94,7 +95,7 @@ class EcoTracePyTorchCallback:
         self._epoch_start_energy_j = energy_j
         self._epoch_start_time = time.perf_counter()
 
-    def on_epoch_end(self, epoch: int, metrics: dict = None):
+    def on_epoch_end(self, epoch: int, metrics: Optional[dict] = None):
         """Called at the end of each epoch. Logs per-epoch carbon to CSV.
 
         Args:
