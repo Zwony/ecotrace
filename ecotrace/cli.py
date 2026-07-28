@@ -32,7 +32,7 @@ def _get_version():
         from ecotrace import __version__
         return __version__
     except ImportError:
-        return "1.4.2"
+        return "1.4.3"
 
 
 # --- CLI Banner --------------------------------------------------------------

@@ -133,7 +133,7 @@ class EcoTrace:
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(self.base_dir, "constants.json")
-        self.csv_path = os.path.join(self.base_dir, "cpu_spec.csv", "boaviztapi", "data", "crowdsourcing", "cpu_specs.csv")
+        self.csv_path = os.path.join(self.base_dir, "cpu_data.csv")
 
         # Load data sources before validating region_code
         self._constants_data = load_constants(self.json_path)

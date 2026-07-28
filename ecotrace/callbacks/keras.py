@@ -15,6 +15,7 @@ Example::
     )
 """
 
+from typing import Optional, List, Tuple
 import time
 from ecotrace.ml import EcoTraceML
 
@@ -63,10 +64,10 @@ class EcoTraceKerasCallback:
         model_name: str = "Keras Model",
         gpu_index: int = 0,
         sample_interval: float = 1.0,
-        project_name: str = None,
-        epochs: int = None,
-        batch_size: int = None,
-        dataset_size: int = None,
+        project_name: Optional[str] = None,
+        epochs: Optional[int] = None,
+        batch_size: Optional[int] = None,
+        dataset_size: Optional[int] = None,
         verbose: bool = True,
     ):
         # Validate that Keras is available at construction time, not at import
@@ -82,10 +83,10 @@ class EcoTraceKerasCallback:
         self.dataset_size = dataset_size
         self.verbose = verbose
 
-        self._tracker: EcoTraceML = None
-        self._epoch_start_time: float = None
+        self._tracker: Optional[EcoTraceML] = None
+        self._epoch_start_time: Optional[float] = None
         self._epoch_start_energy_j: float = 0.0
-        self._epoch_results: list = []
+        self._epoch_results: List[Tuple[int, float, float]] = []
 
         # Keras needs these attributes to recognise a valid callback object
         self.params = {}

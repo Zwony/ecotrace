@@ -1,3 +1,4 @@
+from typing import Optional, List, Tuple, Dict, Any
 import time
 import threading
 import functools
@@ -11,26 +12,34 @@ from .report import create_gpu_usage_chart, generate_pdf_report
 class EcoTraceML:
     """Independent energy and carbon tracking engine for AI/ML models (ISO 14064 Compliant)."""
     
-    def __init__(self, model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0,
-                 project_name: str = None, epochs: int = None, batch_size: int = None, dataset_size: int = None):
+    def __init__(
+        self,
+        model_name: str = "AI Model",
+        gpu_index: int = 0,
+        sample_interval: float = 1.0,
+        project_name: Optional[str] = None,
+        epochs: Optional[int] = None,
+        batch_size: Optional[int] = None,
+        dataset_size: Optional[int] = None,
+    ):
         self.model_name = project_name or model_name
         self.sample_interval = sample_interval
         self.epochs = epochs
         self.batch_size = batch_size
         self.dataset_size = dataset_size
-        self.total_gpu_energy_joules = 0.0
-        self.is_running = False
-        self._thread = None
-        self.power_history = []
+        self.total_gpu_energy_joules: float = 0.0
+        self.is_running: bool = False
+        self._thread: Optional[threading.Thread] = None
+        self.power_history: List[Tuple[float, float]] = []
         self._lock = threading.Lock()
 
         from ecotrace import EcoTrace
         self.eco = EcoTrace(quiet=True, check_updates=False)
-        self.gpu_info = self.eco.gpu_info or get_gpu_info(gpu_index, {"intel": 15.0, "amd": 75.0, "unknown": 100.0})
-        self.gpu_index = self.eco.gpu_index if self.eco.gpu_index is not None else gpu_index
-        self._epoch_snapshots = []  # List of per-epoch (energy_j, duration_s) snapshots
+        self.gpu_info: Optional[Dict[str, Any]] = self.eco.gpu_info or get_gpu_info(gpu_index, {"intel": 15.0, "amd": 75.0, "unknown": 100.0})
+        self.gpu_index: Optional[int] = self.eco.gpu_index if self.eco.gpu_index is not None else gpu_index
+        self._epoch_snapshots: List[Tuple[float, float]] = []  # List of per-epoch (energy_j, duration_s) snapshots
 
-    def _carbon_intensity_gco2_per_kwh(self):
+    def _carbon_intensity_gco2_per_kwh(self) -> float:
         """Normalize carbon intensity to gCO2/kWh.
 
         Some legacy or misconfigured intensity values can be expressed in
@@ -40,9 +49,9 @@ class EcoTraceML:
         raw_intensity = getattr(self.eco, "carbon_intensity", 475.0)
         if raw_intensity <= 0.0:
             return 475.0
-        return raw_intensity * 1000.0 if raw_intensity < 10.0 else raw_intensity
+        return float(raw_intensity * 1000.0 if raw_intensity < 10.0 else raw_intensity)
 
-    def _monitor_gpu(self):
+    def _monitor_gpu(self) -> None:
         last_time = time.time()
 
         while self.is_running:
@@ -54,7 +63,8 @@ class EcoTraceML:
             current_watt = get_gpu_power_w(self.gpu_info)
 
             if current_watt is None:
-                current_watt = self.gpu_info.get("tdp", 100.0) * 0.5 if self.gpu_info else 45.0
+                gpu_tdp = (self.gpu_info.get("tdp") or 100.0) if isinstance(self.gpu_info, dict) else 100.0
+                current_watt = float(gpu_tdp) * 0.5
 
             if current_watt is not None:
                 with self._lock:
@@ -73,7 +83,7 @@ class EcoTraceML:
         with self._lock:
             return self.total_gpu_energy_joules, list(self.power_history)
 
-    def log_epoch(self, epoch: int, energy_j: float, duration_s: float, metrics: dict = None):
+    def log_epoch(self, epoch: int, energy_j: float, duration_s: float, metrics: Optional[dict] = None):
         """Logs a per-epoch energy measurement to the CSV audit log.
 
         Called by ML framework callbacks to record epoch-level carbon data
@@ -134,7 +144,12 @@ class EcoTraceML:
 
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[type] = None,
+        exc_val: Optional[BaseException] = None,
+        exc_tb: Optional[Any] = None,
+    ) -> bool:
         self.is_running = False
         if self._thread:
             self._thread.join()
@@ -192,7 +207,7 @@ class EcoTraceML:
             print(f"Could not write to log CSV: {e}")
 
         # Scale metrics and prepare chart tracking data
-        gpu_tdp = self.gpu_info.get('tdp', 45.0) if self.gpu_info else 45.0
+        gpu_tdp = float((self.gpu_info.get("tdp") or 45.0) if isinstance(self.gpu_info, dict) else 45.0)
         gpu_utilization_samples = [(ts, min((w / gpu_tdp) * 100.0, 100.0)) for ts, w in power_history]
         report_filename = f"ecotrace_{self.model_name.lower()}_report.pdf"
 
@@ -225,8 +240,15 @@ class EcoTraceML:
 
         return False
     
-def ecotrace_ml(model_name: str = "AI Model", gpu_index: int = 0, sample_interval: float = 1.0,
-                project_name: str = None, epochs: int = None, batch_size: int = None, dataset_size: int = None):
+def ecotrace_ml(
+    model_name: str = "AI Model",
+    gpu_index: int = 0,
+    sample_interval: float = 1.0,
+    project_name: Optional[str] = None,
+    epochs: Optional[int] = None,
+    batch_size: Optional[int] = None,
+    dataset_size: Optional[int] = None,
+):
     """
     Decorator for tracking energy and carbon emissions of AI/ML model training using EcoTraceML context manager.
     """
