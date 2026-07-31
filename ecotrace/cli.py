@@ -21,6 +21,7 @@ import time
 import csv
 import json
 import runpy
+import re
 from datetime import datetime
 
 
@@ -278,8 +279,7 @@ def _format_masked_key(raw_input: str) -> str:
     """Returns a sanitized, truncated string representation for terminal status display."""
     if not raw_input or not isinstance(raw_input, str) or not raw_input.startswith("eco_usr_") or len(raw_input) < 15:
         return "eco_usr_***"
-    import re
-    return re.sub(r"^(eco_usr_[a-zA-Z0-9]{3}).*(.{4})$", r"\1...\2", str(raw_input))
+    return f"{raw_input[:11]}...{raw_input[-4:]}"
 
 
 def _cmd_login(args):
