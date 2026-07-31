@@ -10,7 +10,7 @@ try:
     from ecotrace import __version__ as _pkg_version
     USER_AGENT = f"EcoTrace/{_pkg_version}"
 except ImportError:
-    USER_AGENT = "EcoTrace/1.4.3"
+    USER_AGENT = "EcoTrace/1.5.0"
 
 def load_constants(json_path):
     """Loads constants from the JSON configuration file.
@@ -190,3 +190,39 @@ def identify_user_region():
         return data.get("countryCode")
     except Exception:
         return None
+
+# ============================================================================
+# CLI Configuration & Credentials Helper 
+# ============================================================================
+
+def get_cli_config_path():
+    """Returns the absolute file system path to the CLI configuration file (~/.ecotrace/config.json)."""
+    home = os.path.expanduser("~")
+    return os.path.join(home, ".ecotrace", "config.json")
+
+def load_cli_config(config_path=None):
+    """Loads stored CLI credentials and settings.
+
+    Returns:
+        dict: Config values (e.g. {'api_key': 'eco_usr_...', 'endpoint': '...'}), or empty dict if not found.
+    """
+    path = config_path or get_cli_config_path()
+    try:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+def save_cli_config(data, config_path=None):
+    """Saves CLI credentials and settings to ~/.ecotrace/config.json."""
+    path = config_path or get_cli_config_path()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        return True
+    except Exception:
+        return False
+

@@ -4,21 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "1.4.3"
-description = "EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, Boavizta TDP database, and audit-ready PDF reporting."
+version = "1.5.0"
+description = "EcoTrace: High-precision carbon tracking engine for production Python. Function-level CPU/GPU emission measurement with 50ms continuous sampling, 6,980+ CPU TDP database, and audit-ready PDF reporting."
 keywords = ["carbon-footprint", "energy-efficiency", "green-computing", "sustainability", "metrics", "cpu-monitoring", "gpu-monitoring"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12"
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14"
 ]
 readme = "README.MD"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 
 authors = [
   { name="Emre Ozkal", email="ecotraceteam@gmail.com" }
@@ -54,7 +57,7 @@ Repository = "https://github.com/Zwony/ecotrace"
 packages = ["ecotrace", "ecotrace.middleware", "ecotrace.plugins", "ecotrace.exporters", "ecotrace.callbacks"]
 
 [tool.setuptools.package-data]
-ecotrace = ["*.json", "*.csv", "cpu_spec.csv/**/*.csv"]
+ecotrace = ["*.json", "*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

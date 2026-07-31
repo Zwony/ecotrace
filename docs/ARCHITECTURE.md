@@ -8,7 +8,7 @@ EcoTrace addresses this with process-scoped isolation and continuous 50ms sampli
 
 | Strategy | Technical Implementation |
 |---|---|
-| **Scientific Foundation** | TDP-based energy estimation powered by the Boavizta database of 1,800+ CPU models. All measurements are derived from verified manufacturer specifications. |
+| **Scientific Foundation** | TDP-based energy estimation powered by an expanded database of 6,980+ unique CPU models (100% verified TDP coverage). All measurements are derived from verified manufacturer specifications. |
 | **Operational Performance** | 50ms daemon-thread sampling with process-scoped isolation. Negligible overhead for production environments. |
 | **Regulatory Alignment** | Per-function gCO2 audit trails with timestamped logs and PDF reports. Compatible with ESG, GHG Protocol, and EU CSRD reporting standards. |
 

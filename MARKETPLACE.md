@@ -72,7 +72,7 @@ To use the **✨ AI Optimize** feature, add your [Google Gemini API Key](https:/
 ## Requirements
 
 - VS Code `1.80.0` or higher
-- Python `3.9+`
+- Python `3.8+`
 - `ecotrace` Python library (`pip install ecotrace`)
 
 ---

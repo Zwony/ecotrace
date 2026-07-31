@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from .config import (load_constants, validate_region_code, resolve_carbon_intensity,
                       load_gpu_tdp_defaults, fetch_live_carbon_intensity, GRID_CACHE_TTL_S,
-                      identify_user_region, DEFAULT_REGION)
+                      identify_user_region, DEFAULT_REGION, load_cli_config)
 import functools
 import asyncio
 import threading
@@ -128,8 +128,22 @@ class EcoTrace:
         self._budget_warning_fired = False   # 80% threshold — fires once
         self._budget_exceeded_fired = False  # 100% threshold — fires once
         self._tracked_functions_count = 0    # Total tracked calls for session summary
-        self._exporters = []                 # External telemetry exporters (e.g. OTEL)
+        self._exporters = []                 # External telemetry exporters (e.g. OTEL, Cloud)
         self._exporter_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="EcoTrace-Exporter")
+
+        # --- Cloud Exporter Auto-Registration (v1.5.0) ------------------------
+        cli_cfg = load_cli_config()
+        cloud_key = api_key if (isinstance(api_key, str) and api_key.startswith("eco_usr_")) else (
+            os.environ.get("ECOTRACE_CLOUD_KEY") or cli_cfg.get("api_key")
+        )
+        self.cloud_key = cloud_key
+        if self.cloud_key and isinstance(self.cloud_key, str) and self.cloud_key.startswith("eco_usr_"):
+            try:
+                from .exporters.cloud import CloudExporter
+                cloud_exp = CloudExporter(api_key=self.cloud_key, endpoint=cli_cfg.get("endpoint"))
+                self.add_exporter(cloud_exp)
+            except Exception as e:
+                logger.debug(f"Auto CloudExporter registration failed: {e}")
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(self.base_dir, "constants.json")

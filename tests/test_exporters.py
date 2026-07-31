@@ -138,3 +138,42 @@ def test_webhook_exporter_missing_dependency():
         assert exporter.url is None
         exporter.export(0.5, "test", 1.0, "GLOBAL")
 
+
+from ecotrace.exporters.cloud import CloudExporter
+
+@patch('requests.Session.post')
+def test_cloud_exporter_registration_and_export(mock_post):
+    """Verify CloudExporter formats payload and sends X-EcoTrace-Key header."""
+    mock_post.return_value.status_code = 202
+
+    exporter = CloudExporter(api_key="eco_usr_testkey123")
+    exporter.export(
+        carbon_emitted=0.0042,
+        func_name="test_cloud_func",
+        duration=0.5,
+        region="TR",
+        run_id="run_123",
+        run_label="test_label"
+    )
+
+    mock_post.assert_called_once()
+    args, kwargs = mock_post.call_args
+    assert kwargs["json"]["function"] == "test_cloud_func"
+    assert kwargs["json"]["carbon_gco2"] == 0.0042
+    assert kwargs["json"]["region"] == "TR"
+    assert kwargs["json"]["run_id"] == "run_123"
+    assert exporter.session.headers["X-EcoTrace-Key"] == "eco_usr_testkey123"
+
+def test_cloud_exporter_requires_key():
+    """Verify CloudExporter raises ValueError when instantiated without a valid key."""
+    with pytest.raises(ValueError):
+        CloudExporter(api_key="")
+
+def test_ecotrace_auto_registers_cloud_exporter():
+    """Verify EcoTrace auto-registers CloudExporter when instantiated with eco_usr_ key."""
+    eco = EcoTrace(api_key="eco_usr_valid123", quiet=True, check_updates=False)
+    assert len(eco._exporters) == 1
+    assert isinstance(eco._exporters[0], CloudExporter)
+    assert eco._exporters[0].api_key == "eco_usr_valid123"
+
+
