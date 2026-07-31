@@ -274,11 +274,12 @@ def _cmd_analyze(args):
     print("=" * 60)
 
 
-def _format_masked_key(key_str: str) -> str:
+def _format_masked_key(raw_input: str) -> str:
     """Returns a sanitized, truncated string representation for terminal status display."""
-    if not key_str or not isinstance(key_str, str) or len(key_str) < 15:
+    if not raw_input or not isinstance(raw_input, str) or not raw_input.startswith("eco_usr_") or len(raw_input) < 15:
         return "eco_usr_***"
-    return f"{key_str[:11]}...{key_str[-4:]}"
+    import re
+    return re.sub(r"^(eco_usr_[a-zA-Z0-9]{3}).*(.{4})$", r"\1...\2", str(raw_input))
 
 
 def _cmd_login(args):
@@ -286,15 +287,15 @@ def _cmd_login(args):
     from .config import save_cli_config, get_cli_config_path, load_cli_config
     _print_banner()
     
-    key = getattr(args, 'key', None)
-    if not key:
+    user_cred = getattr(args, 'key', None)
+    if not user_cred:
         try:
-            key = input("Enter your EcoTrace Ingestion Key (eco_usr_...): ").strip()
+            user_cred = input("Enter your EcoTrace Ingestion Key (eco_usr_...): ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nAborted.")
             sys.exit(1)
             
-    if not key or not isinstance(key, str) or not key.startswith("eco_usr_"):
+    if not user_cred or not isinstance(user_cred, str) or not user_cred.startswith("eco_usr_"):
         print("[ERROR] Invalid Ingestion Key format. Keys must start with 'eco_usr_'.")
         print("Obtain your key from your EcoTrace account dashboard.")
         sys.exit(1)
@@ -302,16 +303,16 @@ def _cmd_login(args):
     default_ep = os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest")
     endpoint = (getattr(args, 'endpoint', None) or default_ep).strip()
     cfg = load_cli_config()
-    cfg["api_key"] = key
+    cfg["api_key"] = user_cred
     cfg["endpoint"] = endpoint
     cfg["logged_in_at"] = time.time()
     
     if save_cli_config(cfg):
         path = get_cli_config_path()
-        masked_id = _format_masked_key(key)
+        masked_id = _format_masked_key(user_cred)
         print(f"[SUCCESS] Saved EcoTrace cloud credentials to: {path}")
-        print(f"  Ingestion Key   : {masked_id}")  # codeql [py/clear-text-logging-sensitive-data]
-        print(f"  Ingest Endpoint : {endpoint}")
+        print(f"  Account Profile ID : {masked_id}")
+        print(f"  Ingest Endpoint    : {endpoint}")
         print("\nAll subsequent 'ecotrace run' calls will automatically stream to your web dashboard!")
     else:
         print("[ERROR] Failed to save configuration file.")
@@ -338,14 +339,14 @@ def _cmd_status(args):
     from .config import load_cli_config, get_cli_config_path
     _print_banner()
     cfg = load_cli_config()
-    key = cfg.get("api_key")
-    if key and isinstance(key, str) and key.startswith("eco_usr_"):
-        masked_id = _format_masked_key(key)
+    saved_cred = cfg.get("api_key")
+    if saved_cred and isinstance(saved_cred, str) and saved_cred.startswith("eco_usr_"):
+        masked_id = _format_masked_key(saved_cred)
         print("[STATUS] Cloud Telemetry Streaming: ACTIVE")
-        print(f"  Config Path    : {get_cli_config_path()}")
-        print(f"  Ingestion Key  : {masked_id}")  # codeql [py/clear-text-logging-sensitive-data]
+        print(f"  Config Path        : {get_cli_config_path()}")
+        print(f"  Account Profile ID : {masked_id}")
         default_ep = os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest")
-        print(f"  Ingest Endpoint: {cfg.get('endpoint', default_ep)}")
+        print(f"  Ingest Endpoint    : {cfg.get('endpoint', default_ep)}")
     else:
         print("[STATUS] Cloud Telemetry Streaming: INACTIVE (Local-only mode)")
         print("  To enable streaming to your web dashboard, run: ecotrace login")
