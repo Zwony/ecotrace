@@ -32,7 +32,7 @@ def _get_version():
         from ecotrace import __version__
         return __version__
     except ImportError:
-        return "1.4.3"
+        return "1.5.0"
 
 
 # --- CLI Banner --------------------------------------------------------------
@@ -272,6 +272,76 @@ def _cmd_analyze(args):
         print(f"  ... and {len(sorted_funcs) - 10} more functions")
 
     print("=" * 60)
+
+
+def _cmd_login(args):
+    """Saves user's EcoTrace ingestion key to ~/.ecotrace/config.json."""
+    from .config import save_cli_config, get_cli_config_path, load_cli_config
+    _print_banner()
+    
+    key = getattr(args, 'key', None)
+    if not key:
+        try:
+            key = input("Enter your EcoTrace Ingestion Key (eco_usr_...): ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\nAborted.")
+            sys.exit(1)
+            
+    if not key or not isinstance(key, str) or not key.startswith("eco_usr_"):
+        print("[ERROR] Invalid Ingestion Key format. Keys must start with 'eco_usr_'.")
+        print("Obtain your key from your EcoTrace account dashboard.")
+        sys.exit(1)
+        
+    default_ep = os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest")
+    endpoint = (getattr(args, 'endpoint', None) or default_ep).strip()
+    cfg = load_cli_config()
+    cfg["api_key"] = key
+    cfg["endpoint"] = endpoint
+    cfg["logged_in_at"] = time.time()
+    
+    if save_cli_config(cfg):
+        path = get_cli_config_path()
+        masked = key[:11] + "..." + key[-4:]
+        print(f"[SUCCESS] Saved EcoTrace cloud credentials to: {path}")
+        print(f"  Ingestion Key   : {masked}")
+        print(f"  Ingest Endpoint : {endpoint}")
+        print("\nAll subsequent 'ecotrace run' calls will automatically stream to your web dashboard!")
+    else:
+        print("[ERROR] Failed to save configuration file.")
+        sys.exit(1)
+
+
+def _cmd_logout(args):
+    """Removes stored EcoTrace credentials from ~/.ecotrace/config.json."""
+    from .config import get_cli_config_path
+    path = get_cli_config_path()
+    if os.path.exists(path):
+        try:
+            os.remove(path)
+            print(f"[SUCCESS] Removed EcoTrace cloud credentials from {path}")
+        except Exception as e:
+            print(f"[ERROR] Failed to remove configuration file: {e}")
+            sys.exit(1)
+    else:
+        print("[INFO] Not logged in (no configuration file found).")
+
+
+def _cmd_status(args):
+    """Displays current login status and connection info."""
+    from .config import load_cli_config, get_cli_config_path
+    _print_banner()
+    cfg = load_cli_config()
+    key = cfg.get("api_key")
+    if key and isinstance(key, str) and key.startswith("eco_usr_"):
+        masked = key[:11] + "..." + key[-4:]
+        print("[STATUS] Cloud Telemetry Streaming: ACTIVE")
+        print(f"  Config Path    : {get_cli_config_path()}")
+        print(f"  Ingestion Key  : {masked}")
+        default_ep = os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest")
+        print(f"  Ingest Endpoint: {cfg.get('endpoint', default_ep)}")
+    else:
+        print("[STATUS] Cloud Telemetry Streaming: INACTIVE (Local-only mode)")
+        print("  To enable streaming to your web dashboard, run: ecotrace login")
 
 
 # =============================================================================
@@ -1095,6 +1165,29 @@ def main():
     reset_parser.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
     reset_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
 
+    # --- login (v1.5.0) ---
+    login_parser = subparsers.add_parser(
+        "login",
+        help="Authenticate CLI with your EcoTrace Hosted Account ingestion key",
+        description="Saves your private ingestion_key (eco_usr_...) to ~/.ecotrace/config.json"
+    )
+    login_parser.add_argument("--key", default=None, help="Your private ingestion key (eco_usr_...)")
+    login_parser.add_argument("--endpoint", default=os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest"), help="Ingestion endpoint URL (default: https://ecotracelibrary.com/api/metrics/ingest)")
+
+    # --- logout (v1.5.0) ---
+    logout_parser = subparsers.add_parser(
+        "logout",
+        help="Remove stored EcoTrace cloud credentials",
+        description="Deletes ~/.ecotrace/config.json"
+    )
+
+    # --- status (v1.5.0) ---
+    status_parser = subparsers.add_parser(
+        "status",
+        help="Display active cloud credentials and connection status",
+        description="Shows current login status and ingestion config"
+    )
+
     # --- Parse & Dispatch ---
     args = parser.parse_args()
 
@@ -1115,6 +1208,9 @@ def main():
         "diff": _cmd_diff,
         "clean": _cmd_clean,
         "reset": _cmd_reset,
+        "login": _cmd_login,
+        "logout": _cmd_logout,
+        "status": _cmd_status,
     }
 
     handler = commands.get(args.command)

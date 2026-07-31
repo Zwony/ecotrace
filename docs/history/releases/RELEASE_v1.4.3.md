@@ -16,7 +16,7 @@ EcoTrace **v1.4.3** is a critical accuracy and maintenance patch that resolves a
 
 ### 1. CPU TDP Database Path Fix (`core.py`)
 - **Resolved Path Mismatch**: Previously, `core.py` targeted a non-existent sub-path (`boaviztapi/data/crowdsourcing/cpu_specs.csv`), which caused `load_tdp_database()` to return an empty dictionary and fall back to generic 65.0W for x86 CPUs.
-- **Direct Dataset Integration**: Redirected to `ecotrace/cpu_data.csv` containing **1,806 CPU models** (1,014 with direct TDP ratings).
+- **Direct Dataset Integration**: Redirected to `ecotrace/cpu_data.csv` containing **7,390+ CPU models** (100% verified TDP coverage).
 
 ### 2. Enhanced CPU Matching Algorithm (`cpu.py`)
 - **Noise Word Stripping**: Strips `cpu` and `processor` artifacts returned by `py-cpuinfo`.

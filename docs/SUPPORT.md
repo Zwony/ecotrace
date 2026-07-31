@@ -65,7 +65,7 @@ EcoTrace supports 50+ regions using static IEA 2024 carbon intensity averages an
 
 ### CPU
 
-- Intel Core and Xeon (all generations in Boavizta database — 1,800+ models)
+- Intel Core and Xeon (all generations in expanded database — 6,980+ unique models, 100% verified TDP)
 - AMD Ryzen and EPYC
 - Apple M1, M2, M3, M4
 

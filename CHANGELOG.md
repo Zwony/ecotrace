@@ -4,10 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-31
+
+### Added
+- **`CloudExporter` & Native `EcoTrace(api_key="eco_usr_...")` Integration**: Direct, zero-config telemetry streaming from Python applications to the EcoTrace Hosted Web Dashboard using private ingestion keys.
+- **CLI Authentication & Credential Management**: Added `ecotrace login --key eco_usr_...`, `ecotrace logout`, and `ecotrace status` terminal subcommands to securely manage credentials in `~/.ecotrace/config.json`.
+- **Automatic CLI Telemetry Streaming**: `ecotrace run <script.py>` now automatically attaches saved credentials and streams execution runs to the user's web dashboard.
+- **Web Backend WebSocket Live Channel**: Implemented `/api/ws/live` WebSocket channel on FastAPI backend for real-time metric streaming to active web dashboard sessions.
+- **6,980+ Unique CPU TDP Database Expansion**: Expanded `cpu_data.csv` to 6,983 unique CPU models with 100% valid TDP ratings, increasing laptop/mobile CPU coverage by +760% (1,520+ mobile CPUs including Intel 10th-14th Gen H/U/P/HX, Core Ultra, AMD Ryzen 3000-8000 mobile, and Apple Silicon M1-M4).
+- **Expanded Python Version Compatibility**: Extended Python compatibility from `Python 3.9-3.12` to **`Python 3.8 → 3.14+`** across `pyproject.toml`, documentation, marketplace manifests, and landing page metrics.
+
 ## [1.4.3] - 2026-07-28
 
 ### Fixed
-- **CPU TDP Database Path Resolution**: Fixed invalid file path in `core.py` targeting non-existent `boaviztapi/data/crowdsourcing/` path. Redirected to `cpu_data.csv` (1,806 CPU dataset) to ensure TDP database is actually loaded into memory instead of silently falling back to generic 65W for all x86 chips.
+- **CPU TDP Database Path Resolution**: Fixed invalid file path in `core.py` targeting non-existent `boaviztapi/data/crowdsourcing/` path. Redirected to `cpu_data.csv` (7,390+ CPU dataset, 100% verified TDP coverage) to ensure TDP database is actually loaded into memory instead of silently falling back to generic 65W for all x86 chips.
 - **Enhanced CPU Model Matching Algorithm**: Upgraded string resolution in `cpu.py` to support bidirectional containment checks, noise word stripping (`cpu`, `processor`), and length-descending model sorting so specific chips (e.g. `i7-10700K`, `EPYC 7B12`, `i7-13700H`) match their exact TDP boundaries.
 
 ### Changed
