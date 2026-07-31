@@ -341,10 +341,9 @@ def _cmd_status(args):
     cfg = load_cli_config()
     saved_cred = cfg.get("api_key")
     if saved_cred and isinstance(saved_cred, str) and saved_cred.startswith("eco_usr_"):
-        masked_id = _format_masked_key(saved_cred)
         print("[STATUS] Cloud Telemetry Streaming: ACTIVE")
         print(f"  Config Path        : {get_cli_config_path()}")
-        print(f"  Account Profile ID : {masked_id}")
+        print("  Account Profile ID : [HIDDEN]")
         default_ep = os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest")
         print(f"  Ingest Endpoint    : {cfg.get('endpoint', default_ep)}")
     else:
