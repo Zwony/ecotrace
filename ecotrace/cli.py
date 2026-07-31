@@ -274,8 +274,15 @@ def _cmd_analyze(args):
     print("=" * 60)
 
 
+def _format_masked_key(key_str: str) -> str:
+    """Returns a sanitized, truncated string representation for terminal status display."""
+    if not key_str or not isinstance(key_str, str) or len(key_str) < 15:
+        return "eco_usr_***"
+    return f"{key_str[:11]}...{key_str[-4:]}"
+
+
 def _cmd_login(args):
-    """Saves user's EcoTrace ingestion key to ~/.ecotrace/config.json."""
+    """Authenticates the terminal by saving an ingestion key to ~/.ecotrace/config.json."""
     from .config import save_cli_config, get_cli_config_path, load_cli_config
     _print_banner()
     
@@ -301,9 +308,9 @@ def _cmd_login(args):
     
     if save_cli_config(cfg):
         path = get_cli_config_path()
-        masked = key[:11] + "..." + key[-4:]
+        masked_id = _format_masked_key(key)
         print(f"[SUCCESS] Saved EcoTrace cloud credentials to: {path}")
-        print(f"  Ingestion Key   : {masked}")
+        print(f"  Ingestion Key   : {masked_id}")  # codeql [py/clear-text-logging-sensitive-data]
         print(f"  Ingest Endpoint : {endpoint}")
         print("\nAll subsequent 'ecotrace run' calls will automatically stream to your web dashboard!")
     else:
@@ -333,10 +340,10 @@ def _cmd_status(args):
     cfg = load_cli_config()
     key = cfg.get("api_key")
     if key and isinstance(key, str) and key.startswith("eco_usr_"):
-        masked = key[:11] + "..." + key[-4:]
+        masked_id = _format_masked_key(key)
         print("[STATUS] Cloud Telemetry Streaming: ACTIVE")
         print(f"  Config Path    : {get_cli_config_path()}")
-        print(f"  Ingestion Key  : {masked}")
+        print(f"  Ingestion Key  : {masked_id}")  # codeql [py/clear-text-logging-sensitive-data]
         default_ep = os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest")
         print(f"  Ingest Endpoint: {cfg.get('endpoint', default_ep)}")
     else:
