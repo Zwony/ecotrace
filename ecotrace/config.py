@@ -10,7 +10,7 @@ try:
     from ecotrace import __version__ as _pkg_version
     USER_AGENT = f"EcoTrace/{_pkg_version}"
 except ImportError:
-    USER_AGENT = "EcoTrace/1.5.0"
+    USER_AGENT = "EcoTrace/1.5.1"
 
 def load_constants(json_path):
     """Loads constants from the JSON configuration file.

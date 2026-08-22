@@ -6,6 +6,8 @@ __pycache__/
 *.pyc
 ecotrace_log.csv
 *.pdf
+ecotrace_test_report.json
+ecotrace_demo_classifier_model_chart.png
 .env
 
 # VS Code Extension
@@ -15,8 +17,8 @@ out/
 *.vsix
 .vsce/
 scratch/
-test_v*.py
-demo_*.py
+/test_v*.py
+/demo_*.py
 
 # Agent settings and rules
 .agents/

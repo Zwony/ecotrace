@@ -14,9 +14,9 @@ EcoTrace addresses this with process-scoped isolation and continuous 50ms sampli
 
 ---
 
-## Comparison: EcoTrace v1.0.1 vs Alternatives
+## Comparison: EcoTrace  vs Alternatives
 
-| **Feature** | **EcoTrace v1.0.1** | CodeCarbon | CarbonTracker |
+| **Feature** | **EcoTrace v1.5.1** | CodeCarbon | CarbonTracker |
 |---|:---:|:---:|:---:|
 | **API Style** | One-line `@track` | Decorator + Context | Manual |
 | **Granularity** | Per-function | Session-level | Epoch-level |

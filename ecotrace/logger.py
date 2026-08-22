@@ -27,4 +27,4 @@ if not logger.handlers:
     _handler = logging.StreamHandler()
     _handler.setFormatter(logging.Formatter("[EcoTrace] %(levelname)s: %(message)s"))
     logger.addHandler(_handler)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.WARNING)

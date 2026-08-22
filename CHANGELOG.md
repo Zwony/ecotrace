@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-08-15
+
+### Fixed
+- **Windows COM Initialization in Exporters**: Added COM library initialization (`CoInitialize`/`CoUninitialize`) guards to worker threads in `ThreadPoolExecutor` to prevent Windows fatal exception (`0x800401f0`) during metric exports.
+- **`CloudExporter` Parameter Forwarding**: Updated exporter dispatch mechanism in `core.py` to forward `run_id` and `run_label` to registered exporters, enabling full session filtering on the web dashboard.
+- **Exporter Signature Consistency**: Added `**kwargs` support to all exporter signatures (`CloudExporter`, `OTelExporter`, `WebhookExporter`) to ensure forward and backward compatibility.
+- **Logger Default Level**: Restored `logging.WARNING` as default package log level across `ecotrace.logger`.
+- **Dynamic Exporter Lazy Loading**: Implemented module `__getattr__` in `ecotrace.exporters` to prevent eager imports and potential circular import dependencies.
+
 ## [1.5.0] - 2026-07-31
 
 ### Added
