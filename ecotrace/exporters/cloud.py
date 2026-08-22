@@ -32,10 +32,15 @@ class CloudExporter:
         self.endpoint = (endpoint or self.DEFAULT_ENDPOINT).strip()
         self.timeout = timeout
         self.session = requests.Session()
+        try:
+            from .. import __version__ as _pkg_ver
+        except ImportError:
+            _pkg_ver = "1.5.1"
+
         self.session.headers.update({
             "Content-Type": "application/json",
             "X-EcoTrace-Key": self.api_key,
-            "User-Agent": "EcoTrace-Python-Client/1.5.0"
+            "User-Agent": f"EcoTrace-Python-Client/{_pkg_ver}"
         })
 
     def export(
@@ -45,7 +50,8 @@ class CloudExporter:
         duration: float,
         region: Optional[str] = None,
         run_id: Optional[str] = None,
-        run_label: Optional[str] = None
+        run_label: Optional[str] = None,
+        **kwargs
     ) -> None:
         """Dispatches carbon metric payload to the EcoTrace Hosted Ingestion API.
 

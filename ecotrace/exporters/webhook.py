@@ -42,7 +42,7 @@ class WebhookExporter:
         self.ecotrace.add_exporter(self)
         logger.info(f"Webhook Exporter attached to EcoTrace (url: {self.url}).")
 
-    def export(self, carbon_emitted: float, func_name: str, duration: float, region: str):
+    def export(self, carbon_emitted: float, func_name: str, duration: float, region: str, run_id: Optional[str] = None, run_label: Optional[str] = None, **kwargs):
         """Called synchronously by EcoTrace whenever a measurement completes.
         
         Args:

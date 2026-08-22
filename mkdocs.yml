@@ -71,6 +71,7 @@ nav:
       - Support: SUPPORT.md
   - History:
       - Changelog: CHANGELOG.md
+      - v1.5.1: history/releases/RELEASE_v1.5.1.md
       - v1.5.0: history/releases/RELEASE_v1.5.0.md
       - v1.4.3: history/releases/RELEASE_v1.4.3.md
       - v1.4.2: history/releases/RELEASE_v1.4.2.md

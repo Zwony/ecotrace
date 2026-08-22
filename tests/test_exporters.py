@@ -33,6 +33,8 @@ def test_accumulate_carbon_falls_back_to_sync_export_when_thread_pool_submit_fai
         func_name="test_function",
         duration=1.2,
         region=eco.region_code,
+        run_id=eco._run_id,
+        run_label=eco._run_label,
     )
 
 @patch('ecotrace.exporters.otel.metrics')

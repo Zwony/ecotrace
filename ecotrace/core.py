@@ -426,16 +426,34 @@ class EcoTrace:
                 exporters = list(self._exporters)
 
                 def _dispatch_exporters(exporters=exporters):
-                    for exporter in exporters:
+                    has_com = False
+                    if sys.platform == "win32":
                         try:
-                            exporter.export(
-                                carbon_emitted=carbon_emitted,
-                                func_name=func_name,
-                                duration=duration,
-                                region=self.region_code
-                            )
-                        except Exception as e:
-                            logger.debug(f"EcoTrace Exporter error: {e}")
+                            import ctypes
+                            ctypes.windll.ole32.CoInitialize(None)
+                            has_com = True
+                        except Exception:
+                            pass
+                    try:
+                        for exporter in exporters:
+                            try:
+                                exporter.export(
+                                    carbon_emitted=carbon_emitted,
+                                    func_name=func_name,
+                                    duration=duration,
+                                    region=self.region_code,
+                                    run_id=self._run_id,
+                                    run_label=self._run_label
+                                )
+                            except Exception as e:
+                                logger.debug(f"EcoTrace Exporter error: {e}")
+                    finally:
+                        if has_com:
+                            try:
+                                import ctypes
+                                ctypes.windll.ole32.CoUninitialize()
+                            except Exception:
+                                pass
 
                 try:
                     self._exporter_pool.submit(_dispatch_exporters)
