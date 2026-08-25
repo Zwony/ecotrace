@@ -206,7 +206,7 @@ We welcome contributions! Please see our [**CONTRIBUTING.MD**](CONTRIBUTING.MD) 
 
 ## Community
 
-[![Join Discord](https://img.shields.io/discord/1483105790993633411?label=Join%20Community&logo=discord&style=for-the-badge&color=5865F2)](https://discord.gg/hs58XXb3Uq)
+[![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
 
 [CHANGELOG.md](CHANGELOG.md) · [SECURITY.MD](SECURITY.MD)
 
