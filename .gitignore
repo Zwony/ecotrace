@@ -7,7 +7,7 @@ __pycache__/
 ecotrace_log.csv
 *.pdf
 ecotrace_test_report.json
-ecotrace_demo_classifier_model_chart.png
+
 .env
 
 # VS Code Extension
@@ -20,7 +20,7 @@ scratch/
 /test_v*.py
 /demo_*.py
 
-# Agent settings and rules
+
 .agents/
 .gemini/
 site/
@@ -43,7 +43,7 @@ ecotrace/cpu_spec.csv/package.json
 ecotrace/cpu_spec.csv/node_modules/
 ecotrace/cpu_spec.csv/docs/
 ecotrace/cpu_spec.csv/tests/
-# But keep the CPU specs data file (used by core.py)
+
 !ecotrace/cpu_spec.csv/tests/data/crowdsourcing/cpu_specs.csv
 ecotrace/cpu_spec.csv/.github/
 ecotrace/cpu_spec.csv/.pre-commit-config.yaml

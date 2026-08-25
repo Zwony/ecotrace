@@ -39,12 +39,12 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 > **Major Release.** v1.5.0 introduces direct cloud telemetry streaming to [ecotracelibrary.com](https://ecotracelibrary.com), terminal authentication (`ecotrace login`), 6,980+ CPU TDP database coverage, Python 3.14+ compatibility, and WebSocket live streaming.
 
-- 🌐 **Hosted Cloud Observatory (`CloudExporter`)** — Stream carbon metrics directly to your private web dashboard on [ecotracelibrary.com](https://ecotracelibrary.com) using `EcoTrace(api_key="eco_usr_...")`.
-- 🔑 **CLI Credential Management (`ecotrace login`)** — Authenticate your terminal once via `ecotrace login --key eco_usr_...` so all `ecotrace run` profiling runs automatically stream to your web dashboard.
-- ⚡ **6,980+ CPU TDP Database (%100 TDP Validity)** — Expanded dataset from 1,806 to 6,983 unique CPU models, including +760% mobile/laptop CPU coverage (Intel 10th-14th Gen, Core Ultra, AMD Ryzen, Apple Silicon M1-M4).
-- 🐍 **Python 3.8 → 3.14+ Compatibility** — Fully verified runtime compatibility across Python 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, and 3.14+.
-- ⚡ **WebSocket Real-Time Streaming** — Instant live metric updates on your web dashboard via `/api/ws/live`.
-- 🏷️ **Session Run Filtering** — Filter web dashboard metrics by specific `run_id` / `run_label` execution sessions.
+-  **Hosted Cloud Observatory (`CloudExporter`)** — Stream carbon metrics directly to your private web dashboard on [ecotracelibrary.com](https://ecotracelibrary.com) using `EcoTrace(api_key="eco_usr_...")`.
+-  **CLI Credential Management (`ecotrace login`)** — Authenticate your terminal once via `ecotrace login --key eco_usr_...` so all `ecotrace run` profiling runs automatically stream to your web dashboard.
+-  **6,980+ CPU TDP Database (%100 TDP Validity)** — Expanded dataset from 1,806 to 6,983 unique CPU models, including +760% mobile/laptop CPU coverage (Intel 10th-14th Gen, Core Ultra, AMD Ryzen, Apple Silicon M1-M4).
+-  **Python 3.8 → 3.14+ Compatibility** — Fully verified runtime compatibility across Python 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, and 3.14+.
+-  **WebSocket Real-Time Streaming** — Instant live metric updates on your web dashboard via `/api/ws/live`.
+-  **Session Run Filtering** — Filter web dashboard metrics by specific `run_id` / `run_label` execution sessions.
 
 ---
 
