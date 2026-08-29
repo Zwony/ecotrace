@@ -85,14 +85,7 @@ def load_gpu_tdp_defaults(constants_data):
     })
 
 
-# ============================================================================
-# Live Grid API — Electricity Maps Integration (v6.0)
-# ============================================================================
-
-# --- ISO 3166-1 Alpha-2 → Electricity Maps Zone ID mapping ------------------
-# Maps standard country codes used by EcoTrace to the zone identifiers
-# expected by the Electricity Maps API. Countries with multiple grids
-# (e.g. US, CA, AU) default to a representative national zone.
+# ISO 3166-1 Alpha-2 to Electricity Maps Zone ID mapping
 ZONE_MAPPING = {
     "TR": "TR",       "DE": "DE",       "FR": "FR",
     "US": "US-MIDA-PJM",  "GB": "GB",  "IN": "IN-NO",
@@ -112,10 +105,6 @@ ZONE_MAPPING = {
     "GR": "GR",       "UA": "UA",
 }
 
-# --- API Configuration -------------------------------------------------------
-# Developer Note: We chose Electricity Maps because they provide the most 
-# scientifically rigorous grid data, even if it requires a manual API key.
-# Accuracy over convenience.
 ELECTRICITY_MAPS_API_URL = "https://api.electricitymaps.com/v3/carbon-intensity/latest"
 GRID_API_REQUEST_TIMEOUT_S = 5  # Maximum wait for API response (seconds)
 GRID_CACHE_TTL_S = 3600         # Cache duration: 1 hour (seconds)
@@ -191,9 +180,6 @@ def identify_user_region():
     except Exception:
         return None
 
-# ============================================================================
-# CLI Configuration & Credentials Helper 
-# ============================================================================
 
 def get_cli_config_path():
     """Returns the absolute file system path to the CLI configuration file (~/.ecotrace/config.json)."""

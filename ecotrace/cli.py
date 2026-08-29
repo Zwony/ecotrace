@@ -25,8 +25,6 @@ import re
 from datetime import datetime
 
 
-# --- Version & Branding ------------------------------------------------------
-# Lazy import to avoid circular dependency with __init__.py
 def _get_version():
     """Resolves the current package version without triggering heavy imports."""
     try:
@@ -36,10 +34,6 @@ def _get_version():
         return "1.5.1"
 
 
-# --- CLI Banner --------------------------------------------------------------
-# First impression matters. This prints once at the start of every CLI session
-# so the user immediately knows which version and mode they're running.
-# NOTE: ASCII-only characters to avoid cp1254/cp1252 encoding errors on Windows.
 BANNER = """
 ============================================
   EcoTrace - Carbon Profiler CLI  v{ver}
@@ -53,13 +47,6 @@ def _print_banner():
     print(BANNER.format(ver=ver))
     print()
 
-
-# =============================================================================
-# Subcommand: run
-# =============================================================================
-# Core philosophy: wrap any script in a carbon monitoring session WITHOUT
-# touching the user's source code. We use runpy.run_path() instead of
-# subprocess so that psutil.Process() captures the SAME process tree.
 
 def _cmd_run(args):
     """Executes a Python script under full EcoTrace instrumentation.
@@ -87,16 +74,10 @@ def _cmd_run(args):
     print(f"[RUN] Region: {args.region}")
     print()
 
-    # --- EcoTrace Engine Initialization ---
-    # check_updates=False: Auto-update prompts are unnecessary in CLI mode.
-    # quiet=False: User should see the hardware detection output.
     from ecotrace.core import EcoTrace
     eco = EcoTrace(region_code=args.region, check_updates=False, quiet=False,
                    run_label=getattr(args, 'label', None))
 
-    # --- Script Execution Under Monitoring ---
-    # Rewrite sys.argv from the target script's perspective so it can
-    # parse its own arguments correctly via argparse or sys.argv.
     original_argv = sys.argv[:]
     sys.argv = [script_path] + args.script_args
 
@@ -105,7 +86,6 @@ def _cmd_run(args):
     exit_code = 0
 
     try:
-        # CPU monitoring context wraps the entire script execution
         with eco.cpu_monitor():
             if eco.gpu_info:
                 with eco.gpu_monitor():
@@ -113,7 +93,6 @@ def _cmd_run(args):
             else:
                 runpy.run_path(script_path, run_name="__main__")
     except SystemExit as e:
-        # Scripts may call sys.exit() — capture the exit code, don't crash
         exit_code = e.code if isinstance(e.code, int) else 1
     except KeyboardInterrupt:
         print("\n[INFO] Interrupted by user (Ctrl+C).")
@@ -128,8 +107,6 @@ def _cmd_run(args):
     energy_end = eco.hardware.get_cpu_energy_j()
     session_duration = session_end - session_start
 
-    # --- Post-Execution Carbon Summary ---
-    # Calculate total carbon from the monitoring session
     try:
         avg_cpu = eco._get_avg_cpu_in_range(session_start, session_end)
         
@@ -138,18 +115,14 @@ def _cmd_run(args):
             energy_delta_j = max(0.0, energy_end - energy_start)
             
         carbon_emitted = eco._compute_carbon(eco.cpu_info['tdp'], avg_cpu, session_duration, energy_delta_j=energy_delta_j)
-
-        # Accumulate into the CSV audit log
         script_name = os.path.basename(script_path)
         eco._accumulate_carbon(carbon_emitted, f"cli::{script_name}", session_duration, avg_cpu)
 
-        # Print the summary table
         _print_summary_table(script_path, session_duration, avg_cpu, carbon_emitted, eco)
 
     except Exception as e:
         print(f"[WARNING] Carbon calculation failed: {e}")
 
-    # --- Optional JSON Export ---
     if args.output:
         try:
             eco.export_json(args.output)
@@ -227,7 +200,6 @@ def _cmd_analyze(args):
         print("[INFO] Log file is empty — no measurements recorded yet.")
         return
 
-    # --- Aggregate per function ---
     func_stats = {}
     total_carbon = 0.0
     total_duration = 0.0
@@ -250,7 +222,6 @@ def _cmd_analyze(args):
         func_stats[func_name]["duration"] += duration
         func_stats[func_name]["calls"] += 1
 
-    # --- Print summary ---
     print("=" * 60)
     print("  EcoTrace - CSV Analysis Report")
     print("=" * 60)
@@ -350,12 +321,6 @@ def _cmd_status(args):
         print("[STATUS] Cloud Telemetry Streaming: INACTIVE (Local-only mode)")
         print("  To enable streaming to your web dashboard, run: ecotrace login")
 
-
-# =============================================================================
-# Subcommand: export
-# =============================================================================
-# Bridges the gap between CSV logs and machine-readable output.
-# VS Code extension will consume this JSON for its sidebar dashboard.
 
 def _cmd_export(args):
     """Exports session data to JSON or CSV format with filters."""
@@ -663,9 +628,6 @@ def _cmd_benchmark(args):
 
     iterations = args.iterations
 
-    # --- Controlled Workload ---
-    # Sufficiently CPU-heavy to produce measurable differences,
-    # but short enough to not bore the user.
     def _workload():
         """Deterministic CPU-bound workload for consistent benchmarking."""
         total = 0
@@ -673,7 +635,6 @@ def _cmd_benchmark(args):
             total += i * i
         return total
 
-    # --- Phase 1: Baseline (without EcoTrace) ---
     print("[1/2] Baseline measurement (without EcoTrace)...")
     baseline_times = []
     for _ in range(3):
@@ -683,7 +644,6 @@ def _cmd_benchmark(args):
 
     baseline_avg = sum(baseline_times) / len(baseline_times)
 
-    # --- Phase 2: Instrumented (with EcoTrace) ---
     print("[2/2] Instrumented measurement (with EcoTrace)...")
     from ecotrace.core import EcoTrace
     eco = EcoTrace(check_updates=False, quiet=True)
@@ -696,7 +656,6 @@ def _cmd_benchmark(args):
 
     instrumented_avg = sum(instrumented_times) / len(instrumented_times)
 
-    # --- Results ---
     overhead_ms = (instrumented_avg - baseline_avg) * 1000
     overhead_pct = ((instrumented_avg - baseline_avg) / baseline_avg) * 100 if baseline_avg > 0 else 0
 
@@ -719,13 +678,6 @@ def _cmd_benchmark(args):
 
     print("=" * 55)
 
-
-# =============================================================================
-# Subcommand: gate (v1.0)
-# =============================================================================
-# CI/CD carbon budget enforcement. The library decides pass/fail based on
-# accumulated emissions. The pipeline acts on the exit code.
-# This is the library's rule — not the IDE's, not the user's guess.
 
 def _cmd_gate(args):
     """Enforces a carbon budget against the CSV audit log.
@@ -751,7 +703,6 @@ def _cmd_gate(args):
     print(f"[GATE] Log file  : {csv_path}")
     print()
 
-    # --- Parse CSV audit log for total emissions ----------------------------
     total_carbon = 0.0
     measurement_count = 0
 
@@ -773,8 +724,6 @@ def _cmd_gate(args):
         print(f"[ERROR] CSV read failed: {e}")
         sys.exit(1)
 
-    # --- Budget evaluation --------------------------------------------------
-    # The library produces the verdict. The pipeline acts on exit code.
     used_pct = (total_carbon / budget) * 100 if budget > 0 else 0
 
     print("=" * 55)
@@ -797,17 +746,11 @@ def _cmd_gate(args):
         sys.exit(0)
 
 
-# =============================================================================
-# Subcommand: history (v1.3.0)
-# =============================================================================
-# Groups CSV measurements by RunID and prints a per-run summary table.
-
 def _cmd_history(args):
     """Prints a per-run carbon summary grouped by RunID.
 
-    Reads the audit CSV and aggregates emissions by the RunID column
-    (added in v1.3.0). Legacy rows without a RunID are grouped together
-    under the label 'legacy'.
+    Reads the audit CSV and aggregates emissions by the RunID column.
+    Legacy rows without a RunID are grouped together under the label 'legacy'.
 
     Args:
         args: Parsed argparse namespace with optional ``file`` and ``runs`` options.
@@ -821,7 +764,7 @@ def _cmd_history(args):
         print("[INFO]  Run 'ecotrace run <script.py>' first to create a session.")
         sys.exit(1)
 
-    run_map = {}  # run_id -> {label, date, count, duration_s, carbon_gco2}
+    run_map = {}
     try:
         with open(csv_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -858,7 +801,6 @@ def _cmd_history(args):
         print("[INFO] No measurements found.")
         return
 
-    # Sort newest first, optionally limit
     runs = sorted(run_map.items(), key=lambda x: x[1]["date"], reverse=True)
     if max_runs:
         runs = runs[:max_runs]
@@ -876,11 +818,6 @@ def _cmd_history(args):
     print(f"  Showing {len(runs)} run(s) | Total Carbon: {total:.8f} gCO2")
     print("=" * 72)
 
-
-# =============================================================================
-# Subcommand: trends (v1.3.0)
-# =============================================================================
-# Shows carbon per run as an ASCII sparkline for quick trend spotting.
 
 def _cmd_trends(args):
     """Displays an ASCII carbon-per-run trend chart for the last N runs.
@@ -926,7 +863,6 @@ def _cmd_trends(args):
         print("[INFO] No runs found.")
         return
 
-    # ASCII bar chart — scale to terminal width (max 40 chars wide)
     BAR_WIDTH = 40
     max_c = max(r["carbon"] for _, r in runs) or 1.0
     print("=" * 60)
@@ -950,28 +886,11 @@ def _cmd_trends(args):
     print("=" * 60)
 
 
-# =============================================================================
-# Subcommand: dashboard (v1.3.0)
-# =============================================================================
-# Starts the local HTTP dashboard server.
-
-
-
-
-# =============================================================================
-# Subcommand: optimize (v1.0.1)
-# =============================================================================
-# Connects to Google Gemini AI to analyze a specific function's source code
-# and provide carbon-aware optimization suggestions. Called by the VS Code extension.
-
 def _cmd_optimize(args):
     """Analyzes a function's source code using Gemini AI for energy optimizations."""
     file_path = args.file
     func_name = args.func
     region = args.region
-
-    # Don't print banner here because VS Code reads stdout directly for HTML rendering
-    # or just raw text.
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
@@ -1019,23 +938,8 @@ def _cmd_optimize(args):
         sys.exit(1)
 
 
-
-# =============================================================================
-# Argument Parser — CLI Entry Point
-# =============================================================================
-# Uses Python's built-in argparse to avoid adding click/typer dependencies.
-# Each subcommand maps to a _cmd_* handler function above.
-
 def main():
-    """Main entry point for the ``ecotrace`` CLI command.
-
-    Registered as a console script in ``pyproject.toml`` via::
-
-        [project.scripts]
-        ecotrace = "ecotrace.cli:main"
-
-    Also accessible via ``python -m ecotrace``.
-    """
+    """Main entry point for the ``ecotrace`` CLI command."""
     parser = argparse.ArgumentParser(
         prog="ecotrace",
         description="EcoTrace - Carbon-aware Python profiler CLI",
@@ -1052,7 +956,6 @@ def main():
         description="Available subcommands"
     )
 
-    # --- run ---
     run_parser = subparsers.add_parser(
         "run",
         help="Run a Python script with carbon monitoring",
@@ -1064,7 +967,6 @@ def main():
     run_parser.add_argument("-o", "--output", default=None, help="Write results to a JSON file")
     run_parser.add_argument("-l", "--label", default=None, help="Human-readable label for this run (stored in CSV)")
 
-    # --- analyze ---
     analyze_parser = subparsers.add_parser(
         "analyze",
         help="Analyze existing CSV log file in the terminal",
@@ -1072,7 +974,6 @@ def main():
     )
     analyze_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
 
-    # --- export ---
     export_parser = subparsers.add_parser(
         "export",
         help="Export session data to JSON or CSV format",
@@ -1087,7 +988,6 @@ def main():
     export_parser.add_argument("--func", default=None, help="Filter export by function name")
     export_parser.add_argument("-o", "--output", default=None, help="Output file path (default: based on format)")
 
-    # --- benchmark ---
     benchmark_parser = subparsers.add_parser(
         "benchmark",
         help="Measure EcoTrace's own overhead cost",
@@ -1096,7 +996,6 @@ def main():
     benchmark_parser.add_argument("-n", "--iterations", type=int, default=500_000,
                                   help="Benchmark iteration count (default: 500000)")
 
-    # --- gate (v1.0) ---
     gate_parser = subparsers.add_parser(
         "gate",
         help="CI/CD carbon budget gate (exit 1 if budget exceeded)",
@@ -1109,7 +1008,6 @@ def main():
     gate_parser.add_argument("-f", "--file", default="ecotrace_log.csv",
                              help="Path to CSV log file (default: ecotrace_log.csv)")
 
-    # --- history (v1.3.0) ---
     history_parser = subparsers.add_parser(
         "history",
         help="Show per-run carbon summary grouped by RunID",
@@ -1120,7 +1018,6 @@ def main():
     history_parser.add_argument("-n", "--runs", type=int, default=None,
                                 help="Maximum number of recent runs to show (default: all)")
 
-    # --- trends (v1.3.0) ---
     trends_parser = subparsers.add_parser(
         "trends",
         help="ASCII carbon-per-run trend chart",
@@ -1131,9 +1028,6 @@ def main():
     trends_parser.add_argument("-n", "--runs", type=int, default=10,
                                help="Number of most recent runs to show (default: 10)")
 
-
-
-    # --- optimize (v1.0.1) ---
     optimize_parser = subparsers.add_parser(
         "optimize",
         help="Analyze a function using AI for carbon optimization",
@@ -1143,7 +1037,6 @@ def main():
     optimize_parser.add_argument("--func", required=True, help="Name of the function to optimize")
     optimize_parser.add_argument("--region", default="GLOBAL", help="ISO region code for context")
 
-    # --- diff ---
     diff_parser = subparsers.add_parser(
         "diff",
         help="Compare two runs side-by-side",
@@ -1153,7 +1046,6 @@ def main():
     diff_parser.add_argument("--latest", action="store_true", help="Compare the latest two runs")
     diff_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
 
-    # --- clean ---
     clean_parser = subparsers.add_parser(
         "clean",
         help="Trim the CSV log file by date or run count",
@@ -1163,7 +1055,6 @@ def main():
     clean_parser.add_argument("--before", default=None, help="Remove entries older than YYYY-MM-DD")
     clean_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
 
-    # --- reset ---
     reset_parser = subparsers.add_parser(
         "reset",
         help="Delete the CSV log file entirely",
@@ -1172,7 +1063,6 @@ def main():
     reset_parser.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
     reset_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
 
-    # --- login (v1.5.0) ---
     login_parser = subparsers.add_parser(
         "login",
         help="Authenticate CLI with your EcoTrace Hosted Account ingestion key",
@@ -1181,28 +1071,24 @@ def main():
     login_parser.add_argument("--key", default=None, help="Your private ingestion key (eco_usr_...)")
     login_parser.add_argument("--endpoint", default=os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest"), help="Ingestion endpoint URL (default: https://ecotracelibrary.com/api/metrics/ingest)")
 
-    # --- logout (v1.5.0) ---
     logout_parser = subparsers.add_parser(
         "logout",
         help="Remove stored EcoTrace cloud credentials",
         description="Deletes ~/.ecotrace/config.json"
     )
 
-    # --- status (v1.5.0) ---
     status_parser = subparsers.add_parser(
         "status",
         help="Display active cloud credentials and connection status",
         description="Shows current login status and ingestion config"
     )
 
-    # --- Parse & Dispatch ---
     args = parser.parse_args()
 
     if args.command is None:
         parser.print_help()
         sys.exit(0)
 
-    # Command dispatch table
     commands = {
         "run": _cmd_run,
         "analyze": _cmd_analyze,
