@@ -92,10 +92,6 @@ class EcoTraceKerasCallback:
         self.params = {}
         self.model = None
 
-    # ------------------------------------------------------------------
-    # Keras Callback lifecycle hooks (called by model.fit internally)
-    # ------------------------------------------------------------------
-
     def set_params(self, params):
         """Called by Keras before training. Receives training parameters."""
         self.params = params
