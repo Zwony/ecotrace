@@ -6,6 +6,9 @@ __pycache__/
 *.pyc
 ecotrace_log.csv
 *.pdf
+!EcoTrace_Whitepaper.pdf
+!docs/EcoTrace_Whitepaper.pdf
+benchmarks/data/
 ecotrace_test_report.json
 
 .env

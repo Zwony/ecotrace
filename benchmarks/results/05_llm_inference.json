@@ -1,0 +1,146 @@
+{
+  "environment": {
+    "timestamp": "2026-09-01T21:42:07.888371+00:00",
+    "python": {
+      "version": "3.11.1 (tags/v3.11.1:a7a450f, Dec  6 2022, 19:58:39) [MSC v.1934 64 bit (AMD64)]",
+      "implementation": "CPython"
+    },
+    "os": {
+      "name": "Windows",
+      "release": "10",
+      "version": "10.0.26200"
+    },
+    "cpu": {
+      "brand": "13th Gen Intel(R) Core(TM) i7-13700H",
+      "arch": "AMD64",
+      "logical_cores": 20,
+      "physical_cores": 14,
+      "hz_advertised": "2.9180 GHz"
+    },
+    "memory": {
+      "total_gb": 15.65,
+      "available_gb": 4.82
+    },
+    "gpu": null,
+    "power_source": "Battery",
+    "packages": {
+      "ecotrace": "1.5.1",
+      "matplotlib": "3.10.9",
+      "numpy": "2.4.6",
+      "pandas": "3.0.5",
+      "polars": "1.44.1",
+      "psutil": "7.2.2",
+      "torch": "2.13.0+cpu",
+      "transformers": "5.16.1"
+    }
+  },
+  "config": {
+    "models": [
+      {
+        "name": "gpt2",
+        "label": "GPT-2 Small (124M)",
+        "params": "124M"
+      }
+    ],
+    "num_prompts": 5,
+    "max_new_tokens": 30,
+    "measured_runs": 2
+  },
+  "statistics": {
+    "gpt2": {
+      "label": "GPT-2 Small (124M)",
+      "runs": 2,
+      "duration_s": {
+        "raw_count": 2,
+        "clean_count": 2,
+        "outliers_removed": 0,
+        "mean": 178.9369129,
+        "median": 178.9369129,
+        "std_dev": 239.6107998225,
+        "cv_pct": 133.908,
+        "ci_95_lower": -1973.8460214084,
+        "ci_95_upper": 2331.7198472084,
+        "min": 9.5064915,
+        "max": 348.3673343
+      },
+      "carbon_gco2": {
+        "raw_count": 2,
+        "clean_count": 2,
+        "outliers_removed": 0,
+        "mean": 0.5623307397,
+        "median": 0.5623307397,
+        "std_dev": 0.709101036,
+        "cv_pct": 126.1004,
+        "ci_95_lower": -5.80858664,
+        "ci_95_upper": 6.9332481193,
+        "min": 0.0609205886,
+        "max": 1.0637408908
+      },
+      "energy_wh": {
+        "raw_count": 2,
+        "clean_count": 2,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "avg_cpu_pct": {
+        "raw_count": 2,
+        "clean_count": 2,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "total_tokens": {
+        "raw_count": 2,
+        "clean_count": 2,
+        "outliers_removed": 0,
+        "mean": 197.0,
+        "median": 197.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 197.0,
+        "ci_95_upper": 197.0,
+        "min": 197.0,
+        "max": 197.0
+      },
+      "tokens_per_second": {
+        "raw_count": 2,
+        "clean_count": 2,
+        "outliers_removed": 0,
+        "mean": 22.0636038205,
+        "median": 22.0636038205,
+        "std_dev": 0.3253176801,
+        "cv_pct": 1.4745,
+        "ci_95_lower": 19.1407875262,
+        "ci_95_upper": 24.9864201147,
+        "min": 21.8335694828,
+        "max": 22.2936381581
+      },
+      "carbon_per_1k_tokens": {
+        "raw_count": 2,
+        "clean_count": 2,
+        "outliers_removed": 0,
+        "mean": 2.8544707598,
+        "median": 2.8544707598,
+        "std_dev": 3.5994976445,
+        "cv_pct": 126.1004,
+        "ci_95_lower": -29.4852113705,
+        "ci_95_upper": 35.19415289,
+        "min": 0.3092415665,
+        "max": 5.3996999531
+      }
+    }
+  }
+}
