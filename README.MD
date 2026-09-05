@@ -22,6 +22,7 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=for-the-badge&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
 [![VS Code Extension](https://img.shields.io/badge/VS_Code-EcoTrace-007ACC?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
+[![Technical Whitepaper](https://img.shields.io/badge/Whitepaper-PDF%20Report-2E8B57?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](EcoTrace_Whitepaper.pdf)
 
 <br>
 
@@ -194,6 +195,37 @@ If total emissions exceed the budget, the gate fails with exit code 1 — preven
 - **Deep Transparency:** Derived from 6,980+ verified manufacturer TDP specifications rather than category averages.
 - **Fail-Safe Architecture:** Guaranteed application continuity even if hardware drivers or API keys are missing.
 - **Actionable AI:** Integrates with Google Gemini to provide specific code optimization advice (optional).
+
+---
+
+## Academic Benchmarks & Empirical Research
+
+> [!TIP]
+> 📄 **Official Technical Whitepaper:** Download the comprehensive [**EcoTrace Technical Whitepaper (PDF)**](EcoTrace_Whitepaper.pdf) or view the online [**WHITE_PAPER.md**](WHITE_PAPER.md) for complete mathematical derivations, RAPL hardware validation metrics ($MAPE \le 6.8\%$), and empirical study analyses.
+
+EcoTrace includes a reproducible [**Academic Benchmark Suite**](benchmarks/) designed for peer-reviewed green computing research. Every article in `benchmarks/articles/` is **auto-generated** from real measurement JSONs in `benchmarks/results/` by `benchmarks/report_generator.py` — re-run the generator after new measurements to keep the published numbers in sync.
+
+- **Data Engineering:** [Pandas vs. Polars on 5M Rows](benchmarks/articles/01_pandas_vs_polars.md) — 83.8% carbon reduction via Arrow vectorization (real numbers from this machine).
+- **Computer Science:** [Algorithmic Complexity Carbon Scaling](benchmarks/articles/03_sorting_algorithms.md) — Insertion Sort at $N = 50{,}000$ emits **~3,469× more carbon** than NumPy on the same input (the *quadratic carbon cliff*).
+- **Cloud Architecture:** [Web Framework Throughput vs. Carbon](benchmarks/articles/04_web_frameworks.md) — Flask vs. FastAPI under identical load; FastAPI achieves 1.13× speedup and 9.8% carbon reduction (CPU mode).
+- **Generative AI:** [LLM Inference Carbon Footprint](benchmarks/articles/05_llm_inference.md) — Per-token energy and carbon cost of GPT-2 inference (CPU mode; medium/large models require GPU).
+- **Cloud Architecture:** [Spatial Carbon Arbitrage across 15 Countries](benchmarks/articles/06_regional_carbon.md) — The same workload in South Africa emits **~73× more carbon** than in Sweden (a 99% reduction is achievable by region selection alone).
+- **Metrology Validation:** [Empirical Accuracy vs. Intel RAPL Counters](benchmarks/articles/07_accuracy_validation.md) — model-vs-hardware validation methodology with honest synthetic-mode fallback for non-Linux systems.
+- **Machine Learning:** [PyTorch vs. TensorFlow CNN Training](benchmarks/articles/02_ml_training_frameworks.md) — Carbon per accuracy point analysis (CPU mode; numbers regenerate after each run).
+
+### Citing EcoTrace
+
+If you use EcoTrace or its benchmark suite in scientific publications:
+
+```bibtex
+@software{ozkal2026ecotrace,
+  author = {Ozkal, Emre},
+  title = {EcoTrace: High-Precision Energy and Emissions Instrumentation for Python},
+  year = {2026},
+  url = {https://github.com/Zwony/ecotrace},
+  version = {1.5.0}
+}
+```
 
 ---
 
