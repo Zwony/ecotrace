@@ -98,7 +98,7 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.134.0",
+    "@types/vscode": "^1.136.0",
     "@types/node": "26.x",
     "typescript": "^7.0.2",
     "eslint": "^10.9.1",
