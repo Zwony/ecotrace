@@ -39,8 +39,6 @@ from .hardware import HardwareMonitor
 from .logger import logger
 from .ram import RAM_WATT_FACTORS, get_ram_info
 
-# --- Energy Constants ---
-
 
 def _atexit_session_summaries():
     for instance in list(EcoTrace._instances):
@@ -82,23 +80,20 @@ class EcoTrace:
         TypeError: If gpu_index is not an integer or carbon_limit is not numeric.
     """
 
-    # --- Sampling configuration ---------------------------------------------
     FULL_UTILIZATION_PERCENT = 100.0
     MONITOR_INTERVAL_S = 0.05  # 50 ms
-    SAMPLE_BUFFER_SIZE = 10000  # Increased for longer sessions (8+ mins at 50ms)
+    SAMPLE_BUFFER_SIZE = 10000  # 8+ mins at 50ms buffer
     MONITOR_JOIN_TIMEOUT_S = 1.0
     BASELINE_MEASUREMENT_MS = 100  # 100ms idle baseline measurement
 
     _instances = weakref.WeakSet()
 
-    # --- Unit conversion constants ------------------------------------------
     SECONDS_PER_HOUR = 3600
     WATTS_PER_KILOWATT = 1000
 
     def __init__(self, region_code="GLOBAL", carbon_limit=None, gpu_index=0,
                  api_key=None, grid_api_key=None, check_updates=True, quiet=False,
                  on_budget_exceeded=None, session_summary=True, run_label=None):
-        # Auto-update check
         if check_updates:
             try:
                 from . import __version__
@@ -106,8 +101,6 @@ class EcoTrace:
                 check_for_updates(__version__)
             except Exception as e:
                 logger.debug(f"Auto-update check failed: {e}")
-
-        # Input validation
         if not isinstance(gpu_index, int) or gpu_index < 0:
             logger.warning(f"Invalid gpu_index={gpu_index!r}, defaulting to 0.")
             gpu_index = 0
@@ -125,19 +118,15 @@ class EcoTrace:
         self.grid_api_key = grid_api_key or os.environ.get("ECOTRACE_GRID_API_KEY")
         self.quiet = quiet
 
-        # Session run identity
         self._run_id = uuid.uuid4().hex[:12]
         self._run_label = run_label or ""
 
-        # Carbon budget thresholds
         self._on_budget_exceeded = on_budget_exceeded
         self._budget_warning_fired = False
         self._budget_exceeded_fired = False
         self._tracked_functions_count = 0
         self._exporters = []
         self._exporter_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="EcoTrace-Exporter")
-
-        # Cloud exporter configuration
         cli_cfg = load_cli_config()
         cloud_key = api_key if (isinstance(api_key, str) and api_key.startswith("eco_usr_")) else (
             os.environ.get("ECOTRACE_CLOUD_KEY") or cli_cfg.get("api_key")
@@ -155,10 +144,8 @@ class EcoTrace:
         self.json_path = os.path.join(self.base_dir, "constants.json")
         self.csv_path = os.path.join(self.base_dir, "cpu_data.csv")
 
-        # Load data sources before validating region_code
         self._constants_data = load_constants(self.json_path)
         self.tdp_db = load_tdp_database(self.csv_path)
-        # Region selection and auto-detection
         final_region = region_code
         if region_code == "GLOBAL":
             detected = identify_user_region()
@@ -170,7 +157,6 @@ class EcoTrace:
 
         self.region_code = validate_region_code(final_region, self._constants_data)
 
-        # Real-time grid carbon intensity configuration
         self._grid_cache_timestamp = 0.0
         self._grid_cached_intensity = None
         self._intensity_source = "static"
@@ -204,7 +190,6 @@ class EcoTrace:
         self.ram_info = get_ram_info()
         self.hardware = HardwareMonitor()
 
-        # Monitoring state
         self._carbon_lock = threading.Lock()
         self._gpu_monitor_active = False
         self._gpu_monitor_thread = None
@@ -222,7 +207,6 @@ class EcoTrace:
         self._paused_at = None
         self._total_paused_duration = 0.0
 
-        # Initialization banner
         if not self.quiet:
             intensity_metadata = f"{self.carbon_intensity} gCO2/kWh"
             source_label = "LIVE" if self._intensity_source == "live" else "STATIC"
@@ -272,10 +256,7 @@ class EcoTrace:
             logger.info("-" * 53)
             logger.info("[INFO] Instrumentation sequence finalized.\n")
 
-        # Differential tracking idle baseline
         self._idle_baseline_pct = self._measure_idle_baseline()
-
-        # Session lifecycle atexit summary registration
         self._session_start_time = time.perf_counter()
         self._session_summary_enabled = session_summary and not quiet
         if self._session_summary_enabled:
@@ -331,10 +312,6 @@ class EcoTrace:
         self._intensity_source = "static"
         return resolve_carbon_intensity(self.region_code, self._constants_data)
 
-    # ========================================================================
-    # Carbon calculation helpers
-    # ========================================================================
-
     def _measure_idle_baseline(self):
         """Captures short baseline measurement for differential carbon tracking.
 
@@ -348,9 +325,6 @@ class EcoTrace:
         baseline_start = time.perf_counter()
         baseline_samples = []
 
-        # --- Ambient noise sampling ----
-        # Short burst of readings before any user code runs.
-        # Core-normalized so it matches _get_avg_cpu_in_range output.
         while (time.perf_counter() - baseline_start) * 1000 < self.BASELINE_MEASUREMENT_MS:
             try:
                 cpu_usage = self._current_process.cpu_percent()
@@ -379,22 +353,19 @@ class EcoTrace:
         Returns:
             float: Estimated carbon emissions in gCO2.
         """
-        # CPU utilization is already properly core-normalized by _get_avg_cpu_in_range
         normalized_utilization = min(max(utilization_pct, 0.0), 100.0)
         
         # Power calculation (Exact vs Estimated)
         if energy_delta_j is not None:
-            # EXACT MODE: Hardware sensors isolate process footprint via utilization scaling
             main_power_wh = (energy_delta_j / 3600.0) * (normalized_utilization / 100.0)
         else:
-            # ESTIMATION MODE: Non-linear Boavizta modeling for CPU, standard linear for GPU
             if not is_gpu and tdp == self.cpu_info.get('tdp'):
                 power_w = self.hardware.estimate_cpu_power_w(tdp, normalized_utilization)
             else:
                 power_w = tdp * (normalized_utilization / 100.0)
             main_power_wh = power_w * duration_s / self.SECONDS_PER_HOUR
         
-        # RAM energy calculation - Recursive Process Tree (RSS) for accuracy
+        # RAM energy calculation - Process Tree (RSS)
         try:
             total_rss = self._current_process.memory_info().rss
             for child in self._current_process.children(recursive=True):
@@ -417,9 +388,7 @@ class EcoTrace:
             ram_watt_factor = default_ram_watt
         ram_power_wh = (ram_watt_factor * ram_usage_gb) * duration_s / self.SECONDS_PER_HOUR
         
-        # Total energy consumption
         total_power_wh = main_power_wh + ram_power_wh
-        
         return (total_power_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
 
     def _accumulate_carbon(self, carbon_emitted, func_name, duration, avg_cpu=None, file_path=None, line_number=None):
@@ -446,7 +415,7 @@ class EcoTrace:
             self._tracked_functions_count += 1
             self._log_to_csv(func_name, duration, carbon_emitted, avg_cpu, file_path, line_number)
 
-            # --- Emit to registered telemetry exporters ----------------------
+            # Dispatch metrics to registered exporters
             if self._exporters:
                 exporters = list(self._exporters)
 
@@ -486,7 +455,6 @@ class EcoTrace:
                     logger.debug(f"EcoTrace Exporter pool unavailable, falling back to synchronous dispatch: {e}")
                     _dispatch_exporters()
 
-            # --- Carbon Budget Enforcement (v1.0) ----------------------------
             self._enforce_carbon_budget(func_name)
 
     def add_exporter(self, exporter):
@@ -514,7 +482,7 @@ class EcoTrace:
         if self.carbon_limit is None:
             return
 
-        # --- Tier 1: 80% Early Warning (fires once) -------------------------
+        # 80% early warning threshold
         if not self._budget_warning_fired and self.total_carbon >= self.carbon_limit * 0.8:
             self._budget_warning_fired = True
             remaining = self.carbon_limit - self.total_carbon
@@ -523,16 +491,13 @@ class EcoTrace:
                 f"{self.carbon_limit:.6f} gCO2 (remaining: {remaining:.6f} gCO2)"
             )
 
-        # --- Tier 2: Budget Exceeded (fires once + callback) -----------------
+        # 100% budget exceeded threshold
         if not self._budget_exceeded_fired and self.total_carbon >= self.carbon_limit:
             self._budget_exceeded_fired = True
             logger.warning(
                 f"CARBON BUDGET EXCEEDED after '{func_name}': "
                 f"{self.total_carbon:.6f} gCO2 (limit: {self.carbon_limit:.6f} gCO2)"
             )
-            # --- Callback: The library notifies, the consumer decides ---------
-            # on_budget_exceeded is an optional hook for custom enforcement.
-            # The library fires it; the user decides what to do (log, alert, abort).
             if self._on_budget_exceeded:
                 try:
                     self._on_budget_exceeded(self.total_carbon, self.carbon_limit)
@@ -672,19 +637,12 @@ class EcoTrace:
                 b = s["budget"]
                 print(f"  Budget         : {s['total_carbon_gco2']:.6f} / {b['limit_gco2']:.6f} gCO2 ({b['used_pct']:.1f}%) [{b['status']}]")
 
-            # --- Carbon Equivalences (v1.0) ----------------------------------
             if s["equivalence"]:
                 print(f"  Equivalent     : {s['equivalence']}")
 
             print("=" * 55)
         except Exception:
             pass  # Session summary must never crash the application
-
-    # ========================================================================
-    # Carbon Equivalences (v1.0)
-    # ========================================================================
-    # The library converts abstract gCO2 into human-readable comparisons.
-    # Data sources: IEA 2024, EPA greenhouse gas equivalencies, published LCA.
 
     def equivalence(self, gco2):
         """Converts a gCO2 value into a human-readable real-world comparison.
@@ -703,13 +661,6 @@ class EcoTrace:
         if gco2 <= 0:
             return ""
 
-        # --- Equivalence factors (per 1 gCO2) --------------------------------
-        # LED bulb (10W): ~5.2 gCO2/hour → 1 gCO2 ≈ 11.5 min
-        # Smartphone charge: ~8.22 gCO2 per full charge
-        # Car driving: ~121 gCO2/km (EU avg petrol)
-        # Google search: ~0.2 gCO2 per search
-        # Netflix streaming: ~36 gCO2 per hour
-
         if gco2 < 0.01:
             searches = gco2 / 0.2
             return f"{searches:.2f} Google searches"
@@ -726,10 +677,6 @@ class EcoTrace:
             km = gco2 / 121.0
             return f"{km:.2f} km of car driving"
 
-    # ========================================================================
-    # Monitoring infrastructure
-    # ========================================================================
-
     def _cpu_monitor_worker(self):
         """Background thread that continuously samples process-scoped CPU usage.
 
@@ -737,9 +684,6 @@ class EcoTrace:
         storing ``(timestamp, cpu_percent)`` tuples in a thread-safe deque.
         Exits gracefully if the process is no longer accessible.
         """
-        # self._current_process.cpu_percent()  # Priming is already handled in __init__ baseline
-        
-        # Initialize COM on Windows to prevent "Windows fatal exception: code 0x800401f0"
         has_com = False
         if sys.platform == "win32":
             try:
@@ -750,20 +694,17 @@ class EcoTrace:
                 pass
 
         try:
-            child_cache = {}  # pid -> psutil.Process object
+            child_cache = {}
             next_sample_time = time.perf_counter()
             while self._cpu_monitor_active:
                 try:
-                    # 1. Start with parent process usage
                     total_usage = self._current_process.cpu_percent()
                     
-                    # 2. Get current children
                     try:
                         current_children = self._current_process.children(recursive=True)
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         current_children = []
                     
-                    # 3. Update cache and sum usage
                     active_pids = set()
                     for child in current_children:
                         pid = child.pid
@@ -780,7 +721,6 @@ class EcoTrace:
                             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                                 del child_cache[pid]
                     
-                    # 4. Cleanup dead processes
                     for pid in list(child_cache.keys()):
                         if pid not in active_pids:
                             del child_cache[pid]
@@ -789,13 +729,11 @@ class EcoTrace:
                     with self._cpu_sample_lock:
                         self._cpu_samples.append((timestamp, total_usage))
                     
-                    # Tight timing control: account for computation duration
                     next_sample_time += self._monitor_interval
                     sleep_duration = next_sample_time - time.perf_counter()
                     if sleep_duration > 0:
                         time.sleep(sleep_duration)
                     else:
-                        # Compensation for heavy loop: don't sleep, but catch up next time
                         next_sample_time = time.perf_counter()
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     break
@@ -920,14 +858,10 @@ class EcoTrace:
             if not relevant_samples:
                 return self.FULL_UTILIZATION_PERCENT
 
-            # Smart Core Normalization: Divide by logical cores
             raw_avg = sum(relevant_samples) / len(relevant_samples)
             core_count = psutil.cpu_count(logical=True) or 1
             normalized = raw_avg / core_count
 
-            # --- Differential Tracking (v1.0) --------------------------------
-            # Subtract the idle baseline measured at init time.
-            # Floor at 0 to avoid negative utilization from measurement jitter.
             return max(0.0, normalized - self._idle_baseline_pct)
 
     def _get_source_location(self, func):
@@ -956,7 +890,6 @@ class EcoTrace:
             Returns (FULL_UTILIZATION_PERCENT, None) if no samples were captured.
         """
         with self._gpu_sample_lock:
-            # Check length of sample to support backward compatibility if deque still has old (ts, util) items
             relevant_samples = []
             for item in self._gpu_samples:
                 if len(item) == 3:
@@ -1002,10 +935,6 @@ class EcoTrace:
         finally:
             self._stop_gpu_monitor()
 
-    # ========================================================================
-    # Logging
-    # ========================================================================
-
     def _log_to_csv(self, func_name, duration, carbon, avg_cpu=None, file_path=None, line_number=None):
         """Appends a single measurement row to the CSV audit log.
 
@@ -1024,9 +953,6 @@ class EcoTrace:
             with open("ecotrace_log.csv", "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    # v1.3.0: RunID and RunLabel appended at the end so old
-                    # CSVs without these columns remain parseable (DictReader
-                    # will simply return 'N/A' for missing columns).
                     writer.writerow(["Date", "Function", "Duration(s)", "Carbon(gCO2)",
                                      "Region", "AvgCPU(%)", "FilePath", "Line",
                                      "RunID", "RunLabel"])
@@ -1044,13 +970,7 @@ class EcoTrace:
                     self._run_label,
                 ])
         except Exception as e:
-            # We must never crash the user's application solely because logging failed.
-            # Usually occurs due to file contention (locks) during high-frequency execution.
             logger.warning(f"EcoTrace CSV logging failed: {e}")
-
-    # ========================================================================
-    # Public measurement API
-    # ========================================================================
 
     def track(self, func):
         """Decorator that measures carbon emissions for any function call.
@@ -1098,15 +1018,10 @@ class EcoTrace:
                 logger.warning(f"No GPU detected, executing '{func.__name__}' without measurement.")
                 return func(*args, **kwargs)
 
-            # --- VS Code IDE Integration ---
-            # We capture the absolute source location to enable 'Hotspot' markers.
-            # This allows developers to see emissions data directly in their editor gutter.
             try:
-                # Capture the original location of the tracked function
                 file_path = os.path.abspath(inspect.getfile(func))
                 line_number = inspect.getsourcelines(func)[1]
             except Exception:
-                # Fallback: Capturing location must not interrupt the measurement lifecycle
                 file_path, line_number = None, None
 
             start_time = time.perf_counter()
@@ -1351,13 +1266,6 @@ class EcoTrace:
             api_key=self.api_key
         )
 
-    # ========================================================================
-    # JSON Export (v0.8.0)
-    # ========================================================================
-    # Data bridge between the core engine and external consumers (VS Code
-    # extension, CI/CD pipelines, custom dashboards). Produces a structured
-    # JSON file that is far easier to parse than raw CSV.
-
     def export_json(self, filename="ecotrace_report.json", csv_path="ecotrace_log.csv"):
         """Exports session data to a structured JSON file.
 
@@ -1394,9 +1302,6 @@ class EcoTrace:
             my_function()
             eco.export_json("report.json")
         """
-        # --- Build metadata block ---
-        # Captures the full hardware profile so the JSON is self-contained.
-        # Consumers don't need to re-detect hardware to interpret the data.
         ram_dict = None
         if self.ram_info and isinstance(self.ram_info, dict):
             ram_total_gb = self.ram_info.get("total_gb")
@@ -1460,9 +1365,6 @@ class EcoTrace:
             "gpu": gpu_dict
         }
 
-        # --- Parse CSV audit log ---
-        # Read the existing measurement history. If the CSV doesn't exist yet,
-        # we still export the metadata — an empty measurements array is valid.
         measurements = []
         total_carbon = 0.0
         total_duration = 0.0
@@ -1496,7 +1398,6 @@ class EcoTrace:
                         total_carbon += carbon_val
                         total_duration += duration_val
 
-                        # Aggregate per-function totals for the top emitters list
                         fname = record["function"]
                         if fname not in func_carbon_map:
                             func_carbon_map[fname] = 0.0
@@ -1505,8 +1406,6 @@ class EcoTrace:
             except Exception as e:
                 logger.warning(f"CSV read error, exporting metadata only: {e}")
 
-        # --- Build summary block ---
-        # Top 5 most carbon-heavy functions for quick overview
         top_emitters = sorted(func_carbon_map.items(), key=lambda x: x[1], reverse=True)[:5]
 
         summary = {
@@ -1520,7 +1419,6 @@ class EcoTrace:
             ]
         }
 
-        # --- Write JSON output ---
         report = {
             "meta": meta,
             "measurements": measurements,
@@ -1532,17 +1430,12 @@ class EcoTrace:
 
         logger.info(f"JSON report written: {filename} ({len(measurements)} records)")
 
-    # ========================================================================
-    # Lifecycle
-    # ========================================================================
-
     @contextmanager
     def track_block(self, block_name="custom_block"):
         """Context manager for tracking arbitrary code blocks.
 
         Usage:
             with eco.track_block("data_processing"):
-                # Your code here
                 result = expensive_operation()
         
         Args:
@@ -1564,7 +1457,6 @@ class EcoTrace:
             duration = end_time - start_time
             
             try:
-                # Calculate metrics
                 avg_cpu = self._get_avg_cpu_in_range(start_time, end_time)
                 cpu_carbon = self._compute_carbon(self.cpu_info['tdp'], avg_cpu, duration)
                 
@@ -1572,11 +1464,9 @@ class EcoTrace:
                 if (hasattr(self, "gpu_infos") and self.gpu_infos) or self.gpu_info:
                     avg_gpu, avg_gpu_pwr = self._get_avg_gpu_in_range(start_time, end_time)
                     if avg_gpu_pwr is not None:
-                        # EXACT GPU MODE
                         gpu_energy_wh = (avg_gpu_pwr * duration) / self.SECONDS_PER_HOUR
                         gpu_carbon = (gpu_energy_wh / self.WATTS_PER_KILOWATT) * self.carbon_intensity
                     else:
-                        # ESTIMATION MODE
                         valid_gpus = [g for g in self.gpu_infos if isinstance(g, dict)] if hasattr(self, "gpu_infos") and self.gpu_infos else []
                         total_tdp = sum(float(g.get('tdp', 0.0)) for g in valid_gpus) if valid_gpus else (float((self.gpu_info or {}).get('tdp', 100.0)))
                         gpu_carbon = self._compute_carbon(total_tdp, avg_gpu, duration, is_gpu=True)

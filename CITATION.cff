@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use EcoTrace in academic research or industrial sustainability audits, please cite it as below."
+title: "EcoTrace: High-Precision Energy and Emissions Instrumentation for Python"
+authors:
+  - family-names: "Ozkal"
+    given-names: "Emre"
+    email: "ecotraceteam@gmail.com"
+version: 1.5.1
+date-released: 2026-03-01
+url: "https://ecotracelibrary.com"
+repository-code: "https://github.com/Zwony/ecotrace"
+license: MIT
+keywords:
+  - "green-computing"
+  - "carbon-footprint"
+  - "energy-efficiency"
+  - "software-sustainability"
+  - "cpu-monitoring"
+  - "gpu-monitoring"
+  - "scientific-benchmarking"

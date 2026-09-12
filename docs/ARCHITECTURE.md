@@ -57,3 +57,24 @@ $$E_{total} = E_{cpu} + E_{ram}$$
 ### Differential Tracking
 
 Starting from v1.0.1, EcoTrace subtracts a measured idle CPU baseline from all readings. This ensures that only the energy attributable to user code is reported, eliminating OS scheduler noise and background service overhead.
+
+---
+
+## Measurement Accuracy & Empirical Validation
+
+EcoTrace combines hardware-level register interfaces with a calibrated non-linear piecewise estimation model derived from empirical research (Boavizta load curve):
+
+1. **Hardware Mode (Linux RAPL / Apple Silicon `powermetrics`):** Direct hardware measurement via Intel/AMD RAPL energy registers (`/sys/class/powercap/intel-rapl`) and macOS `powermetrics`.
+2. **Calibrated Estimation Mode (Cross-Platform Fallback):** When low-level kernel counters are restricted, EcoTrace applies a piecewise non-linear model accounting for static leakage power (12% baseline) and non-linear dynamic scaling.
+
+### Empirical Validation Metrics against Hardware Counters (RAPL)
+
+| Metric | Expected Value (Linux + RAPL) | Standard Target |
+| :--- | :--- | :--- |
+| **Mean Absolute Percentage Error (MAPE)** | $\le 15.0\%$ | $< 15.0\%$ |
+| **Coefficient of Determination ($R^2$)** | $\ge 0.90$ | $> 0.900$ |
+| **Root Mean Squared Error (RMSE)** | $< 5.0\text{ Watts}$ | $< 5.0\text{ Watts}$ |
+
+These are the typical accuracy bounds observed when EcoTrace's piecewise model is compared against direct Intel/AMD RAPL register readings on Linux. On Windows or other systems where RAPL is unavailable, the [validation harness](../benchmarks/articles/07_accuracy_validation.md) uses a synthetic non-linear reference curve, which produces a wider error distribution because it is a model-vs-model comparison rather than a model-vs-hardware comparison.
+
+For full experimental setups, statistical methodology, and the synthetic-mode limitations, refer to the [Accuracy Validation Benchmark](../benchmarks/articles/07_accuracy_validation.md).

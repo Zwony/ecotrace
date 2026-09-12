@@ -61,6 +61,16 @@ nav:
   - Usage: USAGE.md
   - API Reference: api.md
   - Architecture: ARCHITECTURE.md
+  - Academic Benchmarks:
+      - Technical Whitepaper: WHITE_PAPER.md
+      - Overview: benchmarks/index.md
+      - Accuracy vs. RAPL Counters: benchmarks/07_accuracy_validation.md
+      - Pandas vs. Polars (Data Engineering): benchmarks/01_pandas_vs_polars.md
+      - PyTorch vs. TensorFlow (ML Training): benchmarks/02_ml_training_frameworks.md
+      - Algorithmic Complexity (Sorting): benchmarks/03_sorting_algorithms.md
+      - Web Frameworks (Flask vs FastAPI): benchmarks/04_web_frameworks.md
+      - LLM Inference Scaling: benchmarks/05_llm_inference.md
+      - Regional Grid Arbitrage (15 Countries): benchmarks/06_regional_carbon.md
   - Integrations:
       - Flask: USAGE.md
       - FastAPI: USAGE.md

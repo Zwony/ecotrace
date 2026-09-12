@@ -96,7 +96,7 @@ class HardwareMonitor:
         Returns:
             float: Current energy in Joules, or None if hardware is unavailable.
         """
-        # --- RAPL path (Linux) -----------------------------------------------
+        # RAPL path (Linux)
         if self.rapl_available:
             try:
                 rapl_path = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj"
@@ -107,7 +107,7 @@ class HardwareMonitor:
                 logger.debug(f"RAPL read failed: {e}")
                 return None
 
-        # --- Apple Silicon path (macOS arm64) --------------------------------
+        # Apple Silicon path (macOS arm64)
         if self.apple_silicon_available:
             return self._read_powermetrics_energy_j()
 

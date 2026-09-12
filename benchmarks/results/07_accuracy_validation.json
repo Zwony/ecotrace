@@ -1,0 +1,95 @@
+{
+  "environment": {
+    "timestamp": "2026-09-01T21:00:09.394482+00:00",
+    "python": {
+      "version": "3.11.1 (tags/v3.11.1:a7a450f, Dec  6 2022, 19:58:39) [MSC v.1934 64 bit (AMD64)]",
+      "implementation": "CPython"
+    },
+    "os": {
+      "name": "Windows",
+      "release": "10",
+      "version": "10.0.26200"
+    },
+    "cpu": {
+      "brand": "13th Gen Intel(R) Core(TM) i7-13700H",
+      "arch": "AMD64",
+      "logical_cores": 20,
+      "physical_cores": 14,
+      "hz_advertised": "2.9180 GHz"
+    },
+    "memory": {
+      "total_gb": 15.65,
+      "available_gb": 4.49
+    },
+    "gpu": null,
+    "power_source": "Battery",
+    "packages": {
+      "ecotrace": "1.5.1",
+      "matplotlib": "3.10.9",
+      "numpy": "2.4.6",
+      "pandas": "3.0.5",
+      "polars": "1.44.1",
+      "psutil": "7.2.2",
+      "torch": "2.11.0+cpu"
+    }
+  },
+  "sensor_mode": "Simulation / Synthetic Hardware",
+  "metrics": {
+    "mae_watts": 6.3592,
+    "mape_pct": 40.3,
+    "rmse_watts": 7.1106,
+    "r2_score": 0.7181
+  },
+  "step_results": [
+    {
+      "target_load_pct": 10,
+      "duration_s": 5.037,
+      "actual_power_w": 8.2035,
+      "estimated_power_w": 14.4,
+      "actual_energy_j": 41.32,
+      "estimated_energy_j": 72.5313,
+      "abs_error_w": 6.1965,
+      "pct_error": 75.54
+    },
+    {
+      "target_load_pct": 25,
+      "duration_s": 5.038,
+      "actual_power_w": 13.4413,
+      "estimated_power_w": 21.6562,
+      "actual_energy_j": 67.7146,
+      "estimated_energy_j": 109.0999,
+      "abs_error_w": 8.215,
+      "pct_error": 61.12
+    },
+    {
+      "target_load_pct": 50,
+      "duration_s": 5.034,
+      "actual_power_w": 23.2448,
+      "estimated_power_w": 33.75,
+      "actual_energy_j": 117.0107,
+      "estimated_energy_j": 169.8925,
+      "abs_error_w": 10.5052,
+      "pct_error": 45.19
+    },
+    {
+      "target_load_pct": 75,
+      "duration_s": 5.031,
+      "actual_power_w": 33.8456,
+      "estimated_power_w": 39.825,
+      "actual_energy_j": 170.2767,
+      "estimated_energy_j": 200.3588,
+      "abs_error_w": 5.9794,
+      "pct_error": 17.67
+    },
+    {
+      "target_load_pct": 100,
+      "duration_s": 5.0,
+      "actual_power_w": 45.0,
+      "estimated_power_w": 45.9,
+      "actual_energy_j": 225.0033,
+      "estimated_energy_j": 229.5034,
+      "abs_error_w": 0.9,
+      "pct_error": 2.0
+    }
+  ]
+}

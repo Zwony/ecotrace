@@ -1,0 +1,27 @@
+# EcoTrace Benchmark Suite — Dependencies
+# Pin exact versions for reproducibility across machines.
+# Core
+ecotrace
+numpy
+psutil
+py-cpuinfo
+matplotlib
+
+# Study 01: Pandas vs Polars
+pandas
+polars
+pyarrow
+
+# Study 02: ML Training Frameworks (optional — install only what you need)
+# torch
+# tensorflow
+
+# Study 04: Web Frameworks (optional)
+# flask
+# fastapi
+# uvicorn
+# locust
+
+# Study 05: LLM Inference (optional)
+# transformers
+# accelerate

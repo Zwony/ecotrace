@@ -1,0 +1,255 @@
+{
+  "environment": {
+    "timestamp": "2026-09-05T13:14:07.699185+00:00",
+    "python": {
+      "version": "3.11.1 (tags/v3.11.1:a7a450f, Dec  6 2022, 19:58:39) [MSC v.1934 64 bit (AMD64)]",
+      "implementation": "CPython"
+    },
+    "os": {
+      "name": "Windows",
+      "release": "10",
+      "version": "10.0.26200"
+    },
+    "cpu": {
+      "brand": "13th Gen Intel(R) Core(TM) i7-13700H",
+      "arch": "AMD64",
+      "logical_cores": 20,
+      "physical_cores": 14,
+      "hz_advertised": "2.9180 GHz"
+    },
+    "memory": {
+      "total_gb": 15.65,
+      "available_gb": 4.37
+    },
+    "gpu": null,
+    "power_source": "AC",
+    "packages": {
+      "ecotrace": "1.5.1",
+      "fastapi": "0.111.0",
+      "flask": "3.1.0",
+      "matplotlib": "3.10.9",
+      "numpy": "2.4.6",
+      "pandas": "3.0.5",
+      "polars": "1.44.1",
+      "psutil": "7.2.2",
+      "torch": "2.13.0+cpu",
+      "uvicorn": "0.30.1"
+    }
+  },
+  "config": {
+    "num_requests": 5000,
+    "concurrency": 10,
+    "measured_runs": 3
+  },
+  "statistics": {
+    "flask": {
+      "label": "flask",
+      "runs": 3,
+      "duration_s": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 18.9725046667,
+        "median": 18.6705591,
+        "std_dev": 1.447856072,
+        "cv_pct": 7.6313,
+        "ci_95_lower": 15.3755405068,
+        "ci_95_upper": 22.5694688265,
+        "min": 17.6994308,
+        "max": 20.5475241
+      },
+      "carbon_gco2": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0748291506,
+        "median": 0.0772869371,
+        "std_dev": 0.0060847684,
+        "cv_pct": 8.1315,
+        "ci_95_lower": 0.0597125279,
+        "ci_95_upper": 0.0899457733,
+        "min": 0.0678999178,
+        "max": 0.0793005969
+      },
+      "energy_wh": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "avg_cpu_pct": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "rps": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 265.3009695523,
+        "median": 268.5869799172,
+        "std_dev": 19.8268226401,
+        "cv_pct": 7.4733,
+        "ci_95_lower": 216.0444365178,
+        "ci_95_upper": 314.5575025869,
+        "min": 244.0364328824,
+        "max": 283.2794958574
+      },
+      "latency_p50_ms": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 35.2217666665,
+        "median": 36.2439999999,
+        "std_dev": 2.3684238016,
+        "cv_pct": 6.7243,
+        "ci_95_lower": 29.3378009227,
+        "ci_95_upper": 41.1057324104,
+        "min": 32.5138999997,
+        "max": 36.9074
+      },
+      "latency_p99_ms": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 97.2040333336,
+        "median": 94.7825000003,
+        "std_dev": 9.0825219062,
+        "cv_pct": 9.3438,
+        "ci_95_lower": 74.6399771342,
+        "ci_95_upper": 119.768089533,
+        "min": 89.5777000001,
+        "max": 107.2519000004
+      }
+    },
+    "fastapi": {
+      "label": "fastapi",
+      "runs": 3,
+      "duration_s": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 22.5035761,
+        "median": 23.4065591,
+        "std_dev": 1.890781676,
+        "cv_pct": 8.4021,
+        "ci_95_lower": 17.8062349386,
+        "ci_95_upper": 27.2009172614,
+        "min": 20.3305964,
+        "max": 23.7735728
+      },
+      "carbon_gco2": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0814953409,
+        "median": 0.0832098955,
+        "std_dev": 0.0086875232,
+        "cv_pct": 10.6601,
+        "ci_95_lower": 0.0599125951,
+        "ci_95_upper": 0.1030780866,
+        "min": 0.072078374,
+        "max": 0.0891977531
+      },
+      "energy_wh": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "avg_cpu_pct": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "rps": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 198.9983417108,
+        "median": 195.5399472491,
+        "std_dev": 29.7119771982,
+        "cv_pct": 14.9308,
+        "ci_95_lower": 125.1837415124,
+        "ci_95_upper": 272.8129419092,
+        "min": 171.1669026184,
+        "max": 230.288175265
+      },
+      "latency_p50_ms": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 45.9522,
+        "median": 45.6611,
+        "std_dev": 3.4312237191,
+        "cv_pct": 7.4669,
+        "ci_95_lower": 37.4278798133,
+        "ci_95_upper": 54.4765201866,
+        "min": 42.6757999999,
+        "max": 49.5197
+      },
+      "latency_p99_ms": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 162.0387666664,
+        "median": 165.2314999997,
+        "std_dev": 86.6263384685,
+        "cv_pct": 53.4603,
+        "ci_95_lower": -53.170355838,
+        "ci_95_upper": 377.2478891707,
+        "min": 73.8601999997,
+        "max": 247.0245999998
+      }
+    }
+  },
+  "comparison": {
+    "baseline": "flask",
+    "challenger": "fastapi",
+    "speedup_ratio": 0.8431,
+    "carbon_reduction_pct": -8.91,
+    "carbon_saved_per_run_gco2": -0.0066661903,
+    "duration_test": {
+      "u_statistic": 1.0,
+      "z_score": -1.5275,
+      "p_value_approx": 0.12663,
+      "significant_at_05": false
+    },
+    "carbon_test": {
+      "u_statistic": 2.0,
+      "z_score": -1.0911,
+      "p_value_approx": 0.275234,
+      "significant_at_05": false
+    }
+  }
+}
