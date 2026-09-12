@@ -1,11 +1,17 @@
 import time
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from ecotrace.core import EcoTrace
 
+import importlib
+
 try:
-    from celery.signals import task_prerun, task_postrun, task_retry, task_revoked
+    _celery_signals = importlib.import_module("celery.signals")
+    task_prerun = getattr(_celery_signals, "task_prerun", None)
+    task_postrun = getattr(_celery_signals, "task_postrun", None)
+    task_retry = getattr(_celery_signals, "task_retry", None)
+    task_revoked = getattr(_celery_signals, "task_revoked", None)
 except ImportError:
     task_prerun = None
     task_postrun = None
@@ -26,7 +32,7 @@ class EcoTraceCelery:
     """
     
     def __init__(self, ecotrace_instance: Optional[EcoTrace] = None, log_to_csv: bool = False):
-        if task_prerun is None:
+        if task_prerun is None or task_postrun is None or task_retry is None or task_revoked is None:
             msg = "EcoTraceCelery requires 'celery'. Run: pip install ecotrace[celery]"
             logger.error(msg)
             return

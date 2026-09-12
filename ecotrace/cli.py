@@ -19,10 +19,7 @@ import sys
 import os
 import time
 import csv
-import json
 import runpy
-import re
-from datetime import datetime
 
 
 def _get_version():
@@ -31,7 +28,7 @@ def _get_version():
         from ecotrace import __version__
         return __version__
     except ImportError:
-        return "1.5.1"
+        return "1.6.0"
 
 
 BANNER = """
@@ -890,7 +887,7 @@ def _cmd_optimize(args):
     """Analyzes a function's source code using Gemini AI for energy optimizations."""
     file_path = args.file
     func_name = args.func
-    region = args.region
+    # args.region is available for future regional optimizations
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
@@ -1071,13 +1068,13 @@ def main():
     login_parser.add_argument("--key", default=None, help="Your private ingestion key (eco_usr_...)")
     login_parser.add_argument("--endpoint", default=os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest"), help="Ingestion endpoint URL (default: https://ecotracelibrary.com/api/metrics/ingest)")
 
-    logout_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "logout",
         help="Remove stored EcoTrace cloud credentials",
         description="Deletes ~/.ecotrace/config.json"
     )
 
-    status_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "status",
         help="Display active cloud credentials and connection status",
         description="Shows current login status and ingestion config"

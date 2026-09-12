@@ -1,18 +1,23 @@
 import time
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 # Diagnostic logging facility for middleware-level events.
 logger = logging.getLogger("ecotrace.middleware")
 
-try:
-    from starlette.middleware.base import BaseHTTPMiddleware  # type: ignore
-    from starlette.requests import Request  # type: ignore
-    from starlette.responses import Response  # type: ignore
-except ImportError:
-    BaseHTTPMiddleware = object  # Avoid failing import if not installed
-    Request = None
-    Response = None
+if TYPE_CHECKING:
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.requests import Request
+    from starlette.responses import Response
+else:
+    try:
+        from starlette.middleware.base import BaseHTTPMiddleware
+        from starlette.requests import Request
+        from starlette.responses import Response
+    except ImportError:
+        BaseHTTPMiddleware = object
+        Request = Any
+        Response = Any
 
 from ecotrace.core import EcoTrace
 

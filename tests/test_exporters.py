@@ -144,27 +144,30 @@ def test_webhook_exporter_missing_dependency():
 from ecotrace.exporters.cloud import CloudExporter
 
 @patch('requests.Session.post')
-def test_cloud_exporter_registration_and_export(mock_post):
+def test_cloud_exporter_registration_and_export(mock_post, tmp_path):
     """Verify CloudExporter formats payload and sends X-EcoTrace-Key header."""
     mock_post.return_value.status_code = 202
 
-    exporter = CloudExporter(api_key="eco_usr_testkey123")
-    exporter.export(
-        carbon_emitted=0.0042,
-        func_name="test_cloud_func",
-        duration=0.5,
-        region="TR",
-        run_id="run_123",
-        run_label="test_label"
-    )
+    exporter = CloudExporter(api_key="eco_usr_testkey123", retry_dir=str(tmp_path / "queue"))
+    try:
+        exporter.export(
+            carbon_emitted=0.0042,
+            func_name="test_cloud_func",
+            duration=0.5,
+            region="TR",
+            run_id="run_123",
+            run_label="test_label"
+        )
 
-    mock_post.assert_called_once()
-    args, kwargs = mock_post.call_args
-    assert kwargs["json"]["function"] == "test_cloud_func"
-    assert kwargs["json"]["carbon_gco2"] == 0.0042
-    assert kwargs["json"]["region"] == "TR"
-    assert kwargs["json"]["run_id"] == "run_123"
-    assert exporter.session.headers["X-EcoTrace-Key"] == "eco_usr_testkey123"
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        assert kwargs["json"]["function"] == "test_cloud_func"
+        assert kwargs["json"]["carbon_gco2"] == 0.0042
+        assert kwargs["json"]["region"] == "TR"
+        assert kwargs["json"]["run_id"] == "run_123"
+        assert exporter.session.headers["X-EcoTrace-Key"] == "eco_usr_testkey123"
+    finally:
+        exporter.close()
 
 def test_cloud_exporter_requires_key():
     """Verify CloudExporter raises ValueError when instantiated without a valid key."""
@@ -177,5 +180,7 @@ def test_ecotrace_auto_registers_cloud_exporter():
     assert len(eco._exporters) == 1
     assert isinstance(eco._exporters[0], CloudExporter)
     assert eco._exporters[0].api_key == "eco_usr_valid123"
+    eco._exporters[0].close()
+
 
 

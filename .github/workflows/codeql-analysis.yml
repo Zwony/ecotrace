@@ -1,4 +1,4 @@
-# 🛡️ EcoTrace: CodeQL Security Scanning
+#  EcoTrace: CodeQL Security Scanning
 # Automated Static Analysis for Python and TypeScript/JavaScript.
 
 name: "EcoTrace Security Scan"

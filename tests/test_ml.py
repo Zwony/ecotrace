@@ -1,7 +1,5 @@
-import os
-import csv
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from ecotrace.ml import EcoTraceML, ecotrace_ml
 
 def test_ecotraceml_context_manager(tmp_path):

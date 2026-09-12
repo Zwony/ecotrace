@@ -1,20 +1,31 @@
+from typing import Any
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 
 try:
     from starlette.requests import Request
     from starlette.responses import Response
+
     from ecotrace.middleware.fastapi import EcoTraceMiddleware
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
+    Request: Any = None
+    Response: Any = None
+    EcoTraceMiddleware: Any = None
 
 try:
-    from flask import Flask, request, make_response
+    from flask import Flask, make_response, request
+
     from ecotrace.middleware.flask import EcoTraceFlask
     HAS_FLASK = True
 except ImportError:
     HAS_FLASK = False
+    Flask: Any = None
+    request: Any = None
+    make_response: Any = None
+    EcoTraceFlask: Any = None
 
 
 @pytest.mark.skipif(not HAS_FASTAPI, reason="Starlette/FastAPI not installed")
@@ -59,7 +70,7 @@ def test_flask_middleware():
     mock_eco.cpu_info = {"tdp": 65.0}
     
     # Initialize middleware
-    middleware = EcoTraceFlask(app=app, ecotrace_instance=mock_eco, log_to_csv=False)
+    EcoTraceFlask(app=app, ecotrace_instance=mock_eco, log_to_csv=False)
     
     @app.route("/test")
     def test_route():
