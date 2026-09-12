@@ -1,5 +1,5 @@
-import pytest
 from ecotrace.hardware import HardwareMonitor
+
 
 def test_hardware_monitor_initialization():
     """Verify that HardwareMonitor initializes correctly on the current platform."""

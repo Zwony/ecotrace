@@ -1,17 +1,23 @@
+from __future__ import annotations
+
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 logger = logging.getLogger("ecotrace.exporters.otel")
 
+if TYPE_CHECKING:
+    from ecotrace.core import EcoTrace
+
+import importlib
+
 try:
-    from opentelemetry import metrics
-    from opentelemetry.metrics import MeterProvider, Meter
+    metrics = importlib.import_module("opentelemetry.metrics")
+    Meter = getattr(metrics, "Meter", Any)
+    MeterProvider = getattr(metrics, "MeterProvider", Any)
 except ImportError:
     metrics = None
-    MeterProvider = None
-    Meter = None
-
-from ecotrace.core import EcoTrace
+    MeterProvider = Any
+    Meter = Any
 
 class OTelExporter:
     """OpenTelemetry metrics exporter for EcoTrace carbon emissions.
@@ -29,7 +35,7 @@ class OTelExporter:
     def __init__(
         self, 
         ecotrace_instance: EcoTrace, 
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: Optional[Any] = None,
         meter_name: str = "ecotrace.exporter.otel"
     ):
         if metrics is None:

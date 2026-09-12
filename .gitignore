@@ -10,7 +10,7 @@ ecotrace_test_report.json
 
 .env
 
-# VS Code Extension
+
 node_modules/
 out/
 .vscode-test/
@@ -25,19 +25,19 @@ scratch/
 .gemini/
 site/
 
-# Local databases, secrets, and editor files
+
 *.db
 .env.local
 .vscode/
 
-# Private Web Application and Server Deployment
+
 ecotrace-website/
 docker-compose.yml
 DEPLOY_CHECKLIST.md
 ecotrace.zip
 tools/
 
-# BoaviztAPI Node.js files (only CSV data is used)
+
 ecotrace/cpu_spec.csv/package-lock.json
 ecotrace/cpu_spec.csv/package.json
 ecotrace/cpu_spec.csv/node_modules/

@@ -1,9 +1,8 @@
-import os
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from ecotrace.cpu import get_cpu_info, load_tdp_database
-from ecotrace.gpu import get_gpu_info
 from ecotrace.ram import get_ram_info
+
 
 def test_cpu_info_detection():
     # We mock fetch_raw_cpu_info to return a predictable string
@@ -43,7 +42,7 @@ def test_ram_info_detection():
     assert "total_gb" in info
     assert "type" in info
     assert info["total_gb"] > 0
-    assert info["type"] in ["DDR4", "DDR5", "LPDDR4", "LPDDR5", "UNKNOWN"]
+    assert info["type"] in ["DDR3", "DDR4", "DDR5", "LPDDR4", "LPDDR5", "UNKNOWN"]
 
 
 def test_ram_info_windows_success():
@@ -72,7 +71,7 @@ def test_ram_info_windows_failure():
     
     with patch("os.name", "nt"), \
          patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
-         patch("subprocess.run", return_value=mock_result) as mock_run:
+         patch("subprocess.run", return_value=mock_result):
         info = get_ram_info()
         assert info["total_gb"] == 8.0
         assert info["type"] == "DDR4"
@@ -118,7 +117,7 @@ def test_ram_info_linux_fallback_sudo():
 
     with patch("os.name", "posix"), \
          patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
-         patch("subprocess.run", side_effect=side_effect) as mock_run:
+         patch("subprocess.run", side_effect=side_effect):
         info = get_ram_info()
         assert info["total_gb"] == 32.0
         assert info["type"] == "DDR5"
@@ -140,7 +139,7 @@ def test_ram_info_linux_filenotfound_fallback_sudo():
 
     with patch("os.name", "posix"), \
          patch("psutil.virtual_memory", return_value=mock_virtual_memory), \
-         patch("subprocess.run", side_effect=side_effect) as mock_run:
+         patch("subprocess.run", side_effect=side_effect):
         info = get_ram_info()
         assert info["total_gb"] == 32.0
         assert info["type"] == "DDR5"

@@ -19,10 +19,7 @@ import sys
 import os
 import time
 import csv
-import json
 import runpy
-import re
-from datetime import datetime
 
 
 # --- Version & Branding ------------------------------------------------------
@@ -33,7 +30,7 @@ def _get_version():
         from ecotrace import __version__
         return __version__
     except ImportError:
-        return "1.5.1"
+        return "1.6.0"
 
 
 # --- CLI Banner --------------------------------------------------------------
@@ -968,7 +965,7 @@ def _cmd_optimize(args):
     """Analyzes a function's source code using Gemini AI for energy optimizations."""
     file_path = args.file
     func_name = args.func
-    region = args.region
+    # args.region is available for future regional optimizations
 
     # Don't print banner here because VS Code reads stdout directly for HTML rendering
     # or just raw text.
@@ -1182,14 +1179,14 @@ def main():
     login_parser.add_argument("--endpoint", default=os.environ.get("ECOTRACE_INGEST_URL", "https://ecotracelibrary.com/api/metrics/ingest"), help="Ingestion endpoint URL (default: https://ecotracelibrary.com/api/metrics/ingest)")
 
     # --- logout (v1.5.0) ---
-    logout_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "logout",
         help="Remove stored EcoTrace cloud credentials",
         description="Deletes ~/.ecotrace/config.json"
     )
 
     # --- status (v1.5.0) ---
-    status_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "status",
         help="Display active cloud credentials and connection status",
         description="Shows current login status and ingestion config"

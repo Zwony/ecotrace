@@ -4,22 +4,21 @@ Independent, self-contained unit tests covering bug fixes, edge cases,
 exporter dispatch, thread safety, region validation, and budget enforcement.
 """
 
-import sys
 import logging
 import pytest
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 from ecotrace import EcoTrace, __version__
 from ecotrace.logger import logger
-from ecotrace.config import validate_region_code, resolve_carbon_intensity, load_cli_config
+from ecotrace.config import validate_region_code
 from ecotrace.exporters.cloud import CloudExporter
 from ecotrace.exporters.otel import OTelExporter
 from ecotrace.exporters.webhook import WebhookExporter
 from ecotrace.ml import EcoTraceML
 
 
-def test_package_version_is_1_5_1():
-    """Verify top-level package version is bumped to 1.5.1."""
-    assert __version__ == "1.5.1"
+def test_package_version_is_1_6_0():
+    """Verify top-level package version is bumped to 1.6.0."""
+    assert __version__ == "1.6.0"
 
 
 def test_logger_default_level_is_warning():
@@ -47,35 +46,38 @@ def test_cloud_exporter_user_agent_contains_package_version():
     assert user_agent == f"EcoTrace-Python-Client/{__version__}"
 
 
-def test_cloud_exporter_export_payload_structure():
+def test_cloud_exporter_export_payload_structure(tmp_path):
     """Verify CloudExporter formats payload correctly including run_id and run_label."""
-    exporter = CloudExporter(api_key="eco_usr_test123")
-    
-    with patch.object(exporter.session, "post") as mock_post:
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_post.return_value = mock_resp
-        
-        exporter.export(
-            carbon_emitted=0.012345,
-            func_name="process_dataset",
-            duration=2.5,
-            region="DE",
-            run_id="run_abc123",
-            run_label="experiment_1"
-        )
-        
-        mock_post.assert_called_once()
-        args, kwargs = mock_post.call_args
-        payload = kwargs.get("json", {})
-        
-        assert payload["function"] == "process_dataset"
-        assert payload["carbon_gco2"] == 0.012345
-        assert payload["duration_s"] == 2.5
-        assert payload["region"] == "DE"
-        assert payload["run_id"] == "run_abc123"
-        assert payload["run_label"] == "experiment_1"
-        assert "recorded_at" in payload
+    exporter = CloudExporter(api_key="eco_usr_test123", retry_dir=str(tmp_path / "queue"))
+    try:
+        with patch.object(exporter.session, "post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_post.return_value = mock_resp
+            
+            exporter.export(
+                carbon_emitted=0.012345,
+                func_name="process_dataset",
+                duration=2.5,
+                region="DE",
+                run_id="run_abc123",
+                run_label="experiment_1"
+            )
+            
+            mock_post.assert_called_once()
+            _, kwargs = mock_post.call_args
+            payload = kwargs.get("json", {})
+            
+            assert payload["function"] == "process_dataset"
+            assert payload["carbon_gco2"] == 0.012345
+            assert payload["duration_s"] == 2.5
+            assert payload["region"] == "DE"
+            assert payload["run_id"] == "run_abc123"
+            assert payload["run_label"] == "experiment_1"
+            assert "recorded_at" in payload
+    finally:
+        exporter.close()
+
 
 
 def test_multiple_exporters_receive_dispatched_metrics():
@@ -147,6 +149,8 @@ def test_compare_utility():
     res = eco.compare(fn_a, fn_b)
     assert "func1" in res
     assert "func2" in res
+    assert res["func1"] is not None
+    assert res["func2"] is not None
     assert res["func1"]["result"] == 10
     assert res["func2"]["result"] == 20
     assert res["func1"]["func_name"] == "fn_a"
@@ -214,7 +218,6 @@ def test_ecotrace_ml_snapshot_and_epoch_logging(tmp_path):
     assert joules == 7200.0
     assert len(history) == 2
     
-    log_csv = tmp_path / "test_ml_log.csv"
     with patch("ecotrace.ml.os.path.exists", return_value=False), \
          patch("ecotrace.ml.open", create=True) as mock_open:
         co2 = ml_tracker.log_epoch(epoch=1, energy_j=3600.0, duration_s=10.0, metrics={"loss": 0.25})

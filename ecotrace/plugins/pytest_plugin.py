@@ -1,7 +1,10 @@
-import time
-import pytest  # type: ignore
+from __future__ import annotations
+
 import threading
-from typing import Dict, Any
+import time
+from typing import Any
+
+import pytest
 
 from ecotrace.core import EcoTrace
 
@@ -23,9 +26,9 @@ def pytest_addoption(parser):
     )
 
 # Thread-safe storage for test results: nodeid -> dict(duration, carbon, ... )
-test_emissions: Dict[str, Any] = {}
+test_emissions: dict[str, Any] = {}
 emissions_lock = threading.Lock()
-ecotrace_instance: EcoTrace = None
+ecotrace_instance: EcoTrace | None = None
 
 def pytest_configure(config):
     """Initialize EcoTrace if the flag is enabled."""
@@ -41,7 +44,6 @@ def pytest_runtest_protocol(item, nextitem):
     Snapshots process-scoped CPU utilization across the execution 
     lifecycle of each pytest item.
     """
-    global ecotrace_instance
     if not ecotrace_instance:
         yield
         return
@@ -71,9 +73,10 @@ def pytest_runtest_protocol(item, nextitem):
             
         # Accumulate globally into the main CSV audit log if tracked
         ecotrace_instance._accumulate_carbon(carbon_emitted, item.name, duration, avg_cpu)
-    except Exception:
+    except (AttributeError, KeyError, TypeError, ValueError, ZeroDivisionError, RuntimeError, OSError) as e:
         # Failsafe: don't break tests if carbon measurement hits an error
-        pass
+        from ecotrace.logger import logger
+        logger.debug(f"EcoTrace pytest plugin error: {e}")
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """Print the carbon footprint summary at the end of the test session."""

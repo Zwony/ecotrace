@@ -1,15 +1,18 @@
 import time
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 # Diagnostic logging facility for middleware-level events.
 logger = logging.getLogger("ecotrace.middleware")
 
-try:
-    from flask import request, Response  # type: ignore
-except ImportError:
-    request = None
-    Response = None
+if TYPE_CHECKING:
+    from flask import Response, request
+else:
+    try:
+        from flask import Response, request
+    except ImportError:
+        request = None
+        Response = Any
 
 from ecotrace.core import EcoTrace
 
@@ -48,13 +51,17 @@ class EcoTraceFlask:
 
     def _before_request(self):
         """Pre-request instrumentation hook to initialize monitoring state."""
-        request.environ['ecotrace_start_time'] = time.perf_counter()
+        if request is not None:
+            request.environ['ecotrace_start_time'] = time.perf_counter()
         self.ecotrace._start_cpu_monitor()
 
     def _after_request(self, response: Response) -> Response:
         """Post-request teardown hook to snapshot and resolve carbon metrics."""
         self.ecotrace._stop_cpu_monitor()
         
+        if request is None:
+            return response
+
         start_time = request.environ.get('ecotrace_start_time')
         if not start_time:
             return response

@@ -1,8 +1,11 @@
-import pytest
+import asyncio
 import time
 from unittest.mock import MagicMock, patch
-from ecotrace.core import EcoTrace
+
+import pytest
+
 from ecotrace.middleware.django import EcoTraceMiddleware
+
 
 @pytest.fixture
 def mock_django_settings(monkeypatch):
@@ -16,8 +19,8 @@ def mock_django_settings(monkeypatch):
     import types
     django_module = types.ModuleType('django')
     django_conf = types.ModuleType('django.conf')
-    django_conf.settings = mock_settings
-    django_module.conf = django_conf
+    django_conf.__dict__['settings'] = mock_settings
+    django_module.__dict__['conf'] = django_conf
     
     monkeypatch.setitem(sys.modules, 'django', django_module)
     monkeypatch.setitem(sys.modules, 'django.conf', django_conf)
@@ -47,7 +50,6 @@ def test_django_middleware_sync_wsgi(mock_django_settings):
     mock_response.__setitem__.assert_any_call("X-Eco-Carbon-Emitted", mock_response.__setitem__.call_args_list[0][0][1])
     mock_response.__setitem__.assert_any_call("X-Eco-Duration", mock_response.__setitem__.call_args_list[1][0][1])
 
-import asyncio
 
 def test_django_middleware_async_asgi(mock_django_settings):
     """Test ASGI asynchronous request flow."""

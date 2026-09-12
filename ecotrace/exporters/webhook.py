@@ -1,6 +1,5 @@
 import logging
-import json
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 
 logger = logging.getLogger("ecotrace.exporters.webhook")
 
