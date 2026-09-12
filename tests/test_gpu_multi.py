@@ -22,8 +22,7 @@ def test_get_all_gpu_info_zero_gpus():
     mock_nvml = MagicMock()
     mock_nvml.nvmlDeviceGetCount.return_value = 0
 
-    with patch.dict(sys.modules, {"nvidia_ml_py": mock_nvml}), \
-         patch("wmi.WMI", side_effect=ImportError):
+    with patch.dict(sys.modules, {"nvidia_ml_py": mock_nvml, "wmi": None}):
         gpus = get_all_gpu_info({})
         assert gpus == []
 
@@ -104,8 +103,10 @@ def test_get_all_gpu_info_wmi_intel_and_amd():
 
     defaults = {"intel": 20.0, "amd": 300.0, "unknown": 100.0}
 
-    with patch.dict(sys.modules, {"nvidia_ml_py": None}), \
-         patch("wmi.WMI", mock_wmi):
+    mock_wmi_module = MagicMock()
+    mock_wmi_module.WMI = mock_wmi
+
+    with patch.dict(sys.modules, {"nvidia_ml_py": None, "wmi": mock_wmi_module}):
         gpus = get_all_gpu_info(defaults)
         assert len(gpus) == 2
         assert gpus[0]["type"] == "intel"
@@ -133,8 +134,10 @@ def test_get_all_gpu_info_nvml_init_fails_falls_back_to_wmi():
     gpu.Name = "Intel Iris Xe Graphics"
     mock_wmi.return_value.Win32_VideoController.return_value = [gpu]
 
-    with patch.dict(sys.modules, {"nvidia_ml_py": mock_nvml}), \
-         patch("wmi.WMI", mock_wmi):
+    mock_wmi_module = MagicMock()
+    mock_wmi_module.WMI = mock_wmi
+
+    with patch.dict(sys.modules, {"nvidia_ml_py": mock_nvml, "wmi": mock_wmi_module}):
         gpus = get_all_gpu_info({"intel": 15.0})
         assert len(gpus) == 1
         assert gpus[0]["type"] == "intel"
