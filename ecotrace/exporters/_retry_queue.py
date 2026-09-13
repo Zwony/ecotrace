@@ -1,9 +1,4 @@
-"""Disk-backed retry queue for CloudExporter telemetry payloads.
 
-Designed for low-memory environments (e.g., VPS with <=2 GB RAM). Payloads
-are serialized to individual JSON files in a dedicated directory using atomic
-write-then-rename patterns.
-"""
 from __future__ import annotations
 
 import glob
