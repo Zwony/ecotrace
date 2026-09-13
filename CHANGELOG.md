@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-09-13
+
+### Added
+- **Multi-GPU Automatic Tracking & Aggregation**: Automated discovery of all available NVIDIA GPUs via NVML device enumeration (`get_all_gpu_info`) with continuous 50ms multi-GPU power measurement and aggregation (`get_all_gpu_power_w`).
+- **Telemetry Hardware Reporting**: Added multi-device GPU array reporting (GPU count, device models, combined TDP) to startup logs, session summaries, and exported JSON/CSV artifacts.
+- **DDR3 RAM Speed Detection**: Added memory clock frequency evaluation (800–2133 MHz) via `dmidecode` and WMI with calibrated DDR3 power factor (0.500 W/GB) for legacy enterprise architectures.
+- **Cloud Exporter Offline Disk Retry Queue**: Persistent local disk queue (`~/.ecotrace/retry_queue`) with automatic chronological FIFO queue flushing (50-entry ceiling) on network recovery.
+- **Security Policy Update**: Added `v1.6.x` to the active supported versions table in `SECURITY.MD`.
+
+### Changed
+- **Deprecated Single `gpu_index` Parameter**: Standardized multi-device monitoring across all GPUs; supplying `gpu_index > 0` emits a backward-compatible `DeprecationWarning`.
+- **Static Type Safety & Diagnostics Overhaul**: Eliminated `# type: ignore` pragmas in favor of explicit `TYPE_CHECKING` imports and runtime type narrowing, achieving clean IDE diagnostics under Pyright and Pylance.
+
 ## [1.5.1] - 2026-08-15
 
 ### Fixed

@@ -61,6 +61,7 @@ ecotrace = ["*.json", "*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+norecursedirs = ["tests/manual"]
 pythonpath = ["."]
 
 [tool.pyright]

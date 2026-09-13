@@ -6,6 +6,7 @@ Security updates are provided for the current stable release of EcoTrace.
 
 | Version | Supported |
 | ------- | --------- |
+| v1.6.x  | Yes       |
 | v1.5.x  | Yes       |
 | v1.4.x  | Yes       |
 | v1.3.x  | Yes       |

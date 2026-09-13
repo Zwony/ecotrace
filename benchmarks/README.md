@@ -58,6 +58,6 @@ If you use EcoTrace or these benchmarks in academic research, please cite:
   title = {EcoTrace: High-Precision Energy and Emissions Instrumentation for Python},
   year = {2026},
   url = {https://github.com/Zwony/ecotrace},
-  version = {1.5.0}
+  version = {1.6.0}
 }
 ```
