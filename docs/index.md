@@ -3,7 +3,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.5.0 — Hosted Cloud Integration & Real-Time Observatory Release.** Features native `CloudExporter`, `ecotrace login`, 6,980+ CPU TDP database, and Python 3.14+ readiness.
+**v1.6.0 — Multi-GPU Continuous Tracking & Telemetry Resilience.** Multi-GPU power aggregation, DDR3 RAM hardware detection, persistent offline disk retry queue for `CloudExporter`, and strict static type safety overhaul.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -35,16 +35,16 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.5.0
+## Core Features in v1.6.0
 
-> **Major Release.** v1.5.0 introduces direct cloud telemetry streaming to [ecotracelibrary.com](https://ecotracelibrary.com), terminal authentication (`ecotrace login`), 6,980+ CPU TDP database coverage, Python 3.14+ compatibility, and WebSocket live streaming.
+> **Latest Release.** v1.6.0 introduces automated multi-GPU continuous power tracking, DDR3 RAM hardware detection, a persistent offline disk retry queue for cloud telemetry, and a comprehensive type safety overhaul.
 
--  **Hosted Cloud Observatory (`CloudExporter`)** — Stream carbon metrics directly to your private web dashboard on [ecotracelibrary.com](https://ecotracelibrary.com) using `EcoTrace(api_key="eco_usr_...")`.
--  **CLI Credential Management (`ecotrace login`)** — Authenticate your terminal once via `ecotrace login --key eco_usr_...` so all `ecotrace run` profiling runs automatically stream to your web dashboard.
--  **6,980+ CPU TDP Database (%100 TDP Validity)** — Expanded dataset from 1,806 to 6,983 unique CPU models, including +760% mobile/laptop CPU coverage (Intel 10th-14th Gen, Core Ultra, AMD Ryzen, Apple Silicon M1-M4).
--  **Python 3.8 → 3.14+ Compatibility** — Fully verified runtime compatibility across Python 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, and 3.14+.
--  **WebSocket Real-Time Streaming** — Instant live metric updates on your web dashboard via `/api/ws/live`.
--  **Session Run Filtering** — Filter web dashboard metrics by specific `run_id` / `run_label` execution sessions.
+- **Automated Multi-GPU Tracking & Aggregation (`ecotrace.gpu`)** — Automatically discovers all available NVIDIA GPUs via NVML (`get_all_gpu_info`) and aggregates instantaneous power draw at 50ms intervals across active accelerators (`get_all_gpu_power_w`).
+- **Comprehensive Multi-Device Telemetry** — Startup logs, session summaries, and exported JSON/CSV artifacts now report full GPU array metadata (total GPU count, device models, and combined TDP limit).
+- **Offline Disk Retry Queue (`CloudExporter`)** — Telemetry payloads are safely persisted to an isolated local disk queue (`~/.ecotrace/retry_queue`) during network outages or backend 5xx errors, automatically flushing in chronological FIFO order (up to 50 entries) upon reconnection.
+- **DDR3 RAM Speed Detection (`ecotrace.ram`)** — Evaluates memory clock frequencies (800–2133 MHz) via Linux `dmidecode` and Windows WMI, applying calibrated DDR3 power factors (0.500 W/GB) for accurate carbon accounting on legacy enterprise hardware.
+- **Strict Static Type Safety & Diagnostics Overhaul** — Complete overhaul eliminating `# type: ignore` workarounds across `core.py`, `gpu.py`, and exporters, achieving clean IDE diagnostics under Pyright/Pylance and hardened exception handling.
+- **Unified Multi-Device Architecture** — Deprecates single-device `gpu_index` targeting in favor of unified multi-accelerator tracking, emitting a backward-compatible `DeprecationWarning` if `gpu_index > 0` is passed.
 
 ---
 
@@ -154,7 +154,7 @@ Enforce carbon budgets in your pipeline with our official GitHub Action. Add thi
 
 ```yaml
 - name: EcoTrace Carbon Gate
-  uses: Zwony/ecotrace@v1.5.0
+  uses: Zwony/ecotrace@v1.6.0
   with:
     budget: '10.0'
     region: 'US'
@@ -172,11 +172,12 @@ If total emissions exceed the budget, the gate fails with exit code 1 — preven
 
 ## Why EcoTrace?
 
-| Feature | **EcoTrace v1.5** | CodeCarbon | CarbonTracker |
+| Feature | **EcoTrace v1.6** | CodeCarbon | CarbonTracker |
 |---|:---:|:---:|:---:|
 | **Sampling Interval** | **50ms** | 15s | Per Epoch |
 | **Isolation** | **Process-scoped** | System-wide | System-wide |
 | **Cloud Dashboard Sync** | **Native** | No | No |
+| **Multi-GPU Tracking** | **Continuous (Aggregated)** | Single GPU | Per Epoch |
 | **CPU Dataset** | **6,980+ CPUs** | Limited | Limited |
 | **Budget Enforcement** | **Built-in** | No | No |
 | **CI/CD Gate** | **Built-in** | No | No |
