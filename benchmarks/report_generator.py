@@ -13,12 +13,12 @@ Usage:
 ================================================================================
 """
 
+import argparse
+import datetime
+import json
 import os
 import sys
-import json
-import datetime
-import argparse
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 # Ensure local ecotrace package is resolvable when run as a script
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -668,8 +668,13 @@ RESULT_FILES = {
 
 def generate(study_id: str) -> bool:
     """Regenerate the article for a single study. Returns True on success."""
-    if study_id not in RENDERERS or RENDERERS[study_id] is None:
+    renderer = RENDERERS.get(study_id)
+    if renderer is None:
         print(f"  [{study_id}] No renderer registered (skipping).")
+        return False
+
+    if study_id not in RESULT_FILES:
+        print(f"  [{study_id}] No results file mapped (skipping).")
         return False
 
     result_file = os.path.join(RESULTS_DIR, RESULT_FILES[study_id])
@@ -680,7 +685,7 @@ def generate(study_id: str) -> bool:
     article_file = os.path.join(ARTICLES_DIR, _article_filename(study_id))
 
     print(f"  [{study_id}] Rendering -> {os.path.basename(article_file)}")
-    md = RENDERERS[study_id](result_file)
+    md = renderer(result_file)
     with open(article_file, "w", encoding="utf-8") as f:
         f.write(md)
     return True

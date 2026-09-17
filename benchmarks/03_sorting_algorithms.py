@@ -7,18 +7,19 @@ consumption across sorting algorithms at various input scales.
 ================================================================================
 """
 
+import heapq
+import json
 import os
+import random
 import sys
 import time
-import json
-import random
-import heapq
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
+
+from benchmarks.framework import BenchmarkStatistics, EnvironmentSnapshot
 from ecotrace import EcoTrace
-from benchmarks.framework import EnvironmentSnapshot, BenchmarkStatistics
 
 # --- Configuration -----------------------------------------------------------
 SCALES = [50_000, 100_000, 500_000, 1_000_000]
@@ -131,7 +132,7 @@ def main():
 
                 with eco.track_block(f"{algo_name}_{scale}_run_{i}"):
                     t0 = time.perf_counter()
-                    result = algo_cfg["fn"](arr_copy)
+                    algo_cfg["fn"](arr_copy)
                     duration = time.perf_counter() - t0
 
                 carbon_delta = eco.total_carbon - carbon_before
@@ -148,7 +149,7 @@ def main():
 
     # --- Summary Table ---
     print(f"\n{'=' * 70}")
-    print(f"  RESULTS SUMMARY")
+    print("  RESULTS SUMMARY")
     print(f"{'=' * 70}")
     print(f"\n  {'Algorithm':<20} {'N':>12} {'Duration (s)':>15} {'Carbon (gCO2)':>18} {'Complexity':<12}")
     print(f"  {'-' * 80}")

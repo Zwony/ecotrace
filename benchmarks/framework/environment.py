@@ -5,12 +5,12 @@ Captures a complete, reproducible fingerprint of the system under test.
 Every benchmark report embeds this snapshot so results can be independently verified.
 """
 
-import os
-import sys
-import json
-import platform
 import datetime
-from typing import Dict, Any, Optional
+import json
+import os
+import platform
+import sys
+from typing import Any, Dict, Optional
 
 
 def _safe_import_version(module_name: str) -> Optional[str]:

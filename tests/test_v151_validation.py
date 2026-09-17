@@ -16,9 +16,9 @@ from ecotrace.exporters.webhook import WebhookExporter
 from ecotrace.ml import EcoTraceML
 
 
-def test_package_version_is_1_6_0():
-    """Verify top-level package version is bumped to 1.6.0."""
-    assert __version__ == "1.6.0"
+def test_package_version_is_1_6_1():
+    """Verify top-level package version is bumped to 1.6.1."""
+    assert __version__ == "1.6.1"
 
 
 def test_logger_default_level_is_warning():

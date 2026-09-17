@@ -1,17 +1,37 @@
-"""EcoTrace ML framework callbacks (v1.3.0).
+"""EcoTrace ML framework callbacks.
 
-Provides per-epoch carbon tracking integrations for popular ML frameworks.
-All framework imports are **lazy** — installing EcoTrace never requires
-PyTorch or TensorFlow as a dependency.
+Provides carbon and energy tracking integrations for popular ML frameworks:
+- Hugging Face Transformers (`TrainerCallback`)
+- PyTorch (manual training loops)
+- Keras / TensorFlow (`model.fit`)
 
-Usage::
-
-    # PyTorch (manual loop)
-    from ecotrace.callbacks.pytorch import EcoTracePyTorchCallback
-
-    # Keras / TensorFlow (model.fit)
-    from ecotrace.callbacks.keras import EcoTraceKerasCallback
+All framework dependencies are lazy-loaded on demand.
 """
 
-# Nothing is imported at package level — framework imports are deferred to
-# the individual module files so the base ecotrace install stays lightweight.
+from typing import Any
+
+__all__ = [
+    "EcoTraceCallback",
+    "EcoTraceTrainerCallback",
+    "EcoTraceHuggingFaceCallback",
+    "EcoTracePyTorchCallback",
+    "EcoTraceKerasCallback",
+]
+
+
+def __getattr__(name: str) -> Any:
+    if name in ("EcoTraceCallback", "EcoTraceTrainerCallback", "EcoTraceHuggingFaceCallback"):
+        from .huggingface import EcoTraceCallback, EcoTraceTrainerCallback, EcoTraceHuggingFaceCallback
+        globals()["EcoTraceCallback"] = EcoTraceCallback
+        globals()["EcoTraceTrainerCallback"] = EcoTraceTrainerCallback
+        globals()["EcoTraceHuggingFaceCallback"] = EcoTraceHuggingFaceCallback
+        return globals()[name]
+    elif name == "EcoTracePyTorchCallback":
+        from .pytorch import EcoTracePyTorchCallback
+        globals()["EcoTracePyTorchCallback"] = EcoTracePyTorchCallback
+        return EcoTracePyTorchCallback
+    elif name == "EcoTraceKerasCallback":
+        from .keras import EcoTraceKerasCallback
+        globals()["EcoTraceKerasCallback"] = EcoTraceKerasCallback
+        return EcoTraceKerasCallback
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

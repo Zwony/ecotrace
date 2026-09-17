@@ -7,17 +7,18 @@ carbon footprints depending on the electrical grid's carbon intensity.
 ================================================================================
 """
 
+import json
 import os
 import sys
 import time
-import json
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
+
+from benchmarks.framework import BenchmarkStatistics, EnvironmentSnapshot
 from ecotrace import EcoTrace
 from ecotrace.config import load_constants
-from benchmarks.framework import EnvironmentSnapshot, BenchmarkStatistics
 
 # --- Configuration -----------------------------------------------------------
 WORKLOAD_DURATION_S = 10  # Fixed-duration CPU-intensive workload
@@ -153,7 +154,7 @@ def main():
 
     # --- Summary Table (sorted by carbon intensity) ---
     print(f"\n{'=' * 70}")
-    print(f"  CROSS-REGION CARBON VARIABILITY -- IDENTICAL WORKLOAD")
+    print("  CROSS-REGION CARBON VARIABILITY -- IDENTICAL WORKLOAD")
     print(f"{'=' * 70}")
 
     region_summaries.sort(key=lambda r: r["intensity_gco2_kwh"])
@@ -173,12 +174,12 @@ def main():
         max_ratio = highest["carbon_gco2_mean"] / lowest["carbon_gco2_mean"]
         reduction = (1 - lowest["carbon_gco2_mean"] / highest["carbon_gco2_mean"]) * 100
 
-        print(f"\n  +-----------------------------------------------------------------+")
-        print(f"  |  KEY INSIGHT                                                    |")
+        print("\n  +-----------------------------------------------------------------+")
+        print("  |  KEY INSIGHT                                                    |")
         print(f"  |  The same workload in {highest['name']:<14} ({highest['code']}) produces {max_ratio:.0f}x MORE    |")
         print(f"  |  carbon than in {lowest['name']:<14} ({lowest['code']}).                      |")
         print(f"  |  Region selection alone can reduce emissions by {reduction:.0f}%.         |")
-        print(f"  +-----------------------------------------------------------------+")
+        print("  +-----------------------------------------------------------------+")
 
     # Save
     os.makedirs(RESULTS_DIR, exist_ok=True)

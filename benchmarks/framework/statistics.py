@@ -6,7 +6,7 @@ Follows standard reporting conventions used in systems benchmarking papers.
 """
 
 import math
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 def mean(values: List[float]) -> float:

@@ -13,6 +13,7 @@ build/
 htmlcov/
 .coverage.*
 .ecotrace/
+*.csv
 ecotrace_log.csv
 ecotrace_test_report.json
 *.pdf

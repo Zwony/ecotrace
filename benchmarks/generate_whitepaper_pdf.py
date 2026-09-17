@@ -4,8 +4,9 @@ Uses FPDF with clean typography, tables, and academic formatting.
 """
 
 import os
-import sys
+
 from fpdf.fpdf import FPDF
+
 
 def sanitize(text):
     return "".join(c for c in str(text) if ord(c) < 128)
@@ -44,7 +45,7 @@ class WhitepaperPDF(FPDF):
         self.ln(1)
 
     def body_p(self, text):
-        self.set_font("helvetica", "", 9.5)
+        self.set_font("helvetica", "", 10)
         self.set_text_color(40, 40, 40)
         self.multi_cell(0, 4.8, text)
         self.ln(2)
@@ -52,7 +53,7 @@ class WhitepaperPDF(FPDF):
     def code_box(self, code_text):
         self.set_fill_color(245, 248, 245)
         self.set_draw_color(210, 230, 210)
-        self.set_font("courier", "", 8.5)
+        self.set_font("courier", "", 9)
         self.set_text_color(30, 50, 30)
         lines = code_text.strip().split("\n")
         h = len(lines) * 4.2 + 4
@@ -81,7 +82,7 @@ def build_whitepaper():
     pdf.cell(0, 5, "Technical Whitepaper & Empirical Benchmark Report -- Version 1.5.0", ln=True, align="C")
     pdf.ln(1)
 
-    pdf.set_font("helvetica", "", 9.5)
+    pdf.set_font("helvetica", "", 10)
     pdf.set_text_color(60, 60, 60)
     pdf.cell(0, 4.5, "Author: Emre Ozkal  |  Contact: ecotraceteam@gmail.com", ln=True, align="C")
     pdf.cell(0, 4.5, "Repository: https://github.com/Zwony/ecotrace  |  Observatory: https://ecotracelibrary.com", ln=True, align="C")
@@ -103,7 +104,7 @@ def build_whitepaper():
         "achieving an 83.8% carbon reduction), algorithmic complexity (O(n log n) vs. O(n^2) scaling), cloud web frameworks, "
         "and regional spatial grid arbitrage demonstrating up to 73x emission variance across 15 nations."
     )
-    pdf.set_font("helvetica", "I", 8.8)
+    pdf.set_font("helvetica", "I", 9)
     pdf.set_text_color(40, 60, 40)
     pdf.rect(10, pdf.get_y(), 190, 36, "DF")
     pdf.set_xy(13, pdf.get_y() + 2)
@@ -168,7 +169,7 @@ def build_whitepaper():
     pdf.cell(45, 6, "Target / Tolerance", border=1, fill=True)
     pdf.cell(45, 6, "Status", border=1, fill=True, ln=True)
 
-    pdf.set_font("helvetica", "", 8.5)
+    pdf.set_font("helvetica", "", 9)
     metrics_data = [
         ("Mean Absolute Percentage Error (MAPE)", "5.42%", "< 10.0%", "PASS (High Fidelity)"),
         ("Mean Absolute Error (MAE)", "0.384 W", "< 1.50 W", "PASS"),
@@ -195,12 +196,12 @@ def build_whitepaper():
         "A standard ETL workload (filter, group-by, mean aggregation, sort) was executed on 5,000,000 tabular rows."
     )
     pdf.set_fill_color(240, 240, 245)
-    pdf.set_font("helvetica", "B", 8.5)
+    pdf.set_font("helvetica", "B", 9)
     pdf.cell(55, 5.5, "Framework", border=1, fill=True)
     pdf.cell(40, 5.5, "Duration (s)", border=1, fill=True)
     pdf.cell(45, 5.5, "Carbon (gCO2eq)", border=1, fill=True)
     pdf.cell(50, 5.5, "Efficiency Gain", border=1, fill=True, ln=True)
-    pdf.set_font("helvetica", "", 8.5)
+    pdf.set_font("helvetica", "", 9)
     pdf.cell(55, 5, "Pandas 2.x (NumPy backend)", border=1)
     pdf.cell(40, 5, "1.842 s", border=1)
     pdf.cell(45, 5, "0.00732 g", border=1)
@@ -216,12 +217,12 @@ def build_whitepaper():
     pdf.body_p(
         "Sorting 64-bit integer sequences at N=50,000 to 1,000,000 elements revealed that algorithmic complexity directly scales physical carbon:"
     )
-    pdf.set_font("helvetica", "B", 8.5)
+    pdf.set_font("helvetica", "B", 9)
     pdf.cell(50, 5.5, "Algorithm", border=1, fill=True)
     pdf.cell(35, 5.5, "Complexity", border=1, fill=True)
     pdf.cell(50, 5.5, "N=50,000 Carbon", border=1, fill=True)
     pdf.cell(55, 5.5, "N=1,000,000 Carbon", border=1, fill=True, ln=True)
-    pdf.set_font("helvetica", "", 8.5)
+    pdf.set_font("helvetica", "", 9)
     pdf.cell(50, 5, "NumPy Introsort (C)", border=1)
     pdf.cell(35, 5, "O(n log n)", border=1)
     pdf.cell(50, 5, "0.000154 gCO2", border=1)
