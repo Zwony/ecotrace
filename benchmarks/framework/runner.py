@@ -5,18 +5,18 @@ Standardized harness for executing benchmarks with configurable repetitions,
 warm-up rounds, statistical analysis, and automatic report generation.
 """
 
+import json
 import os
 import sys
-import json
 import time
-from dataclasses import dataclass, field, asdict
-from typing import Callable, Dict, Any, List, Optional
+from dataclasses import asdict, dataclass, field
+from typing import Any, Callable, Dict, List, Optional
 
 # Ensure local ecotrace package is resolvable
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from .environment import EnvironmentSnapshot
-from .statistics import BenchmarkStatistics, mean, remove_outliers_iqr
+from .statistics import BenchmarkStatistics
 
 
 @dataclass
@@ -186,7 +186,7 @@ class BenchmarkRunner:
             self._results[label] = results
 
         print(f"\n{'=' * 70}")
-        print(f"  All benchmarks completed.")
+        print("  All benchmarks completed.")
         print(f"{'=' * 70}\n")
 
         return self._results
@@ -279,7 +279,7 @@ class BenchmarkRunner:
         # Pairwise comparisons
         labels = list(stats.keys())
         if len(labels) >= 2:
-            print(f"\n  Pairwise Comparisons:")
+            print("\n  Pairwise Comparisons:")
             print(f"  {'-' * 60}")
             for i, base in enumerate(labels):
                 for challenger in labels[i + 1:]:

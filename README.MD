@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.6.0 — Multi-GPU Continuous Tracking & Telemetry Resilience.** Multi-GPU power aggregation, DDR3 RAM hardware detection, persistent offline disk retry queue for `CloudExporter`, and strict static type safety overhaul.
+**v1.6.1 — HuggingFace Integration, CodeCarbon Drop-in API & Metrology Study.** Native HuggingFace Trainer callback, CodeCarbon-compatible API layer (`EmissionsTracker`), Case 08 Metrology & Overhead benchmark, and Zenodo DOI archival integration.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**

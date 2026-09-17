@@ -7,17 +7,16 @@ under identical synthetic HTTP load.
 ================================================================================
 """
 
+import json
 import os
 import sys
-import time
-import json
 import threading
-import subprocess
+import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from benchmarks.framework import BenchmarkStatistics, EnvironmentSnapshot
 from ecotrace import EcoTrace
-from benchmarks.framework import EnvironmentSnapshot, BenchmarkStatistics
 
 # --- Configuration -----------------------------------------------------------
 NUM_REQUESTS = 5000
@@ -91,8 +90,8 @@ def run_fastapi_server(port=8892):
 # =============================================================================
 def send_requests(url: str, count: int, concurrency: int = 10) -> dict:
     """Sends HTTP requests and measures throughput."""
-    import urllib.request
     import urllib.error
+    import urllib.request
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     latencies = []
@@ -105,7 +104,7 @@ def send_requests(url: str, count: int, concurrency: int = 10) -> dict:
             with urllib.request.urlopen(req, timeout=5) as resp:
                 resp.read()
             return time.perf_counter() - t0
-        except Exception:
+        except (urllib.error.URLError, OSError, TimeoutError):
             return None
 
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
@@ -133,14 +132,14 @@ def send_requests(url: str, count: int, concurrency: int = 10) -> dict:
 
 def _wait_for_server(port, timeout=10):
     """Polls the server until it's ready."""
-    import urllib.request
     import urllib.error
+    import urllib.request
     start = time.time()
     while time.time() - start < timeout:
         try:
             urllib.request.urlopen(f"http://127.0.0.1:{port}/api/benchmark", timeout=1)
             return True
-        except Exception:
+        except (urllib.error.URLError, OSError, TimeoutError):
             time.sleep(0.2)
     return False
 
@@ -217,7 +216,7 @@ def main():
 
     # --- Summary ---
     print(f"\n{'=' * 70}")
-    print(f"  RESULTS SUMMARY")
+    print("  RESULTS SUMMARY")
     print(f"{'=' * 70}")
     print(f"\n  {'Framework':<15} {'Duration (s)':>14} {'Carbon (gCO2)':>18} "
           f"{'Req/s':>10} {'p50 (ms)':>10}")

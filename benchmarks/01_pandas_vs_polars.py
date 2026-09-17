@@ -10,6 +10,7 @@ and estimated carbon emissions (gCO2eq) on a 5-million-row aggregation pipeline.
 import os
 import sys
 import time
+
 import numpy as np
 import pandas as pd
 import polars as pl

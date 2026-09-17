@@ -14,18 +14,17 @@ Calculates:
 ================================================================================
 """
 
+import json
+import math
 import os
 import sys
 import time
-import math
-import json
-import platform
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
+from benchmarks.framework import EnvironmentSnapshot
 from ecotrace import EcoTrace
 from ecotrace.hardware import HardwareMonitor
-from benchmarks.framework import EnvironmentSnapshot, BenchmarkStatistics
 
 LOAD_STEPS = [10, 25, 50, 75, 100]  # Target CPU utilization levels (%)
 STEP_DURATION_S = 5.0                # Duration per load level in seconds

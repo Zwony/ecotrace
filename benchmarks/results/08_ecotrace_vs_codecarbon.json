@@ -1,0 +1,223 @@
+{
+  "environment": {
+    "timestamp": "2026-09-17T20:39:50.866357+00:00",
+    "python": {
+      "version": "3.11.1 (tags/v3.11.1:a7a450f, Dec  6 2022, 19:58:39) [MSC v.1934 64 bit (AMD64)]",
+      "implementation": "CPython"
+    },
+    "os": {
+      "name": "Windows",
+      "release": "10",
+      "version": "10.0.26200"
+    },
+    "cpu": {
+      "brand": "13th Gen Intel(R) Core(TM) i7-13700H",
+      "arch": "AMD64",
+      "logical_cores": 20,
+      "physical_cores": 14,
+      "hz_advertised": "2.9180 GHz"
+    },
+    "memory": {
+      "total_gb": 15.65,
+      "available_gb": 5.35
+    },
+    "gpu": null,
+    "power_source": "AC",
+    "packages": {
+      "codecarbon": "3.3.1",
+      "ecotrace": "1.6.0",
+      "matplotlib": "3.10.9",
+      "numpy": "2.4.6",
+      "pandas": "3.0.5",
+      "polars": "1.44.1",
+      "psutil": "7.2.2",
+      "torch": "2.13.0+cpu"
+    }
+  },
+  "config": {
+    "measured_runs": 3,
+    "workload": "standard_arithmetic_2.5M"
+  },
+  "statistics": {
+    "baseline": {
+      "label": "baseline",
+      "runs": 3,
+      "duration_s": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.1247155667,
+        "median": 0.1253431,
+        "std_dev": 0.0043251788,
+        "cv_pct": 3.468,
+        "ci_95_lower": 0.1139703598,
+        "ci_95_upper": 0.1354607735,
+        "min": 0.1201109,
+        "max": 0.1286927
+      },
+      "carbon_gco2": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "energy_wh": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "avg_cpu_pct": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "ecotrace": {
+      "label": "ecotrace",
+      "runs": 3,
+      "duration_s": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.1909808667,
+        "median": 0.1929749,
+        "std_dev": 0.0522341036,
+        "cv_pct": 27.3504,
+        "ci_95_lower": 0.0612136873,
+        "ci_95_upper": 0.320748046,
+        "min": 0.1377783,
+        "max": 0.2421894
+      },
+      "carbon_gco2": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0043867395,
+        "median": 0.004437159,
+        "std_dev": 0.0012062138,
+        "cv_pct": 27.4968,
+        "ci_95_lower": 0.0013900965,
+        "ci_95_upper": 0.0073833824,
+        "min": 0.0031561065,
+        "max": 0.0055669529
+      },
+      "energy_wh": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "avg_cpu_pct": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "codecarbon": {
+      "label": "codecarbon",
+      "runs": 3,
+      "duration_s": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 2.0319375,
+        "median": 1.491818,
+        "std_dev": 0.9549958035,
+        "cv_pct": 46.9993,
+        "ci_95_lower": -0.3405950634,
+        "ci_95_upper": 4.4044700634,
+        "min": 1.4693988,
+        "max": 3.1345957
+      },
+      "carbon_gco2": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0010324958,
+        "median": 0.0010337201,
+        "std_dev": 4.5739e-05,
+        "cv_pct": 4.4299,
+        "ci_95_lower": 0.0009188645,
+        "ci_95_upper": 0.001146127,
+        "min": 0.0009861569,
+        "max": 0.0010776104
+      },
+      "energy_wh": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "avg_cpu_pct": {
+        "raw_count": 3,
+        "clean_count": 3,
+        "outliers_removed": 0,
+        "mean": 0.0,
+        "median": 0.0,
+        "std_dev": 0.0,
+        "cv_pct": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "comparison": {
+    "ecotrace_overhead_pct": 53.13,
+    "sampling_interval_ms": {
+      "ecotrace": 50,
+      "codecarbon": 15000
+    },
+    "isolation": {
+      "ecotrace": "process_scoped",
+      "codecarbon": "system_wide"
+    },
+    "codecarbon_overhead_pct": 1529.26
+  }
+}

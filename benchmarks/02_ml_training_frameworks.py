@@ -7,16 +7,16 @@ for training an identical CNN architecture on CIFAR-10.
 ================================================================================
 """
 
+import json
 import os
 import sys
 import time
-import json
 
 # Ensure local ecotrace package is resolvable
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from benchmarks.framework import BenchmarkStatistics, EnvironmentSnapshot
 from ecotrace import EcoTrace
-from benchmarks.framework import EnvironmentSnapshot, BenchmarkStatistics
 
 # --- Configuration -----------------------------------------------------------
 NUM_EPOCHS = 5
@@ -27,20 +27,15 @@ WARMUP_RUNS = 0    # No warm-up for full training benchmarks
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 
 
+import importlib.util
+
+
 def _check_torch_available():
-    try:
-        import torch
-        return True
-    except ImportError:
-        return False
+    return importlib.util.find_spec("torch") is not None
 
 
 def _check_tf_available():
-    try:
-        import tensorflow
-        return True
-    except ImportError:
-        return False
+    return importlib.util.find_spec("tensorflow") is not None
 
 
 def train_pytorch_cnn(num_epochs=NUM_EPOCHS, batch_size=BATCH_SIZE):
@@ -50,11 +45,10 @@ def train_pytorch_cnn(num_epochs=NUM_EPOCHS, batch_size=BATCH_SIZE):
         dict: Metrics including final accuracy and loss.
     """
     import torch
-    import torch.nn as nn
-    import torch.optim as optim
-    from torch.utils.data import DataLoader
     import torchvision
-    import torchvision.transforms as transforms
+    from torch import nn, optim
+    from torch.utils.data import DataLoader
+    from torchvision import transforms
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -96,6 +90,7 @@ def train_pytorch_cnn(num_epochs=NUM_EPOCHS, batch_size=BATCH_SIZE):
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     # Training loop
+    running_loss = 0.0
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -129,7 +124,7 @@ def train_tensorflow_cnn(num_epochs=NUM_EPOCHS, batch_size=BATCH_SIZE):
     Returns:
         dict: Metrics including final accuracy and loss.
     """
-    import tensorflow as tf
+    import tensorflow as tf  # type: ignore
 
     # Suppress TF info logs
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -147,7 +142,8 @@ def train_tensorflow_cnn(num_epochs=NUM_EPOCHS, batch_size=BATCH_SIZE):
 
     # Same architecture as PyTorch model
     model = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(32, 3, padding="same", activation="relu", input_shape=(32, 32, 3)),
+        tf.keras.layers.Input(shape=(32, 32, 3)),
+        tf.keras.layers.Conv2D(32, 3, padding="same", activation="relu"),
         tf.keras.layers.MaxPooling2D(2),
         tf.keras.layers.Conv2D(64, 3, padding="same", activation="relu"),
         tf.keras.layers.MaxPooling2D(2),
@@ -164,7 +160,7 @@ def train_tensorflow_cnn(num_epochs=NUM_EPOCHS, batch_size=BATCH_SIZE):
         metrics=["accuracy"],
     )
 
-    history = model.fit(
+    model.fit(
         x_train, y_train,
         epochs=num_epochs,
         batch_size=batch_size,
@@ -240,7 +236,7 @@ def main():
 
     # --- Summary ---
     print(f"\n{'=' * 70}")
-    print(f" RESULTS SUMMARY")
+    print(" RESULTS SUMMARY")
     print(f"{'=' * 70}")
 
     for label, stats in results.items():
@@ -253,7 +249,7 @@ def main():
 
     if has_torch and has_tf and "pytorch" in results and "tensorflow" in results:
         comp = results["pytorch"].compare(results["tensorflow"])
-        print(f"\n  COMPARISON (PyTorch as baseline):")
+        print("\n  COMPARISON (PyTorch as baseline):")
         print(f"    Speedup: {comp['speedup_ratio']:.2f}x")
         print(f"    Carbon Reduction: {comp['carbon_reduction_pct']:.1f}%")
         sig = "[OK] Significant" if comp['duration_test']['significant_at_05'] else "[X] Not significant"

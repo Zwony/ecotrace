@@ -43,7 +43,7 @@ class CloudExporter:
         try:
             from .. import __version__ as _pkg_ver
         except ImportError:
-            _pkg_ver = "1.6.0"
+            _pkg_ver = "1.6.1"
 
         self.session.headers.update({
             "Content-Type": "application/json",

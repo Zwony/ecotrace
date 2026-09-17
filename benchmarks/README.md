@@ -8,13 +8,14 @@ Scientific, reproducible green computing benchmarks evaluating energy efficiency
 
 | Study | Title | Category | Focus | Runner |
 | :---: | :--- | :--- | :--- | :--- |
-| **01** | [Pandas vs. Polars](articles/01_pandas_vs_polars.md) | Data Engineering | Vectorization, Arrow format, Race-to-Sleep | `python pandas_vs_polars.py` |
+| **01** | [Pandas vs. Polars](articles/01_pandas_vs_polars.md) | Data Engineering | Vectorization, Arrow format, Race-to-Sleep | `python 01_pandas_vs_polars.py` |
 | **02** | [PyTorch vs. TensorFlow](articles/02_ml_training_frameworks.md) | Machine Learning | CNN Training on CIFAR-10, Carbon per Accuracy Point | `python 02_ml_training_frameworks.py` |
 | **03** | [Sorting Algorithm Complexity](articles/03_sorting_algorithms.md) | Computer Science | $O(n \log n)$ vs $O(n^2)$ physical energy scaling | `python 03_sorting_algorithms.py` |
 | **04** | [Web Framework Efficiency](articles/04_web_frameworks.md) | Cloud Systems | Flask vs FastAPI request carbon cost under load | `python 04_web_frameworks.py` |
 | **05** | [LLM Inference Scaling](articles/05_llm_inference.md) | Generative AI | Per-token energy cost across GPT-2 parameter tiers | `python 05_llm_inference.py` |
 | **06** | [Cross-Region Grid Variability](articles/06_regional_carbon.md) | Cloud Architecture | Up to 70x spatial carbon difference across 15 countries | `python 06_regional_carbon.py` |
 | **07** | [Accuracy vs. RAPL](articles/07_accuracy_validation.md) | Energy Metrology | Model-vs-hardware validation (MAPE, MAE, R²) — Linux/RAPL for ground truth, synthetic fallback elsewhere | `python validation/accuracy_vs_rapl.py` |
+| **08** | [The Observer Effect (EcoTrace vs. CodeCarbon)](articles/08_ecotrace_vs_codecarbon.md) | Overhead & Metrology | High-frequency 50ms process-scoped vs 15s system-wide sampling overhead | `python 08_ecotrace_vs_codecarbon.py` |
 
 ---
 

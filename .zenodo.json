@@ -1,0 +1,38 @@
+{
+  "title": "EcoTrace: High-Precision Energy and Operational Carbon Emissions Instrumentation for Python",
+  "description": "EcoTrace is a high-precision, open-source software energy and operational carbon emission instrumentation library for Python. It provides 50ms continuous temporal sampling, process-scoped attribution to prevent multi-tenant noise, non-linear piecewise CPU power modeling calibrated against Intel/AMD RAPL hardware counters, multi-GPU tracking via NVML, drop-in compatibility with CodeCarbon APIs (EmissionsTracker), and HuggingFace Trainer callbacks.",
+  "creators": [
+    {
+      "name": "Ozkal, Emre",
+      "affiliation": "EcoTrace Project"
+    }
+  ],
+  "access_right": "open",
+  "license": "MIT",
+  "upload_type": "software",
+  "keywords": [
+    "green-computing",
+    "carbon-footprint",
+    "energy-efficiency",
+    "software-sustainability",
+    "cpu-monitoring",
+    "gpu-monitoring",
+    "scientific-benchmarking",
+    "machine-learning",
+    "reproducible-research"
+  ],
+  "related_identifiers": [
+    {
+      "scheme": "url",
+      "identifier": "https://github.com/Zwony/ecotrace",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    },
+    {
+      "scheme": "url",
+      "identifier": "https://ecotracelibrary.com",
+      "relation": "isDocumentedBy",
+      "resource_type": "publication-softwaredocumentation"
+    }
+  ]
+}

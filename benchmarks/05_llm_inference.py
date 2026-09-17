@@ -7,16 +7,17 @@ inference across different model sizes (GPT-2 family).
 ================================================================================
 """
 
+import gc
+import json
 import os
 import sys
 import time
-import json
-import gc
+from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from benchmarks.framework import BenchmarkStatistics, EnvironmentSnapshot
 from ecotrace import EcoTrace
-from benchmarks.framework import EnvironmentSnapshot, BenchmarkStatistics
 
 # --- Configuration -----------------------------------------------------------
 # CPU-only: limited to GPT-2 small to keep runtime reasonable.
@@ -43,12 +44,11 @@ MEASURED_RUNS = 2     # Reduced from 3 for CPU feasibility
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 
 
+import importlib.util
+
+
 def _check_transformers():
-    try:
-        import transformers
-        return True
-    except ImportError:
-        return False
+    return importlib.util.find_spec("transformers") is not None
 
 
 def run_inference(model_name: str, prompts: list, max_new_tokens: int = MAX_NEW_TOKENS):
@@ -58,12 +58,12 @@ def run_inference(model_name: str, prompts: list, max_new_tokens: int = MAX_NEW_
         dict: Metrics including total tokens generated, latency, etc.
     """
     import torch
-    from transformers import AutoTokenizer, AutoModelForCausalLM
+    from transformers import AutoModelForCausalLM, AutoTokenizer
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    if tokenizer.pad_token is None:
+    tokenizer: Any = AutoTokenizer.from_pretrained(model_name)
+    if tokenizer is not None and getattr(tokenizer, "pad_token", None) is None and hasattr(tokenizer, "eos_token"):
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
@@ -166,7 +166,7 @@ def main():
 
     # --- Summary ---
     print(f"\n{'=' * 70}")
-    print(f"  RESULTS SUMMARY -- Per-Token Carbon Economics")
+    print("  RESULTS SUMMARY -- Per-Token Carbon Economics")
     print(f"{'=' * 70}")
     print(f"\n  {'Model':<25} {'Params':>8} {'Duration (s)':>14} {'gCO2/1K tokens':>18} {'Tok/s':>8}")
     print(f"  {'-' * 78}")
@@ -185,7 +185,7 @@ def main():
         small = all_results[labels[0]]["stats"]
         large = all_results[labels[-1]]["stats"]
         comp = small.compare(large)
-        print(f"\n  SCALING ANALYSIS (Smallest vs Largest):")
+        print("\n  SCALING ANALYSIS (Smallest vs Largest):")
         print(f"    Carbon Increase: {abs(comp['carbon_reduction_pct']):.1f}%")
 
     # Save

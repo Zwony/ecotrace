@@ -5,8 +5,8 @@ authors:
   - family-names: "Ozkal"
     given-names: "Emre"
     email: "ecotraceteam@gmail.com"
-version: 1.5.1
-date-released: 2026-03-01
+version: 1.6.1
+date-released: 2026-09-18
 url: "https://ecotracelibrary.com"
 repository-code: "https://github.com/Zwony/ecotrace"
 license: MIT

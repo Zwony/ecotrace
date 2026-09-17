@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-09-18
+
+### Added
+- **HuggingFace Transformers Integration (`EcoTraceHuggingFaceCallback`)**: Native callback module (`ecotrace.callbacks.huggingface`) providing seamless integration with HuggingFace `Trainer`. Delivers automatic per-step carbon logging into `state.log_history`, per-epoch metric evaluation, and consolidated emissions reporting upon training completion.
+- **CodeCarbon-Compatible API (`ecotrace.tracker`)**: Compatibility module exporting `EmissionsTracker`, `OfflineEmissionsTracker`, and `track_emissions` from top-level `ecotrace`, enabling projects already using the CodeCarbon API surface to adopt EcoTrace with minimal migration effort.
+- **Case 08 Instrumentation Overhead Benchmark**: Added empirical benchmark (`benchmarks/08_ecotrace_vs_codecarbon.py`) and academic article (`benchmarks/articles/08_ecotrace_vs_codecarbon.md`) comparing design tradeoffs between high-frequency process-scoped sampling (50ms) and periodic system-wide polling (15s) in carbon tracking libraries.
+- **Zenodo DOI Archival Metadata (`.zenodo.json`)**: Added standardized Zenodo metadata configuration for automated citable DOI minting upon GitHub release tagging.
+
+### Changed
+- **Benchmark Suite Harmonization**: Renamed initial benchmark to `benchmarks/01_pandas_vs_polars.py` and updated suite registry in `benchmarks/README.md` to cleanly index Studies 01 through 08.
+- **Strict IDE Diagnostic & Type Integrity**: Resolved all 21 type checker diagnostics (Pyrefly / Pylance) across benchmark runners, whitepaper PDF generator (enforcing integer font sizes), and report dispatcher.
+- **Repository Cleanliness**: Enhanced `.gitignore` to automatically filter all generated CSV run logs across benchmarks and workspaces.
+
 ## [1.6.0] - 2026-09-13
 
 ### Added
