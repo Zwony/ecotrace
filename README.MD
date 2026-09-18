@@ -40,16 +40,15 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.6.0
+## Core Features in v1.6.1
 
-> **Latest Release.** v1.6.0 introduces automated multi-GPU continuous power tracking, DDR3 RAM hardware detection, a persistent offline disk retry queue for cloud telemetry, and a comprehensive type safety overhaul.
+> **Latest Release.** v1.6.1 introduces native HuggingFace Trainer callbacks, drop-in CodeCarbon API compatibility, the Case 08 Observer Effect benchmark study, and official Zenodo DOI archival indexing.
 
-- **Automated Multi-GPU Tracking & Aggregation (`ecotrace.gpu`)** — Automatically discovers all available NVIDIA GPUs via NVML (`get_all_gpu_info`) and aggregates instantaneous power draw at 50ms intervals across active accelerators (`get_all_gpu_power_w`).
-- **Comprehensive Multi-Device Telemetry** — Startup logs, session summaries, and exported JSON/CSV artifacts now report full GPU array metadata (total GPU count, device models, and combined TDP limit).
-- **Offline Disk Retry Queue (`CloudExporter`)** — Telemetry payloads are safely persisted to an isolated local disk queue (`~/.ecotrace/retry_queue`) during network outages or backend 5xx errors, automatically flushing in chronological FIFO order (up to 50 entries) upon reconnection.
-- **DDR3 RAM Speed Detection (`ecotrace.ram`)** — Evaluates memory clock frequencies (800–2133 MHz) via Linux `dmidecode` and Windows WMI, applying calibrated DDR3 power factors (0.500 W/GB) for accurate carbon accounting on legacy enterprise hardware.
-- **Strict Static Type Safety & Diagnostics Overhaul** — Complete overhaul eliminating `# type: ignore` workarounds across `core.py`, `gpu.py`, and exporters, achieving clean IDE diagnostics under Pyright/Pylance and hardened exception handling.
-- **Unified Multi-Device Architecture** — Deprecates single-device `gpu_index` targeting in favor of unified multi-accelerator tracking, emitting a backward-compatible `DeprecationWarning` if `gpu_index > 0` is passed.
+- **HuggingFace Transformers Callback (`ecotrace.callbacks.huggingface`)** — Native `EcoTraceHuggingFaceCallback` injecting instantaneous power draw (W) and cumulative carbon metrics directly into `state.log_history` on step and epoch intervals.
+- **CodeCarbon Drop-in API (`ecotrace.tracker`)** — Zero-codebase-refactoring drop-in replacement (`EmissionsTracker`, `OfflineEmissionsTracker`, `@track_emissions`) enabling existing projects to switch to EcoTrace seamlessly.
+- **Automated Multi-GPU Tracking & Aggregation (`ecotrace.gpu`)** — Automatically discovers all available NVIDIA GPUs via NVML (`get_all_gpu_info`) and aggregates instantaneous power draw at 50ms intervals across active accelerators.
+- **Offline Disk Retry Queue (`CloudExporter`)** — Telemetry payloads are safely persisted to an isolated local disk queue during network outages, automatically flushing in chronological FIFO order upon reconnection.
+- **Zenodo DOI Archival Integration** — Standardized metadata (`.zenodo.json`, `CITATION.cff`) ensuring verifiable scientific citation and permanent preservation.
 
 ---
 
@@ -120,6 +119,35 @@ training_pipeline()
 print(f"Remaining budget: {eco.remaining_budget} gCO2")
 ```
 
+### Option 4: HuggingFace Transformers Integration
+Log step-by-step carbon emissions automatically inside HuggingFace `Trainer`:
+
+```python
+from transformers import Trainer
+from ecotrace.callbacks import EcoTraceHuggingFaceCallback
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    callbacks=[EcoTraceHuggingFaceCallback()],
+)
+trainer.train()
+```
+
+### Option 5: Drop-in CodeCarbon Compatibility
+Migrate legacy codebases with zero refactoring — just change your import:
+
+```python
+# from codecarbon import EmissionsTracker  <-- Change to EcoTrace:
+from ecotrace import EmissionsTracker
+
+tracker = EmissionsTracker(project_name="bert-finetuning")
+tracker.start()
+# ... your model training or inference ...
+emissions = tracker.stop()
+print(f"Emissions: {emissions:.6f} kg CO2")
+```
+
 ### Expected Output
 When initialized, EcoTrace performs automated hardware detection:
 
@@ -152,26 +180,37 @@ At process exit, a session summary is printed automatically:
 
 ---
 
-## CI/CD Integration
+## CI/CD & Testing Integration
 
-### Official GitHub Action
-Enforce carbon budgets in your pipeline with our official GitHub Action. Add this to your `.github/workflows/ci.yml`:
+### Official GitHub Action (Carbon Gate)
+Enforce carbon emission budgets directly in your GitHub pull requests. Add this to your `.github/workflows/ci.yml`:
 
 ```yaml
+- name: Run Tests with Carbon Profiling
+  run: pytest --ecotrace
+
 - name: EcoTrace Carbon Gate
-  uses: Zwony/ecotrace@v1.6.0
+  uses: Zwony/ecotrace@v1.6.1
   with:
-    budget: '10.0'
+    budget: '5.0'    # Fails pipeline if total test emissions exceed 5.0 gCO2
     region: 'US'
 ```
 
-### Manual CLI Integration
-You can also run the gate manually:
+### Pytest Plugin Integration
+Measure per-test function carbon footprints directly from your test suite:
+
 ```bash
-ecotrace gate --budget 10.0
+pytest --ecotrace
 ```
 
-If total emissions exceed the budget, the gate fails with exit code 1 — preventing carbon-heavy code from being merged.
+### Manual CLI Gate
+Run the gate locally or inside custom continuous integration pipelines:
+
+```bash
+ecotrace gate --budget 5.0 --region US
+```
+
+If total emissions recorded in `ecotrace_log.csv` exceed the budget, the command exits with code `1` — preventing carbon-heavy regressions from merging into production.
 
 ---
 
