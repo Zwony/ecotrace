@@ -15,14 +15,12 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 <br>
 
-[![Official Website](https://img.shields.io/badge/Website-ecotracelibrary.com-2E8B57?style=for-the-badge&logo=google-chrome&logoColor=white)](https://ecotracelibrary.com)
-[![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=2E8B57&style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/ecotrace/)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=for-the-badge&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
-[![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
-[![VS Code Extension](https://img.shields.io/badge/VS_Code-EcoTrace-007ACC?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor)
-[![Technical Whitepaper](https://img.shields.io/badge/Whitepaper-PDF%20Report-2E8B57?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](EcoTrace_Whitepaper.pdf)
+[![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=2E8B57&style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/ecotrace/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=flat-square&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22834060.svg)](https://doi.org/10.5281/zenodo.22834060)
+[![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
 
 <br>
 
@@ -237,6 +235,25 @@ Full documentation is available at [**ecotracelibrary.com**](https://ecotracelib
 - [**Advanced Usage**](https://ecotrace.readthedocs.io/en/latest/USAGE/) — GPU tracking, AI insights, benchmarks, and comparison tables.
 - [**API Reference**](https://ecotrace.readthedocs.io/en/latest/api/) — Technical documentation for core classes and functions.
 - [**Support and Reference**](https://ecotrace.readthedocs.io/en/latest/SUPPORT/) — Troubleshooting, region codes, and hardware compatibility.
+- [**Technical Whitepaper (PDF)**](EcoTrace_Whitepaper.pdf) — Comprehensive metrology and empirical evaluation report.
+
+---
+
+## Citation
+
+If you use EcoTrace in academic research or sustainability audits, please cite:
+
+```bibtex
+@software{ecotrace2026,
+  author = {Ozkal, Emre},
+  title = {EcoTrace: High-Precision Energy and Emissions Instrumentation for Python},
+  year = {2026},
+  publisher = {Zenodo},
+  version = {v1.6.1},
+  doi = {10.5281/zenodo.22834060},
+  url = {https://doi.org/10.5281/zenodo.22834060}
+}
+```
 
 ---
 
