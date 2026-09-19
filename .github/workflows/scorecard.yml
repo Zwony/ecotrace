@@ -6,6 +6,7 @@ on:
     - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions: read-all
 
@@ -26,7 +27,7 @@ jobs:
           persist-credentials: false
 
       - name: Run analysis
-        uses: ossf/scorecard-action@v2.4.0
+        uses: ossf/scorecard-action@v2.4.4
         with:
           results_file: results.sarif
           results_format: sarif
