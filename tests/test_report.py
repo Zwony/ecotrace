@@ -51,15 +51,19 @@ def test_get_gemini_insights_no_key():
 
 
 def test_get_gemini_insights_mocked():
+    import types
+    mock_google = types.ModuleType("google")
+    mock_genai = types.ModuleType("google.generativeai")
     mock_model = MagicMock()
     mock_response = MagicMock()
     mock_response.text = "Optimize loops to reduce carbon."
     mock_model.generate_content.return_value = mock_response
 
-    mock_genai = MagicMock()
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_genai.GenerativeModel = MagicMock(return_value=mock_model)
+    mock_genai.configure = MagicMock()
+    mock_google.generativeai = mock_genai
 
-    with patch.dict("sys.modules", {"google.generativeai": mock_genai}):
+    with patch.dict("sys.modules", {"google": mock_google, "google.generativeai": mock_genai}):
         insights = report.get_gemini_insights(
             api_key="fake-key",
             cpu_info={"brand": "Test CPU", "cores": 4, "tdp": 65.0},

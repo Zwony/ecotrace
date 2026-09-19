@@ -14,59 +14,50 @@ def test_fastapi_middleware_missing_dependency():
 
 
 def test_fastapi_middleware_dispatch_isolated():
-    class DummyBaseMiddleware:
-        def __init__(self, app):
-            self.app = app
+    mock_eco = MagicMock()
+    mock_eco.cpu_monitor.return_value.__enter__ = MagicMock()
+    mock_eco.cpu_monitor.return_value.__exit__ = MagicMock()
+    mock_eco._get_avg_cpu_in_range.return_value = 10.0
+    mock_eco._compute_carbon.return_value = 0.05
+    mock_eco.cpu_info = {"tdp": 65.0}
 
-    with patch.object(fastapi_mod, "BaseHTTPMiddleware", DummyBaseMiddleware):
-        mock_eco = MagicMock()
-        mock_eco.cpu_monitor.return_value.__enter__ = MagicMock()
-        mock_eco.cpu_monitor.return_value.__exit__ = MagicMock()
-        mock_eco._get_avg_cpu_in_range.return_value = 10.0
-        mock_eco._compute_carbon.return_value = 0.05
-        mock_eco.cpu_info = {"tdp": 65.0}
+    middleware = object.__new__(fastapi_mod.EcoTraceMiddleware)
+    middleware.ecotrace = mock_eco
+    middleware.log_to_csv = True
 
-        middleware = fastapi_mod.EcoTraceMiddleware(
-            app=MagicMock(),
-            ecotrace_instance=mock_eco,
-            log_to_csv=True,
-        )
+    mock_request = MagicMock()
+    mock_response = MagicMock()
+    mock_response.headers = {}
 
-        mock_request = MagicMock()
-        mock_response = MagicMock()
-        mock_response.headers = {}
+    async def mock_call_next(req):
+        return mock_response
 
-        async def mock_call_next(req):
-            return mock_response
+    response = asyncio.run(middleware.dispatch(mock_request, mock_call_next))
 
-        response = asyncio.run(middleware.dispatch(mock_request, mock_call_next))
-
-        assert response.headers["X-Eco-Carbon-Emitted"] == "0.05000000g"
-        assert "X-Eco-Duration" in response.headers
-        mock_eco._accumulate_carbon.assert_called_once()
+    assert response.headers["X-Eco-Carbon-Emitted"] == "0.05000000g"
+    assert "X-Eco-Duration" in response.headers
+    mock_eco._accumulate_carbon.assert_called_once()
 
 
 def test_fastapi_middleware_dispatch_exception_handled():
-    class DummyBaseMiddleware:
-        def __init__(self, app):
-            self.app = app
+    mock_eco = MagicMock()
+    mock_eco.cpu_monitor.return_value.__enter__ = MagicMock()
+    mock_eco.cpu_monitor.return_value.__exit__ = MagicMock()
+    mock_eco._get_avg_cpu_in_range.side_effect = RuntimeError("error")
 
-    with patch.object(fastapi_mod, "BaseHTTPMiddleware", DummyBaseMiddleware):
-        mock_eco = MagicMock()
-        mock_eco.cpu_monitor.return_value.__enter__ = MagicMock()
-        mock_eco.cpu_monitor.return_value.__exit__ = MagicMock()
-        mock_eco._get_avg_cpu_in_range.side_effect = RuntimeError("error")
+    middleware = object.__new__(fastapi_mod.EcoTraceMiddleware)
+    middleware.ecotrace = mock_eco
+    middleware.log_to_csv = False
 
-        middleware = fastapi_mod.EcoTraceMiddleware(app=MagicMock(), ecotrace_instance=mock_eco)
-        mock_request = MagicMock()
-        mock_response = MagicMock()
-        mock_response.headers = {}
+    mock_request = MagicMock()
+    mock_response = MagicMock()
+    mock_response.headers = {}
 
-        async def mock_call_next(req):
-            return mock_response
+    async def mock_call_next(req):
+        return mock_response
 
-        response = asyncio.run(middleware.dispatch(mock_request, mock_call_next))
-        assert response == mock_response
+    response = asyncio.run(middleware.dispatch(mock_request, mock_call_next))
+    assert response == mock_response
 
 
 def test_flask_middleware_missing_dependency():
