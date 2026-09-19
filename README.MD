@@ -20,6 +20,8 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=flat-square&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22834060.svg)](https://doi.org/10.5281/zenodo.22834060)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Zwony/ecotrace/badge)](https://scorecard.dev/viewer/?uri=github.com/Zwony/ecotrace)
+[![codecov](https://codecov.io/gh/Zwony/ecotrace/graph/badge.svg)](https://codecov.io/gh/Zwony/ecotrace)
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
 
 <br>
