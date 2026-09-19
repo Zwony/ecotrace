@@ -7,6 +7,7 @@ EcoTrace is an open-source project. Contributions of any kind — code, document
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [First-Time Contributors & Mentorship](#first-time-contributors--mentorship)
 - [Getting Started](#getting-started)
 - [How to Contribute](#how-to-contribute)
 - [Development Setup](#development-setup)
@@ -20,6 +21,16 @@ EcoTrace is an open-source project. Contributions of any kind — code, document
 ## Code of Conduct
 
 By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.MD). We are dedicated to providing a respectful, inclusive, and constructive environment for everyone.
+
+---
+
+## First-Time Contributors & Mentorship
+
+Welcome! If you are new to open-source or to EcoTrace, we are thrilled to have you:
+- **Beginner-Friendly Issues:** Check out issues with the [`good first issue`](https://github.com/Zwony/ecotrace/labels/good%20first%20issue) or [`help wanted`](https://github.com/Zwony/ecotrace/labels/help%20wanted) labels.
+- **Low-Barrier Tasks:** You don't need deep domain expertise—adding hardware TDP profiles, improving documentation, expanding test cases, or writing tutorial examples are fantastic ways to start.
+- **Mentorship & Community:** Need advice, pairing, or a fast code review? Drop by our [Discord Community](https://discord.gg/hs58XXb3Uq) to connect directly with the maintainers and community.
+- **Hacktoberfest:** EcoTrace actively supports Hacktoberfest. Look for tagged issues during October and earn your PR contributions!
 
 ---
 
