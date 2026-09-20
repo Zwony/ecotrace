@@ -1,5 +1,7 @@
 """
 Minimal Celery task example with EcoTrace.
+
+Requires: celery
 """
 
 from celery import Celery

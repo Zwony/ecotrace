@@ -1,5 +1,7 @@
 """
 Minimal Hugging Face Trainer example with EcoTrace.
+
+Requires: torch, transformers
 """
 
 import torch
