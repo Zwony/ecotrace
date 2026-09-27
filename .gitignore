@@ -43,6 +43,7 @@ scratch/
 site/
 ecotrace-website/
 docker-compose.yml
+.dockerignore
 DEPLOY_CHECKLIST.md
 ecotrace.zip
 tools/
