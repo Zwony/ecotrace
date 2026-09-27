@@ -252,8 +252,10 @@ def _print_function_table(sorted_funcs, total_carbon, total_duration):
     """Prints per-function metrics as a bordered ASCII table with a totals row.
 
     Uses only standard-library string formatting (no external table
-    dependencies). Column widths adapt to the current terminal width and
-    long function names are truncated so lines never break mid-table.
+    dependencies). The layout adapts to the terminal width: the function
+    column shrinks first, then the Calls column is dropped, so the table
+    never exceeds the detected terminal width. Long function names are
+    truncated to fit.
 
     Args:
         sorted_funcs: ``(function_name, stats)`` pairs sorted by carbon,
@@ -267,41 +269,53 @@ def _print_function_table(sorted_funcs, total_carbon, total_duration):
     except Exception:
         term_width = 80
 
-    calls_w, carbon_w, time_w = 5, 14, 10
     # Fixed per-line overhead: "| " + " | " between columns + " |"
-    fixed_overhead = 13
-    func_w = min(30, max(10, term_width - fixed_overhead - calls_w - carbon_w - time_w))
+    if term_width >= 50:
+        # Standard layout: Function | Calls | Carbon (gCO2) | Time (s)
+        headers = ("Function", "Calls", "Carbon (gCO2)", "Time (s)")
+        widths = (min(30, max(8, term_width - 42)), 5, 14, 10)
+    elif term_width >= 28:
+        # Very narrow terminal: drop the Calls column so the table stays
+        # inside the terminal width.
+        headers = ("Function", "Carbon (gCO2)", "Time (s)")
+        widths = (min(24, max(8, term_width - 31)), 13, 8)
+    else:
+        # Minimum readable layout for degenerate widths.
+        headers = ("Function", "Carbon (gCO2)")
+        widths = (8, 13)
 
     def _fit(name):
-        return name if len(name) <= func_w else name[: max(1, func_w - 3)] + "..."
+        return name if len(name) <= widths[0] else name[: max(1, widths[0] - 3)] + "..."
 
-    def _row(func, calls, carbon, duration):
-        return (
-            f"| {func:<{func_w}} | {calls:>{calls_w}} | "
-            f"{carbon:>{carbon_w}} | {duration:>{time_w}} |"
-        )
+    def _row(cells):
+        out = f"| {cells[0]:<{widths[0]}} "
+        for i in range(1, len(cells)):
+            out += f"| {cells[i]:>{widths[i]}} "
+        return out + "|"
 
-    rule = (
-        f"+{'-' * (func_w + 2)}+{'-' * (calls_w + 2)}"
-        f"+{'-' * (carbon_w + 2)}+{'-' * (time_w + 2)}+"
-    )
+    def _rule():
+        return "+" + "+".join("-" * (w + 2) for w in widths) + "+"
 
+    show_calls = len(headers) == 4
     total_calls = sum(stats["calls"] for _, stats in sorted_funcs)
-    print(rule)
-    print(_row("Function", "Calls", "Carbon (gCO2)", "Time (s)"))
-    print(rule)
+
+    print(_rule())
+    print(_row(headers))
+    print(_rule())
     for func_name, stats in sorted_funcs[:10]:
-        print(
-            _row(
-                _fit(func_name),
-                stats["calls"],
-                f"{stats['carbon']:.8f}",
-                f"{stats['duration']:.4f}",
-            )
-        )
-    print(rule)
-    print(_row("TOTAL", total_calls, f"{total_carbon:.8f}", f"{total_duration:.4f}"))
-    print(rule)
+        cells = [_fit(func_name)]
+        if show_calls:
+            cells.append(stats["calls"])
+        cells += [f"{stats['carbon']:.8f}", f"{stats['duration']:.4f}"]
+        print(_row(cells))
+    print(_rule())
+
+    total_cells = ["TOTAL"]
+    if show_calls:
+        total_cells.append(total_calls)
+    total_cells += [f"{total_carbon:.8f}", f"{total_duration:.4f}"]
+    print(_row(total_cells))
+    print(_rule())
 
     if len(sorted_funcs) > 10:
         print(f"  ... and {len(sorted_funcs) - 10} more functions (included in TOTAL)")

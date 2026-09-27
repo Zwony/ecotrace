@@ -1,6 +1,7 @@
 import os
 import sys
 import pytest
+from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 from ecotrace.cli import main, _cmd_analyze, _cmd_export, _cmd_benchmark
 
@@ -79,6 +80,57 @@ def test_cli_analyze_table_flag(tmp_path, capsys):
     for line in out.splitlines():
         if line.startswith("|"):
             assert line.endswith("|")
+
+def test_cli_analyze_table_fits_narrow_terminal(tmp_path, capsys, monkeypatch):
+    """Regression: on a 40-column terminal the table must stay within width."""
+    csv_file = tmp_path / "narrow_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line\n"
+        "2026-04-23 12:00,preprocess_batch,1.0,0.5,TR,10.0,dummy.py,1\n"
+    )
+
+    class Args:
+        file = str(csv_file)
+        table = True
+
+    monkeypatch.setattr(
+        "shutil.get_terminal_size", lambda: SimpleNamespace(columns=40, lines=20)
+    )
+
+    _cmd_analyze(Args())
+    out = capsys.readouterr().out
+
+    # Calls column is dropped in the compact layout for very narrow terminals
+    assert "Calls" not in out
+    assert "| Function" in out
+    assert "| TOTAL" in out
+    table_lines = [l for l in out.splitlines() if l.startswith(("|", "+"))]
+    assert table_lines
+    assert max(len(l) for l in table_lines) <= 40
+
+def test_cli_analyze_table_standard_layout_on_wide_terminal(tmp_path, capsys, monkeypatch):
+    csv_file = tmp_path / "wide_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line\n"
+        "2026-04-23 12:00,hot_loop,1.0,0.5,TR,10.0,dummy.py,1\n"
+    )
+
+    class Args:
+        file = str(csv_file)
+        table = True
+
+    monkeypatch.setattr(
+        "shutil.get_terminal_size", lambda: SimpleNamespace(columns=80, lines=24)
+    )
+
+    _cmd_analyze(Args())
+    out = capsys.readouterr().out
+
+    assert "| Calls" in out
+    assert "| TOTAL" in out
+    table_lines = [l for l in out.splitlines() if l.startswith(("|", "+"))]
+    assert table_lines
+    assert max(len(l) for l in table_lines) <= 80
 
 def test_cli_analyze_table_truncates_long_names(tmp_path, capsys):
     csv_file = tmp_path / "long_name_log.csv"
