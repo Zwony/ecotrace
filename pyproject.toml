@@ -66,3 +66,18 @@ pythonpath = ["."]
 
 [tool.pyright]
 extraPaths = ["ecotrace-website/backend"]
+
+[tool.coverage.run]
+source = ["ecotrace"]
+omit = [
+    "ecotrace/__main__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

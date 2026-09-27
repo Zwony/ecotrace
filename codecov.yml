@@ -1,0 +1,25 @@
+# Codecov configuration for EcoTrace
+# Docs: https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+ignore:
+  - "ecotrace/__main__.py"       # CLI entrypoint runner only
+  - "ecotrace-website/**/*"     # Web platform
+  - "benchmarks/**/*"           # Benchmark suite
+  - "tools/**/*"                # Developer tooling
+  - "tests/**/*"                # Test suite
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: false
