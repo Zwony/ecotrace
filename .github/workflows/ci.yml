@@ -28,7 +28,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip==24.3.1
         pip install .
-        pip install pytest==8.3.4 requests-mock==1.12.1 pytest-cov==6.0.0
+        pip install pytest==8.3.4 requests-mock==1.12.1 pytest-cov==5.0.0
 
     - name: Run tests with coverage
       run: |
