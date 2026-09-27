@@ -52,6 +52,106 @@ def test_cli_analyze_success(tmp_path, capsys):
     assert "dummy_func" in captured.out
     assert "0.5" in captured.out
 
+def test_cli_analyze_table_flag(tmp_path, capsys):
+    csv_file = tmp_path / "table_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line\n"
+        "2026-04-23 12:00,hot_loop,1.0,0.5,TR,10.0,dummy.py,1\n"
+        "2026-04-23 12:01,io_task,2.0,0.4,TR,20.0,dummy.py,2\n"
+    )
+
+    class Args:
+        file = str(csv_file)
+        table = True
+
+    _cmd_analyze(Args())
+    out = capsys.readouterr().out
+
+    assert "+---" in out
+    assert "| Function" in out
+    assert "| hot_loop" in out
+    assert "| io_task" in out
+    # The TOTAL row aggregates every row in the log
+    assert "| TOTAL" in out
+    assert "0.90000000" in out
+    assert "3.0000" in out
+    # Every table row is properly closed by a border character
+    for line in out.splitlines():
+        if line.startswith("|"):
+            assert line.endswith("|")
+
+def test_cli_analyze_table_truncates_long_names(tmp_path, capsys):
+    csv_file = tmp_path / "long_name_log.csv"
+    long_name = "very_long_function_name_" * 3
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line\n"
+        f"2026-04-23 12:00,{long_name},1.0,0.5,TR,10.0,dummy.py,1\n"
+    )
+
+    class Args:
+        file = str(csv_file)
+        table = True
+
+    _cmd_analyze(Args())
+    out = capsys.readouterr().out
+
+    assert "..." in out
+    # Table lines stay bounded regardless of the raw function name length
+    table_lines = [line for line in out.splitlines() if line.startswith("|")]
+    assert table_lines
+    assert all(len(line) <= 72 for line in table_lines)
+
+def test_cli_analyze_table_empty_log(tmp_path, capsys):
+    csv_file = tmp_path / "empty_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line\n"
+    )
+
+    class Args:
+        file = str(csv_file)
+        table = True
+
+    _cmd_analyze(Args())
+    out = capsys.readouterr().out
+
+    # Graceful degradation: the empty-log notice, no table artifacts
+    assert "no measurements recorded" in out
+    assert "| Function" not in out
+    assert "+---" not in out
+
+def test_cli_analyze_default_output_has_no_table(tmp_path, capsys):
+    csv_file = tmp_path / "plain_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line\n"
+        "2026-04-23 12:00,dummy_func,1.0,0.5,TR,10.0,dummy.py,1\n"
+    )
+
+    class Args:
+        file = str(csv_file)
+
+    _cmd_analyze(Args())
+    out = capsys.readouterr().out
+
+    assert "dummy_func" in out
+    assert "0.5" in out
+    assert "| Function" not in out
+    assert "+---" not in out
+
+def test_cli_analyze_table_flag_via_main(tmp_path, capsys):
+    csv_file = tmp_path / "main_log.csv"
+    csv_file.write_text(
+        "Date,Function,Duration(s),Carbon(gCO2),Region,AvgCPU(%),FilePath,Line\n"
+        "2026-04-23 12:00,dummy_func,1.0,0.5,TR,10.0,dummy.py,1\n"
+    )
+    test_args = ["ecotrace", "analyze", "-f", str(csv_file), "--table"]
+    with patch.object(sys, 'argv', test_args):
+        main()
+    out = capsys.readouterr().out
+
+    assert "| Function" in out
+    assert "| TOTAL" in out
+    assert "0.50000000" in out
+
 def test_cli_export_invalid_format(capsys):
     class Args:
         format = "xml"

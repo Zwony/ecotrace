@@ -20,6 +20,7 @@ import os
 import time
 import csv
 import runpy
+import shutil
 
 
 def _get_version():
@@ -173,7 +174,8 @@ def _cmd_analyze(args):
     showing the top emitters.
 
     Args:
-        args: Parsed argparse namespace containing optional ``file`` path.
+        args: Parsed argparse namespace containing the optional ``file`` path
+            and the ``table`` flag for a bordered ASCII breakdown.
     """
     csv_path = args.file
     _print_banner()
@@ -231,16 +233,78 @@ def _cmd_analyze(args):
     # Sort by carbon (highest first), show top 10
     sorted_funcs = sorted(func_stats.items(), key=lambda x: x[1]["carbon"], reverse=True)
 
-    print(f"  {'Function':<30} {'Calls':>5} {'CO2 (gCO2)':>14} {'Time (s)':>10}")
-    print("  " + "-" * 56)
+    if getattr(args, "table", False):
+        _print_function_table(sorted_funcs, total_carbon, total_duration)
+    else:
+        print(f"  {'Function':<30} {'Calls':>5} {'CO2 (gCO2)':>14} {'Time (s)':>10}")
+        print("  " + "-" * 56)
 
-    for func_name, stats in sorted_funcs[:10]:
-        print(f"  {func_name:<30} {stats['calls']:>5} {stats['carbon']:>14.8f} {stats['duration']:>10.4f}")
+        for func_name, stats in sorted_funcs[:10]:
+            print(f"  {func_name:<30} {stats['calls']:>5} {stats['carbon']:>14.8f} {stats['duration']:>10.4f}")
 
-    if len(sorted_funcs) > 10:
-        print(f"  ... and {len(sorted_funcs) - 10} more functions")
+        if len(sorted_funcs) > 10:
+            print(f"  ... and {len(sorted_funcs) - 10} more functions")
 
     print("=" * 60)
+
+
+def _print_function_table(sorted_funcs, total_carbon, total_duration):
+    """Prints per-function metrics as a bordered ASCII table with a totals row.
+
+    Uses only standard-library string formatting (no external table
+    dependencies). Column widths adapt to the current terminal width and
+    long function names are truncated so lines never break mid-table.
+
+    Args:
+        sorted_funcs: ``(function_name, stats)`` pairs sorted by carbon,
+            highest first. The table shows the top 10 but the TOTAL row
+            aggregates every function.
+        total_carbon: Sum of carbon emissions over all functions (gCO2).
+        total_duration: Sum of durations over all functions (seconds).
+    """
+    try:
+        term_width = shutil.get_terminal_size().columns or 80
+    except Exception:
+        term_width = 80
+
+    calls_w, carbon_w, time_w = 5, 14, 10
+    # Fixed per-line overhead: "| " + " | " between columns + " |"
+    fixed_overhead = 13
+    func_w = min(30, max(10, term_width - fixed_overhead - calls_w - carbon_w - time_w))
+
+    def _fit(name):
+        return name if len(name) <= func_w else name[: max(1, func_w - 3)] + "..."
+
+    def _row(func, calls, carbon, duration):
+        return (
+            f"| {func:<{func_w}} | {calls:>{calls_w}} | "
+            f"{carbon:>{carbon_w}} | {duration:>{time_w}} |"
+        )
+
+    rule = (
+        f"+{'-' * (func_w + 2)}+{'-' * (calls_w + 2)}"
+        f"+{'-' * (carbon_w + 2)}+{'-' * (time_w + 2)}+"
+    )
+
+    total_calls = sum(stats["calls"] for _, stats in sorted_funcs)
+    print(rule)
+    print(_row("Function", "Calls", "Carbon (gCO2)", "Time (s)"))
+    print(rule)
+    for func_name, stats in sorted_funcs[:10]:
+        print(
+            _row(
+                _fit(func_name),
+                stats["calls"],
+                f"{stats['carbon']:.8f}",
+                f"{stats['duration']:.4f}",
+            )
+        )
+    print(rule)
+    print(_row("TOTAL", total_calls, f"{total_carbon:.8f}", f"{total_duration:.4f}"))
+    print(rule)
+
+    if len(sorted_funcs) > 10:
+        print(f"  ... and {len(sorted_funcs) - 10} more functions (included in TOTAL)")
 
 
 def _format_masked_key(raw_input: str) -> str:
@@ -970,6 +1034,11 @@ def main():
         description="Read ecotrace_log.csv and display a per-function summary table."
     )
     analyze_parser.add_argument("-f", "--file", default="ecotrace_log.csv", help="Path to CSV log file")
+    analyze_parser.add_argument(
+        "--table",
+        action="store_true",
+        help="Render the per-function breakdown as a bordered ASCII table with totals",
+    )
 
     export_parser = subparsers.add_parser(
         "export",
