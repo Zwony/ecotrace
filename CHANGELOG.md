@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **LangChain Integration (`EcoTraceLangChainCallback`)**: Native callback handler (`ecotrace.callbacks.langchain`) that measures process-scoped energy and carbon for every LLM and chat model call made through LangChain, including chains and agents. Concurrent calls are tracked independently per `run_id`, failed calls are cleaned up via `on_llm_error`, and provider token usage is recorded when available. LangChain is lazy-imported and remains an optional dependency. Includes `examples/langchain_tracking.py` and `tests/test_langchain_callback.py`.
+
 ## [1.6.1] - 2026-09-18
 
 ### Added

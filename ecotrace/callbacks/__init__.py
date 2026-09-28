@@ -4,6 +4,7 @@ Provides carbon and energy tracking integrations for popular ML frameworks:
 - Hugging Face Transformers (`TrainerCallback`)
 - PyTorch (manual training loops)
 - Keras / TensorFlow (`model.fit`)
+- LangChain (LLM, chat model, chain and agent calls)
 
 All framework dependencies are lazy-loaded on demand.
 """
@@ -16,6 +17,8 @@ __all__ = [
     "EcoTraceHuggingFaceCallback",
     "EcoTracePyTorchCallback",
     "EcoTraceKerasCallback",
+    "EcoTraceLangChainCallback",
+    "EcoTraceLangChainHandler",
 ]
 
 
@@ -34,4 +37,9 @@ def __getattr__(name: str) -> Any:
         from .keras import EcoTraceKerasCallback
         globals()["EcoTraceKerasCallback"] = EcoTraceKerasCallback
         return EcoTraceKerasCallback
+    elif name in ("EcoTraceLangChainCallback", "EcoTraceLangChainHandler"):
+        from .langchain import EcoTraceLangChainCallback, EcoTraceLangChainHandler
+        globals()["EcoTraceLangChainCallback"] = EcoTraceLangChainCallback
+        globals()["EcoTraceLangChainHandler"] = EcoTraceLangChainHandler
+        return globals()[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
