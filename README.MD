@@ -137,7 +137,20 @@ trainer = Trainer(
 trainer.train()
 ```
 
-### Option 5: Drop-in CodeCarbon Compatibility
+### Option 5: LangChain Integration
+Measure the carbon footprint of every LLM call, chain, or agent run. Concurrent calls (`batch()`, async agents) are tracked separately by `run_id`:
+
+```python
+from ecotrace.callbacks import EcoTraceLangChainCallback
+
+cb = EcoTraceLangChainCallback(project_name="rag-pipeline")
+llm.invoke("Summarise this document...", config={"callbacks": [cb]})
+
+print(cb.total_emissions_g)  # gCO2 across all LLM calls
+print(cb.records)            # per-call breakdown (model, duration, emissions, token usage)
+```
+
+### Option 6: Drop-in CodeCarbon Compatibility
 Migrate legacy codebases with zero refactoring — just change your import:
 
 ```python
