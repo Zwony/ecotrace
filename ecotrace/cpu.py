@@ -41,19 +41,19 @@ def load_tdp_database(csv_path):
         pass
     return tdp_dict
 
-def get_cpu_info(tdp_db, constants_data):
-    """Detects CPU hardware and resolves Thermal Design Power using a multi-source chain.
+def get_cpu_info(tdp_db, constants_data=None):
+    """Detects CPU hardware and resolves Thermal Design Power (TDP) in watts.
 
-    Matches available chip strings strictly against Apple Silicon static definitions
-    first, before fuzzy matching against the Boavizta hardware database for x86 chips.
+    Matches available processor strings against the verified CPU specification
+    database (including Apple Silicon, Intel, AMD), with sensible defaults.
 
     Args:
         tdp_db (dict): Generated dictionary matching CPU hardware to known TDPs.
-        constants_data (dict): Application-wide constant configurations containing 'TDP_MAP'.
+        constants_data (dict, optional): Application-wide constant configurations (kept for backward compatibility).
 
     Returns:
         dict: CPU characteristics comprising:
-            - brand (str): ASCII-cleaned display name for the physical CPU.
+            - brand (str): Cleaned display name for the physical CPU.
             - cores (int): Count of logical processing threads utilizing the OS scheduler.
             - tdp (float): Assigned structural TDP boundary in watts.
     """
@@ -67,27 +67,23 @@ def get_cpu_info(tdp_db, constants_data):
     clean_brand = re.sub(r'\d+th\s+gen', '', clean_brand)
     clean_brand = " ".join(clean_brand.split())
 
-    if "apple" in clean_brand:
-        found_tdp = 25.0
-        tdp_map = constants_data.get("TDP_MAP", {})
-        for m_chip in ["m4", "m3", "m2", "m1"]:
-            if m_chip in clean_brand:
-                found_tdp = tdp_map.get(m_chip.upper(), 25.0)
-                break
+    clean_brand_search = clean_brand.replace(" cpu ", " ").replace(" processor", "")
+    clean_brand_search = " ".join(clean_brand_search.split())
+
+    found_tdp = None
+    if clean_brand in tdp_db:
+        found_tdp = tdp_db[clean_brand]
+    elif clean_brand_search in tdp_db:
+        found_tdp = tdp_db[clean_brand_search]
     else:
-        found_tdp = 65.0
-        clean_brand_search = clean_brand.replace(" cpu ", " ").replace(" processor", "")
-        clean_brand_search = " ".join(clean_brand_search.split())
+        sorted_models = sorted(tdp_db.items(), key=lambda x: len(x[0]), reverse=True)
+        for model_name, tdp in sorted_models:
+            if len(model_name) > 3 and (model_name in clean_brand_search or clean_brand_search in model_name):
+                found_tdp = tdp
+                break
 
-        if clean_brand in tdp_db:
-            found_tdp = tdp_db[clean_brand]
-        elif clean_brand_search in tdp_db:
-            found_tdp = tdp_db[clean_brand_search]
-        else:
-            sorted_models = sorted(tdp_db.items(), key=lambda x: len(x[0]), reverse=True)
-            for model_name, tdp in sorted_models:
-                if len(model_name) > 4 and (model_name in clean_brand_search or clean_brand_search in model_name):
-                    found_tdp = tdp
-                    break
+    if found_tdp is None:
+        # Fallback based on architecture
+        found_tdp = 25.0 if "apple" in clean_brand else 65.0
 
-    return {"brand": display_brand, "cores": psutil.cpu_count(logical=True), "tdp": found_tdp}
+    return {"brand": display_brand, "cores": psutil.cpu_count(logical=True), "tdp": float(found_tdp)}
