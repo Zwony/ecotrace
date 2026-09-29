@@ -14,9 +14,13 @@ def test_cpu_info_detection():
 
 def test_apple_silicon_tdp():
     with patch("ecotrace.cpu.fetch_raw_cpu_info", return_value={"brand_raw": "Apple M2 Max"}):
-        constants = {"TDP_MAP": {"M2": 30.0}}
-        info = get_cpu_info({}, constants)
-        assert info["tdp"] == 30.0
+        db = {"apple m2 max": 90.0}
+        info = get_cpu_info(db)
+        assert info["tdp"] == 90.0
+
+    with patch("ecotrace.cpu.fetch_raw_cpu_info", return_value={"brand_raw": "Apple M9 Ultra"}):
+        info = get_cpu_info({})
+        assert info["tdp"] == 25.0  # Apple fallback TDP
 
 def test_load_tdp_database(tmp_path):
     csv_file = tmp_path / "cpu_specs.csv"
