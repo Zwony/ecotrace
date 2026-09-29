@@ -94,7 +94,7 @@ def test_cli_analyze_table_fits_narrow_terminal(tmp_path, capsys, monkeypatch):
         table = True
 
     monkeypatch.setattr(
-        "shutil.get_terminal_size", lambda: SimpleNamespace(columns=40, lines=20)
+        "shutil.get_terminal_size", lambda *args, **kwargs: SimpleNamespace(columns=40, lines=20)
     )
 
     _cmd_analyze(Args())
@@ -120,7 +120,7 @@ def test_cli_analyze_table_standard_layout_on_wide_terminal(tmp_path, capsys, mo
         table = True
 
     monkeypatch.setattr(
-        "shutil.get_terminal_size", lambda: SimpleNamespace(columns=80, lines=24)
+        "shutil.get_terminal_size", lambda *args, **kwargs: SimpleNamespace(columns=80, lines=24)
     )
 
     _cmd_analyze(Args())
