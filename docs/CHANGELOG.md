@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-30
+
+### Added
+- **LangChain Integration (`EcoTraceLangChainCallback`)**: Native callback handler (`ecotrace.callbacks.langchain`) that measures process-scoped energy and carbon for every LLM and chat model call made through LangChain, including chains and agents. Concurrent calls are tracked independently per `run_id`, failed calls are cleaned up via `on_llm_error`, and provider token usage is recorded when available. LangChain is lazy-imported and remains an optional dependency. Includes `examples/langchain_tracking.py` and `tests/test_langchain_callback.py` (contributed by @Gthejesraj in #198).
+- **Global Grid Database Expansion (200+ Countries/Zones)**: Upgraded `CARBON_INTENSITY_MAP` in `constants.json` with verified country-level generation intensity data from the Ember Climate 2025/2026 dataset, providing offline local carbon intensity resolution across 209 countries and territories with zero configuration.
+- **Terminal ASCII Analysis Table (`ecotrace analyze --table`)**: Added bordered per-function breakdown table with responsive terminal width auto-scaling, column totals, and zero new third-party dependencies (contributed by @hajar-benhadj in #197 / #199).
+
+### Changed
+- **Unified Hardware Specification Resolution**: Cleaned up legacy hardcoded `TDP_MAP` in `constants.json` and `cpu.py`, unifying x86 and Apple Silicon processor resolution directly against the verified 6,980+ CPU specification dataset (`cpu_data.csv`).
+- **OpenSSF Security & Dependency Pinning**: Enforced GitHub branch protection status checks, established `.github/CODEOWNERS`, configured `codecov.yml` exclusion boundaries, and pinned continuous integration dependencies across Python 3.8 through 3.14-dev matrix jobs.
+
 ## [1.6.1] - 2026-09-18
 
 ### Added

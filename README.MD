@@ -6,12 +6,12 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.6.1 — HuggingFace Integration, CodeCarbon Drop-in API & Metrology Study.** Native HuggingFace Trainer callback, CodeCarbon-compatible API layer (`EmissionsTracker`), Case 08 Metrology & Overhead benchmark, and Zenodo DOI archival integration.
+**v1.7.0 — Native LangChain LLM Tracking, Global Grid Expansion (200+ Zones), and ASCII Terminal Analytics.** Native LangChain callback (`EcoTraceLangChainCallback`) for LLM/RAG pipelines, expanded static grid carbon coverage from Ember Climate 2025/2026 dataset, bordered terminal ASCII report table (`ecotrace analyze --table`), and streamlined hardware TDP resolution.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
 
-Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configuration
+Real-time monitoring | 200+ Global Zones | AI-powered insights | Zero-configuration
 
 <br>
 
@@ -43,15 +43,15 @@ Real-time monitoring | 50+ Global Zones | AI-powered insights | Zero-configurati
 
 ---
 
-## Core Features in v1.6.1
+## Core Features in v1.7.0
 
-> **Latest Release.** v1.6.1 introduces native HuggingFace Trainer callbacks, drop-in CodeCarbon API compatibility, the Case 08 Observer Effect benchmark study, and official Zenodo DOI archival indexing.
+> **Latest Release.** v1.7.0 introduces native LangChain callback instrumentation, global carbon grid database expansion to 200+ countries, terminal ASCII table reporting, and streamlined CPU architecture resolution.
 
-- **HuggingFace Transformers Callback (`ecotrace.callbacks.huggingface`)** — Native `EcoTraceHuggingFaceCallback` injecting instantaneous power draw (W) and cumulative carbon metrics directly into `state.log_history` on step and epoch intervals.
-- **CodeCarbon Drop-in API (`ecotrace.tracker`)** — Zero-codebase-refactoring drop-in replacement (`EmissionsTracker`, `OfflineEmissionsTracker`, `@track_emissions`) enabling existing projects to switch to EcoTrace seamlessly.
-- **Automated Multi-GPU Tracking & Aggregation (`ecotrace.gpu`)** — Automatically discovers all available NVIDIA GPUs via NVML (`get_all_gpu_info`) and aggregates instantaneous power draw at 50ms intervals across active accelerators.
-- **Offline Disk Retry Queue (`CloudExporter`)** — Telemetry payloads are safely persisted to an isolated local disk queue during network outages, automatically flushing in chronological FIFO order upon reconnection.
-- **Zenodo DOI Archival Integration** — Standardized metadata (`.zenodo.json`, `CITATION.cff`) ensuring verifiable scientific citation and permanent preservation.
+- **Native LangChain Callback (`ecotrace.callbacks.langchain`)** — Thread-safe `EcoTraceLangChainCallback` for LangChain and chat models. Measures process-scoped energy and carbon consumption per `run_id`, recording model names, execution durations, emissions ($gCO_2$), and provider token usage.
+- **Global Grid Expansion (200+ Countries/Zones)** — Built-in `CARBON_INTENSITY_MAP` upgraded with verified country-level generation intensity data from the Ember Climate 2025/2026 dataset, providing offline local grid resolution across 209 countries and territories with zero configuration.
+- **Terminal ASCII Analysis Table (`ecotrace analyze --table`)** — Bordered per-function breakdown table with responsive terminal width auto-scaling, column totals, and zero new third-party dependencies.
+- **Unified Hardware Specification Resolution** — Direct matching against the 6,980+ CPU specification dataset for all x86 and Apple Silicon architectures, eliminating deprecated hardcoded mappings.
+- **HuggingFace & CodeCarbon Drop-in Interoperability** — Full compatibility with HuggingFace `TrainerCallback` and CodeCarbon API signatures (`EmissionsTracker`, `@track_emissions`).
 
 ---
 
@@ -206,7 +206,7 @@ Enforce carbon emission budgets directly in your GitHub pull requests. Add this 
   run: pytest --ecotrace
 
 - name: EcoTrace Carbon Gate
-  uses: Zwony/ecotrace@v1.6.1
+  uses: Zwony/ecotrace@v1.7.0
   with:
     budget: '5.0'    # Fails pipeline if total test emissions exceed 5.0 gCO2
     region: 'US'
@@ -304,7 +304,7 @@ If you use EcoTrace in academic research or sustainability audits, please cite:
   title = {EcoTrace: High-Precision Energy and Emissions Instrumentation for Python},
   year = {2026},
   publisher = {Zenodo},
-  version = {v1.6.1},
+  version = {v1.7.0},
   doi = {10.5281/zenodo.22834060},
   url = {https://doi.org/10.5281/zenodo.22834060}
 }
