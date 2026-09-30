@@ -6,8 +6,8 @@ authors:
     given-names: "Emre"
     email: "ecotraceteam@gmail.com"
 doi: "10.5281/zenodo.22834060"
-version: 1.6.1
-date-released: 2026-09-18
+version: 1.7.0
+date-released: 2026-09-30
 url: "https://ecotracelibrary.com"
 repository-code: "https://github.com/Zwony/ecotrace"
 license: MIT
