@@ -3,7 +3,7 @@ import sys
 import pytest
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
-from ecotrace.cli import main, _cmd_analyze, _cmd_export, _cmd_benchmark
+from ecotrace.cli import main, _cmd_analyze, _cmd_export, _cmd_benchmark, _print_function_table
 
 @pytest.fixture
 def dummy_script(tmp_path):
@@ -203,6 +203,18 @@ def test_cli_analyze_table_flag_via_main(tmp_path, capsys):
     assert "| Function" in out
     assert "| TOTAL" in out
     assert "0.50000000" in out
+
+
+def test_cli_function_table_terminal_widths(capsys):
+    funcs = [("compute_heavy", {"calls": 5, "carbon": 0.0025, "duration": 1.25})]
+    for width in (20, 25, 27, 35, 45, 60, 100):
+        with patch("shutil.get_terminal_size", return_value=os.terminal_size((width, 24))):
+            _print_function_table(funcs, total_carbon=0.0025, total_duration=1.25)
+            out = capsys.readouterr().out
+            assert "| Function" in out
+            assert "| TOTAL" in out
+            assert "0.00250000" in out
+
 
 def test_cli_export_invalid_format(capsys):
     class Args:

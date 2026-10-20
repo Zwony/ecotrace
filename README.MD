@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.7.0 — Native LangChain LLM Tracking, Global Grid Expansion (200+ Zones), and ASCII Terminal Analytics.** Native LangChain callback (`EcoTraceLangChainCallback`) for LLM/RAG pipelines, expanded static grid carbon coverage from Ember Climate 2025/2026 dataset, bordered terminal ASCII report table (`ecotrace analyze --table`), and streamlined hardware TDP resolution.
+**v1.7.1 — Performance & Telemetry Stability Patch.** High-performance in-memory CPU database caching, defensive isolation in LangChain tracking callbacks, narrow terminal ASCII scaling fixes, and container environment safeguards.
 ---
 
 **EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
@@ -304,7 +304,7 @@ If you use EcoTrace in academic research or sustainability audits, please cite:
   title = {EcoTrace: High-Precision Energy and Emissions Instrumentation for Python},
   year = {2026},
   publisher = {Zenodo},
-  version = {v1.7.0},
+  version = {v1.7.1},
   doi = {10.5281/zenodo.22834060},
   url = {https://doi.org/10.5281/zenodo.22834060}
 }

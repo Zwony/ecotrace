@@ -23,26 +23,21 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from ..logger import logger
 from ..tracker import EmissionsTracker
 
-if TYPE_CHECKING:
+try:
     from langchain_core.callbacks import BaseCallbackHandler
-else:
+except ImportError:
     try:
-        from langchain_core.callbacks import BaseCallbackHandler
+        from langchain.callbacks.base import BaseCallbackHandler
     except ImportError:
-        try:
-            from langchain.callbacks.base import BaseCallbackHandler
-        except ImportError:
-            class BaseCallbackHandler:
-                """Minimal stand-in used when LangChain is not installed."""
-
-                raise_error: bool = False
-                run_inline: bool = False
+        class BaseCallbackHandler:
+            raise_error: bool = False
+            run_inline: bool = False
 
 
 class EcoTraceLangChainCallback(BaseCallbackHandler):
@@ -134,21 +129,24 @@ class EcoTraceLangChainCallback(BaseCallbackHandler):
     # ------------------------------------------------------------------ #
 
     def _begin(self, run_id: UUID, serialized: Optional[Dict[str, Any]], kwargs: Dict[str, Any]) -> None:
-        with self._lock:
-            if run_id in self._active:
-                return
-            tracker = self._idle_trackers.pop() if self._idle_trackers else None
+        try:
+            with self._lock:
+                if run_id in self._active:
+                    return
+                tracker = self._idle_trackers.pop() if self._idle_trackers else None
 
-        if tracker is None:
-            tracker = EmissionsTracker(**self._tracker_kwargs)
-        tracker.start()
+            if tracker is None:
+                tracker = EmissionsTracker(**self._tracker_kwargs)
+            tracker.start()
 
-        with self._lock:
-            self._active[run_id] = {
-                "tracker": tracker,
-                "model": _model_name(serialized, kwargs),
-                "started_at": time.time(),
-            }
+            with self._lock:
+                self._active[run_id] = {
+                    "tracker": tracker,
+                    "model": _model_name(serialized, kwargs),
+                    "started_at": time.time(),
+                }
+        except Exception as e:
+            logger.debug(f"[EcoTrace] Failed to start LangChain tracking for run {run_id}: {e}")
 
     def _finish(
         self,
@@ -157,43 +155,46 @@ class EcoTraceLangChainCallback(BaseCallbackHandler):
         response: Any = None,
         error: Optional[BaseException] = None,
     ) -> None:
-        with self._lock:
-            entry = self._active.pop(run_id, None)
-        if entry is None:
-            return
+        try:
+            with self._lock:
+                entry = self._active.pop(run_id, None)
+            if entry is None:
+                return
 
-        tracker: EmissionsTracker = entry["tracker"]
-        emissions_kg = tracker.stop()
-        emissions_g = tracker.final_emissions_g
-        duration_s = tracker.duration_seconds
+            tracker: EmissionsTracker = entry["tracker"]
+            emissions_kg = tracker.stop()
+            emissions_g = tracker.final_emissions_g
+            duration_s = tracker.duration_seconds
 
-        record: Dict[str, Any] = {
-            "run_id": str(run_id),
-            "model": entry["model"],
-            "status": status,
-            "started_at": entry["started_at"],
-            "duration_s": duration_s,
-            "emissions_g": emissions_g,
-            "emissions_kg": emissions_kg,
-        }
-        token_usage = _token_usage(response)
-        if token_usage:
-            record["token_usage"] = token_usage
-        if error is not None:
-            record["error"] = repr(error)
+            record: Dict[str, Any] = {
+                "run_id": str(run_id),
+                "model": entry["model"],
+                "status": status,
+                "started_at": entry["started_at"],
+                "duration_s": duration_s,
+                "emissions_g": emissions_g,
+                "emissions_kg": emissions_kg,
+            }
+            token_usage = _token_usage(response)
+            if token_usage:
+                record["token_usage"] = token_usage
+            if error is not None:
+                record["error"] = repr(error)
 
-        with self._lock:
-            self.records.append(record)
-            self.total_emissions_g += emissions_g
-            self.total_emissions_kg += emissions_kg
-            self.total_duration_s += duration_s
-            self._idle_trackers.append(tracker)
+            with self._lock:
+                self.records.append(record)
+                self.total_emissions_g += emissions_g
+                self.total_emissions_kg += emissions_kg
+                self.total_duration_s += duration_s
+                self._idle_trackers.append(tracker)
 
-        if self.verbose:
-            logger.info(
-                f"[EcoTrace] LLM call ({entry['model']}, {status}) took {duration_s:.2f}s "
-                f"and emitted {emissions_g:.6f} gCO2."
-            )
+            if self.verbose:
+                logger.info(
+                    f"[EcoTrace] LLM call ({entry['model']}, {status}) took {duration_s:.2f}s "
+                    f"and emitted {emissions_g:.6f} gCO2."
+                )
+        except Exception as e:
+            logger.debug(f"[EcoTrace] Failed to finish LangChain tracking for run {run_id}: {e}")
 
     @property
     def active_runs(self) -> int:
