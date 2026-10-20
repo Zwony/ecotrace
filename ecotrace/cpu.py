@@ -14,6 +14,7 @@ def fetch_raw_cpu_info():
     """
     return cpuinfo.get_cpu_info()
 
+@functools.lru_cache(maxsize=1)
 def load_tdp_database(csv_path):
     """Parses the Boavizta CPU specification dataset into a TDP lookup table.
 
@@ -86,4 +87,4 @@ def get_cpu_info(tdp_db, constants_data=None):
         # Fallback based on architecture
         found_tdp = 25.0 if "apple" in clean_brand else 65.0
 
-    return {"brand": display_brand, "cores": psutil.cpu_count(logical=True), "tdp": float(found_tdp)}
+    return {"brand": display_brand, "cores": psutil.cpu_count(logical=True) or 1, "tdp": float(found_tdp)}

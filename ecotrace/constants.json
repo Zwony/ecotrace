@@ -213,6 +213,7 @@
     "DEFAULT": 475
   },
   "GPU_TDP_DEFAULTS": {
+    "nvidia": 150.0,
     "intel": 15.0,
     "amd": 75.0,
     "unknown": 100.0

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-10-20
+
+### Fixed
+- **Terminal ASCII Table Bounds Guard (`ecotrace analyze --table`)**: Fixed an `IndexError: tuple index out of range` crash triggered when terminal width is narrower than 28 columns by strictly aligning data cells to rendered header columns. Added automated matrix unit tests covering 20 to 100 column widths.
+- **In-Memory CPU Specification Caching**: Added `functools.lru_cache(maxsize=1)` to `load_tdp_database` in `cpu.py`, eliminating redundant disk I/O and parsing of `cpu_data.csv` (6,980+ rows) across successive `EcoTrace()` and `EmissionsTracker()` instances.
+- **Defensive LangChain Tracking Isolation**: Protected `_begin` and `_finish` lifecycle hooks in `EcoTraceLangChainCallback` with exception guards to ensure telemetry anomalies never crash host LLM inference or RAG workflows.
+- **Container Environment Safeguards**: Guaranteed non-null logical CPU core resolution (`psutil.cpu_count() or 1`) for restricted Docker/LXC container environments.
+- **Hardware Configuration Completeness**: Added explicit `"nvidia": 150.0` default entry to `GPU_TDP_DEFAULTS` in `constants.json`.
+
 ## [1.7.0] - 2026-09-30
 
 ### Added

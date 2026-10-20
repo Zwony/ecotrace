@@ -29,7 +29,7 @@ def _get_version():
         from ecotrace import __version__
         return __version__
     except ImportError:
-        return "1.7.0"
+        return "1.7.1"
 
 
 BANNER = """
@@ -297,6 +297,7 @@ def _print_function_table(sorted_funcs, total_carbon, total_duration):
         return "+" + "+".join("-" * (w + 2) for w in widths) + "+"
 
     show_calls = len(headers) == 4
+    show_time = len(headers) >= 3
     total_calls = sum(stats["calls"] for _, stats in sorted_funcs)
 
     print(_rule())
@@ -305,15 +306,19 @@ def _print_function_table(sorted_funcs, total_carbon, total_duration):
     for func_name, stats in sorted_funcs[:10]:
         cells = [_fit(func_name)]
         if show_calls:
-            cells.append(stats["calls"])
-        cells += [f"{stats['carbon']:.8f}", f"{stats['duration']:.4f}"]
+            cells.append(str(stats["calls"]))
+        cells.append(f"{stats['carbon']:.8f}")
+        if show_time:
+            cells.append(f"{stats['duration']:.4f}")
         print(_row(cells))
     print(_rule())
 
     total_cells = ["TOTAL"]
     if show_calls:
-        total_cells.append(total_calls)
-    total_cells += [f"{total_carbon:.8f}", f"{total_duration:.4f}"]
+        total_cells.append(str(total_calls))
+    total_cells.append(f"{total_carbon:.8f}")
+    if show_time:
+        total_cells.append(f"{total_duration:.4f}")
     print(_row(total_cells))
     print(_rule())
 
