@@ -9,9 +9,9 @@
 **v1.7.1 — Performance & Telemetry Stability Patch.** High-performance in-memory CPU database caching, defensive isolation in LangChain tracking callbacks, narrow terminal ASCII scaling fixes, and container environment safeguards.
 ---
 
-**EcoTrace is a lightweight library for granular carbon footprint measurement of Python applications. No configuration files, no background services—just real-time hardware-level transparency.**
+**EcoTrace is a lightweight, zero-configuration hardware profiler for Python applications, AI training pipelines, and LLM workloads. Measure exact process-scoped energy consumption (Joules/kWh), runtime latency, and operational carbon footprint ($gCO_2$) without background daemons.**
 
-Real-time monitoring | 200+ Global Zones | AI-powered insights | Zero-configuration
+Hardware-Level Telemetry (RAPL / NVML / Apple Silicon) • Process-Scoped Isolation • Native LLM & LangChain Callbacks • 100% Offline & Local-First
 
 <br>
 
@@ -28,16 +28,16 @@ Real-time monitoring | 200+ Global Zones | AI-powered insights | Zero-configurat
 <br>
 
 > [!TIP]
->  **Live Web Observatory:** Stream and monitor your application carbon footprint in real-time on our hosted web platform at [**ecotracelibrary.com**](https://ecotracelibrary.com).
+> **VS Code Extension:** Monitor function-level energy and emissions in real time with CodeLens while you code. [Download here](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
 
 > [!TIP]
-> **VS Code Extension:** Monitor application carbon footprint in real-time during development. [Download here](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
+> **Hosted Web Dashboard (Optional):** Stream metrics in real-time to our hosted team platform at [**ecotracelibrary.com**](https://ecotracelibrary.com).
 
 <br>
 
 ![EcoTrace Demo](assets/demo.gif)
 
-*Function-level carbon measurement with real-time monitoring*
+*Function-level energy and carbon measurement with real-time monitoring*
 
 </div>
 
@@ -63,55 +63,75 @@ pip install ecotrace
 
 Optional extras:
 ```bash
-pip install ecotrace[gpu]   # NVIDIA GPU support
-pip install ecotrace[ai]    # Gemini AI insights
-pip install ecotrace[all]   # Everything
+pip install ecotrace[gpu]   # NVIDIA GPU (NVML) support
+pip install ecotrace[ai]    # Gemini AI code optimization insights
+pip install ecotrace[all]   # Full dependencies (GPU + AI + Report generation)
 ```
 
 ---
 
-## Quick Start
+## Quick Start (100% Local & Offline)
 
-### Option 1: Zero-Code Profiling (CLI + Cloud Sync)
-Authenticate your terminal once, then profile any script without changing source code:
+EcoTrace works entirely on your local machine with **zero configuration, zero API keys, and no required accounts**.
 
-```bash
-# 1. Login with your ingestion key from https://ecotracelibrary.com
-ecotrace login --key eco_usr_abc123...
-
-# 2. Run your script — metrics automatically stream to your web dashboard!
-ecotrace run my_script.py
-```
-
-### Option 2: Programmatic Tracking & Cloud Dashboard
-Decorate functions for granular instrumentation and stream metrics to your web account:
+### Option 1: 3-Line Function Profiler
+Decorate any synchronous or asynchronous function to immediately inspect its runtime energy draw and carbon impact:
 
 ```python
 from ecotrace import EcoTrace
 
-# Connects directly to your hosted account at https://ecotracelibrary.com
-eco = EcoTrace(api_key="eco_usr_abc123...", region_code="US")
+eco = EcoTrace()
 
 @eco.track
-def my_function():
-    # Your heavy processing here
-    pass
+def process_data():
+    # Your heavy compute, batch job, or inference logic
+    return sum(i * i for i in range(10_000_000))
 
-my_function()
+process_data()
+```
+*When your script exits, EcoTrace automatically prints an accurate hardware breakdown (Joules, Wh, execution latency, and $gCO_2$).*
 
-# Export audit-ready reports or check cumulative totals
-eco.generate_pdf_report("carbon_audit.pdf")
-print(f"Total Carbon Emitted: {eco.total_carbon} gCO2")
+### Option 2: Zero-Code CLI Profiler
+Profile any standalone Python script or training run without changing a single line of source code:
+
+```bash
+# Run script with terminal ASCII breakdown table
+ecotrace run my_script.py --table
 ```
 
-### Option 3: Carbon Budget Mode
-Set a limit and let EcoTrace enforce it:
+### Option 3: LangChain & AI Agent Callback (LLM Profiling)
+Measure the exact energy footprint and token consumption of every LLM call, RAG pipeline, or autonomous agent:
+
+```python
+from ecotrace.callbacks import EcoTraceLangChainCallback
+
+cb = EcoTraceLangChainCallback(project_name="rag-pipeline")
+llm.invoke("Summarise this document...", config={"callbacks": [cb]})
+
+print(f"Total Emissions: {cb.total_emissions_g:.6f} gCO2")
+print(cb.records)  # per-call breakdown: model, duration, token usage, emissions
+```
+
+### Option 4: A/B Implementation Comparison
+Directly compare the energy efficiency and execution speed of two alternative algorithms or libraries (e.g., Pandas vs. Polars):
+
+```python
+from ecotrace import EcoTrace
+
+eco = EcoTrace()
+
+# Compares runtime, CPU utilization, Joules, and carbon side-by-side
+eco.compare(pandas_pipeline, polars_pipeline)
+```
+
+### Option 5: Carbon Budget & Guardrail Mode
+Set an operational budget and trigger alerts when your workload exceeds thresholds:
 
 ```python
 eco = EcoTrace(
     region_code="TR",
-    carbon_limit=5.0,                   # 5 gCO2 budget
-    on_budget_exceeded=lambda t, l: print(f"Budget exceeded: {t:.4f}/{l:.4f} gCO2")
+    carbon_limit=5.0,  # 5 gCO2 budget
+    on_budget_exceeded=lambda total, limit: print(f"Budget exceeded: {total:.4f}/{limit:.4f} gCO2")
 )
 
 @eco.track
@@ -122,8 +142,8 @@ training_pipeline()
 print(f"Remaining budget: {eco.remaining_budget} gCO2")
 ```
 
-### Option 4: HuggingFace Transformers Integration
-Log step-by-step carbon emissions automatically inside HuggingFace `Trainer`:
+### Option 6: HuggingFace Transformers Integration
+Log step-by-step training emissions directly inside HuggingFace `Trainer`:
 
 ```python
 from transformers import Trainer
@@ -137,21 +157,8 @@ trainer = Trainer(
 trainer.train()
 ```
 
-### Option 5: LangChain Integration
-Measure the carbon footprint of every LLM call, chain, or agent run. Concurrent calls (`batch()`, async agents) are tracked separately by `run_id`:
-
-```python
-from ecotrace.callbacks import EcoTraceLangChainCallback
-
-cb = EcoTraceLangChainCallback(project_name="rag-pipeline")
-llm.invoke("Summarise this document...", config={"callbacks": [cb]})
-
-print(cb.total_emissions_g)  # gCO2 across all LLM calls
-print(cb.records)            # per-call breakdown (model, duration, emissions, token usage)
-```
-
-### Option 6: Drop-in CodeCarbon Compatibility
-Migrate legacy codebases with zero refactoring — just change your import:
+### Option 7: Drop-in CodeCarbon Compatibility
+Migrate legacy codebases with zero refactoring — just change your import statement:
 
 ```python
 # from codecarbon import EmissionsTracker  <-- Change to EcoTrace:
@@ -162,6 +169,25 @@ tracker.start()
 # ... your model training or inference ...
 emissions = tracker.stop()
 print(f"Emissions: {emissions:.6f} kg CO2")
+```
+
+---
+
+## Optional: Live Web Observatory & Cloud Dashboard
+
+If you want live streaming dashboards, team collaboration, or persistent audit history across cloud clusters, connect your local runs to our hosted platform at [**ecotracelibrary.com**](https://ecotracelibrary.com):
+
+```bash
+# 1. Login with your personal ingestion key from https://ecotracelibrary.com
+ecotrace login --key eco_usr_abc123...
+
+# 2. Run your script — telemetry automatically streams to your web dashboard!
+ecotrace run my_script.py
+```
+
+Or connect programmatically via Python:
+```python
+eco = EcoTrace(api_key="eco_usr_abc123...", region_code="US")
 ```
 
 ### Expected Output
@@ -253,7 +279,7 @@ If total emissions recorded in `ecotrace_log.csv` exceed the budget, the command
 ## Academic Benchmarks & Empirical Research
 
 > [!TIP]
-> 📄 **Official Technical Whitepaper:** Download the comprehensive [**EcoTrace Technical Whitepaper (PDF)**](EcoTrace_Whitepaper.pdf) or view the online [**WHITE_PAPER.md**](WHITE_PAPER.md) for complete mathematical derivations, RAPL hardware validation metrics ($MAPE \le 6.8\%$), and empirical study analyses.
+> **Official Technical Whitepaper:** Download the comprehensive [**EcoTrace Technical Whitepaper (PDF)**](EcoTrace_Whitepaper.pdf) or view the online [**WHITE_PAPER.md**](WHITE_PAPER.md) for complete mathematical derivations, RAPL hardware validation metrics ($MAPE \le 6.8\%$), and empirical study analyses.
 
 EcoTrace includes a reproducible [**Academic Benchmark Suite**](benchmarks/) designed for peer-reviewed green computing research. Every article in `benchmarks/articles/` is **auto-generated** from real measurement JSONs in `benchmarks/results/` by `benchmarks/report_generator.py` — re-run the generator after new measurements to keep the published numbers in sync.
 
