@@ -23,6 +23,7 @@ Hardware-Level Telemetry (RAPL / NVML / Apple Silicon) • Process-Scoped Isolat
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Zwony/ecotrace/badge)](https://scorecard.dev/viewer/?uri=github.com/Zwony/ecotrace)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14713/badge)](https://www.bestpractices.dev/projects/14713)
 [![codecov](https://codecov.io/gh/Zwony/ecotrace/graph/badge.svg)](https://codecov.io/gh/Zwony/ecotrace)
+[![XERJ Corpus Hub](https://hub.xerj.org/contributors/Zwony/badge.svg)](https://hub.xerj.org/contributors/Zwony)
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
 
 <br>
