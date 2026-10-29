@@ -56,8 +56,6 @@ with eco.track_block("polars_pipeline"):
 | **Carbon Footprint ($gCO_2eq$)** | `0.002201 g` | `0.000357 g` | **-83.8% Emissions** |
 | **Net Carbon Saved / Run** | — | — | **0.001844 g $CO_2eq$** |
 
-![EcoTrace Benchmark Chart](../assets/pandas_vs_polars_benchmark.png)
-
 *\*Note on CPU Utilization: EcoTrace samples whole-system processor utilization at 50 ms intervals normalized across all 20 logical threads. Because Polars completes the entire computation in an ultra-fast burst (~100 ms) across multiple threads before returning to idle, the time-averaged whole-system percentage registers at 6.67% (representing nearly 2x higher parallel thread activity than Pandas during its active window).*
 
 ---
