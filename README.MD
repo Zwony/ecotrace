@@ -16,6 +16,7 @@ Hardware-Level Telemetry (RAPL / NVML / Apple Silicon) • Process-Scoped Isolat
 <br>
 
 [![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=2E8B57&style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/ecotrace/)
+[![LangChain Official Integration](https://img.shields.io/badge/LangChain-Official%20Integration-1C3C3C?style=flat-square&logo=langchain&logoColor=white)](https://python.langchain.com/docs/integrations/providers/all_providers/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=flat-square&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=flat-square)](https://opensource.org/licenses/MIT)
@@ -26,6 +27,9 @@ Hardware-Level Telemetry (RAPL / NVML / Apple Silicon) • Process-Scoped Isolat
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
 
 <br>
+
+> [!NOTE]
+> **Official LangChain Integration:** EcoTrace is officially cataloged in the [LangChain Integration Directory](https://python.langchain.com/docs/integrations/providers/all_providers/) for LLM hardware energy, latency, and emissions profiling.
 
 > [!TIP]
 > **VS Code Extension:** Monitor function-level energy and emissions in real time with CodeLens while you code. [Download here](https://marketplace.visualstudio.com/items?itemName=ecotrace-team.ecotrace-monitor).
@@ -100,7 +104,7 @@ ecotrace run my_script.py --table
 ```
 
 ### Option 3: LangChain & AI Agent Callback (LLM Profiling)
-Measure the exact energy footprint and token consumption of every LLM call, RAG pipeline, or autonomous agent:
+Officially listed in the [LangChain Provider Directory](https://python.langchain.com/docs/integrations/providers/all_providers/). Measure the exact hardware energy footprint and token consumption of every LLM call, RAG pipeline, or autonomous agent:
 
 ```python
 from ecotrace.callbacks import EcoTraceLangChainCallback
