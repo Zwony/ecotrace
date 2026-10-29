@@ -72,8 +72,10 @@ nav:
       - LLM Inference Scaling: benchmarks/05_llm_inference.md
       - Regional Grid Arbitrage (15 Countries): benchmarks/06_regional_carbon.md
   - Integrations:
-      - Flask: USAGE.md
+      - LangChain (LLM Profiling): integrations/langchain.md
+      - Hugging Face Transformers: integrations/huggingface.md
       - FastAPI: USAGE.md
+      - Flask: USAGE.md
   - Community:
       - Contributing: CONTRIBUTING.MD
       - Code of Conduct: CODE_OF_CONDUCT.MD
