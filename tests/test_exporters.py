@@ -209,6 +209,22 @@ def test_webhook_exporter_discord_color_follows_carbon_limit(mock_post, carbon_l
     assert payload["embeds"][0]["color"] == expected_color
 
 
+@patch('requests.post')
+def test_webhook_exporter_slack_sends_block_kit_blocks(mock_post):
+    """format="slack" sends Block Kit blocks and a plain text fallback with the function name, gCO2 and duration."""
+    payload = _post_one_measurement(mock_post, format="slack")
+
+    assert set(payload) == {"text", "blocks"}
+    assert "test_function" in payload["text"]
+    assert "0.005000 gCO2" in payload["text"]
+    assert "1.20 s" in payload["text"]
+
+    title, metrics = payload["blocks"]
+    assert title == {"type": "section", "text": {"type": "plain_text", "text": "EcoTrace: test_function"}}
+    assert metrics["type"] == "section"
+    assert [field["text"] for field in metrics["fields"]] == ["*Carbon*\n0.005000 gCO2", "*Duration*\n1.20 s"]
+
+
 from ecotrace.exporters.cloud import CloudExporter
 
 @patch('requests.Session.post')

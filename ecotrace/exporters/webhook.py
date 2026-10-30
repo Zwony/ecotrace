@@ -10,7 +10,7 @@ except ImportError:
 
 from ecotrace.core import EcoTrace
 
-WEBHOOK_FORMATS = ("json", "discord")
+WEBHOOK_FORMATS = ("json", "discord", "slack")
 DISCORD_COLOR_GREEN = 0x2ECC71
 DISCORD_COLOR_RED = 0xE74C3C
 
@@ -26,7 +26,8 @@ class WebhookExporter:
         format: Payload format. "json" (default) sends the raw metrics dict. "discord"
             sends a Discord embed with the function name, gCO2 and duration, green
             below the EcoTrace instance's carbon_limit (or when none is set) and red at
-            or above it. An unknown value logs a warning and falls back to "json".
+            or above it. "slack" sends Slack Block Kit blocks with the same three values.
+            An unknown value logs a warning and falls back to "json".
     """
     
     def __init__(
@@ -76,6 +77,8 @@ class WebhookExporter:
         }
         if self.format == "discord":
             payload = self._discord_payload(carbon_emitted, func_name, duration)
+        elif self.format == "slack":
+            payload = self._slack_payload(carbon_emitted, func_name, duration)
         
         try:
             req_headers = {"Content-Type": "application/json"}
@@ -98,4 +101,20 @@ class WebhookExporter:
                     {"name": "Duration", "value": f"{duration:.2f} s", "inline": True},
                 ],
             }]
+        }
+
+    def _slack_payload(self, carbon_emitted: float, func_name: str, duration: float) -> Dict[str, Any]:
+        """Builds Slack Block Kit blocks, with a plain text fallback for notifications."""
+        carbon = f"{carbon_emitted:.6f} gCO2"
+        seconds = f"{duration:.2f} s"
+        return {
+            "text": f"EcoTrace: {func_name} emitted {carbon} in {seconds}",
+            "blocks": [
+                # plain_text for the name, so Slack does not read _ or * in it as formatting
+                {"type": "section", "text": {"type": "plain_text", "text": f"EcoTrace: {func_name}"}},
+                {"type": "section", "fields": [
+                    {"type": "mrkdwn", "text": f"*Carbon*\n{carbon}"},
+                    {"type": "mrkdwn", "text": f"*Duration*\n{seconds}"},
+                ]},
+            ],
         }
