@@ -10,6 +10,8 @@ except ImportError:
 
 from ecotrace.core import EcoTrace
 
+WEBHOOK_FORMATS = ("json",)
+
 class WebhookExporter:
     """Webhook metrics exporter for EcoTrace carbon emissions.
     
@@ -19,13 +21,16 @@ class WebhookExporter:
         ecotrace_instance: The initialized EcoTrace core instance to attach to.
         url: The webhook HTTP/HTTPS endpoint.
         headers: Optional dict of extra HTTP headers (e.g. for auth/tokens).
+        format: Payload format. "json" (default) sends the raw metrics dict. An unknown
+            value logs a warning and falls back to "json".
     """
     
     def __init__(
         self, 
         ecotrace_instance: EcoTrace, 
         url: str,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
+        format: str = "json"
     ):
         if requests is None:
             msg = "WebhookExporter requires 'requests'. Please install requests."
@@ -36,6 +41,10 @@ class WebhookExporter:
         self.ecotrace = ecotrace_instance
         self.url = url
         self.headers = headers or {}
+        if format not in WEBHOOK_FORMATS:
+            logger.warning(f"Invalid format={format!r}, defaulting to 'json'.")
+            format = "json"
+        self.format = format
         
         # Attach self to the EcoTrace engine
         self.ecotrace.add_exporter(self)

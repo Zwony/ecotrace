@@ -141,6 +141,47 @@ def test_webhook_exporter_missing_dependency():
         exporter.export(0.5, "test", 1.0, "GLOBAL")
 
 
+def _post_one_measurement(mock_post, carbon_emitted=0.005, carbon_limit=None, **exporter_kwargs):
+    """Send one measurement through a WebhookExporter and return the JSON body it POSTed."""
+    mock_post.return_value.status_code = 200
+
+    eco = EcoTrace(quiet=True, check_updates=False, carbon_limit=carbon_limit)
+    eco.region_code = "US"
+    WebhookExporter(ecotrace_instance=eco, url="http://example.com/webhook", **exporter_kwargs)
+
+    eco._accumulate_carbon(carbon_emitted=carbon_emitted, func_name="test_function", duration=1.2)
+    eco._exporter_pool.shutdown(wait=True)
+
+    mock_post.assert_called_once()
+    return mock_post.call_args.kwargs["json"]
+
+
+@patch('requests.post')
+def test_webhook_exporter_default_format_keeps_json_payload(mock_post):
+    """Without a format, the payload is the same flat dict the exporter sent before the option existed."""
+    payload = _post_one_measurement(mock_post)
+
+    assert set(payload) == {"function", "carbon_gco2", "duration_s", "region", "run_id", "run_label"}
+    assert payload["function"] == "test_function"
+    assert payload["carbon_gco2"] == 0.005
+    assert payload["duration_s"] == 1.2
+    assert payload["region"] == "US"
+    assert "embeds" not in payload
+    assert "blocks" not in payload
+
+
+@patch('requests.post')
+def test_webhook_exporter_json_format_matches_default_payload(mock_post):
+    """format="json" is accepted and sends the same payload as the default (run_id differs per EcoTrace)."""
+    default_payload = _post_one_measurement(mock_post)
+    mock_post.reset_mock()
+    json_payload = _post_one_measurement(mock_post, format="json")
+
+    default_payload.pop("run_id")
+    json_payload.pop("run_id")
+    assert json_payload == default_payload
+
+
 from ecotrace.exporters.cloud import CloudExporter
 
 @patch('requests.Session.post')
