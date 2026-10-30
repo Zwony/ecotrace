@@ -225,6 +225,16 @@ def test_webhook_exporter_slack_sends_block_kit_blocks(mock_post):
     assert [field["text"] for field in metrics["fields"]] == ["*Carbon*\n0.005000 gCO2", "*Duration*\n1.20 s"]
 
 
+@patch('requests.post')
+def test_webhook_exporter_unknown_format_falls_back_to_json(mock_post, caplog):
+    """An unknown format logs a warning and still sends the default JSON payload."""
+    with caplog.at_level("WARNING", logger="ecotrace.exporters.webhook"):
+        payload = _post_one_measurement(mock_post, format="teams")
+
+    assert "Invalid format='teams'" in caplog.text
+    assert set(payload) == {"function", "carbon_gco2", "duration_s", "region", "run_id", "run_label"}
+
+
 from ecotrace.exporters.cloud import CloudExporter
 
 @patch('requests.Session.post')
