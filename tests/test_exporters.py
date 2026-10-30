@@ -182,6 +182,33 @@ def test_webhook_exporter_json_format_matches_default_payload(mock_post):
     assert json_payload == default_payload
 
 
+@patch('requests.post')
+def test_webhook_exporter_discord_sends_an_embed(mock_post):
+    """format="discord" sends one embed with the function name, gCO2 and duration."""
+    payload = _post_one_measurement(mock_post, format="discord")
+
+    assert list(payload) == ["embeds"]
+    assert len(payload["embeds"]) == 1
+    embed = payload["embeds"][0]
+    assert "test_function" in embed["title"]
+    fields = {field["name"]: field["value"] for field in embed["fields"]}
+    assert fields == {"Carbon": "0.005000 gCO2", "Duration": "1.20 s"}
+
+
+@pytest.mark.parametrize("carbon_limit, expected_color", [
+    (None, 0x2ECC71),   # no limit set: green
+    (1.0, 0x2ECC71),    # 0.005 gCO2 is below the limit: green
+    (0.005, 0xE74C3C),  # equal to the limit counts as over it: red
+    (0.001, 0xE74C3C),  # above the limit: red
+])
+@patch('requests.post')
+def test_webhook_exporter_discord_color_follows_carbon_limit(mock_post, carbon_limit, expected_color):
+    """The embed is green below carbon_limit (or without one) and red at or above it."""
+    payload = _post_one_measurement(mock_post, carbon_emitted=0.005, carbon_limit=carbon_limit, format="discord")
+
+    assert payload["embeds"][0]["color"] == expected_color
+
+
 from ecotrace.exporters.cloud import CloudExporter
 
 @patch('requests.Session.post')

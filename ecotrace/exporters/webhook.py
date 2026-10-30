@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger("ecotrace.exporters.webhook")
 
@@ -10,7 +10,9 @@ except ImportError:
 
 from ecotrace.core import EcoTrace
 
-WEBHOOK_FORMATS = ("json",)
+WEBHOOK_FORMATS = ("json", "discord")
+DISCORD_COLOR_GREEN = 0x2ECC71
+DISCORD_COLOR_RED = 0xE74C3C
 
 class WebhookExporter:
     """Webhook metrics exporter for EcoTrace carbon emissions.
@@ -21,8 +23,10 @@ class WebhookExporter:
         ecotrace_instance: The initialized EcoTrace core instance to attach to.
         url: The webhook HTTP/HTTPS endpoint.
         headers: Optional dict of extra HTTP headers (e.g. for auth/tokens).
-        format: Payload format. "json" (default) sends the raw metrics dict. An unknown
-            value logs a warning and falls back to "json".
+        format: Payload format. "json" (default) sends the raw metrics dict. "discord"
+            sends a Discord embed with the function name, gCO2 and duration, green
+            below the EcoTrace instance's carbon_limit (or when none is set) and red at
+            or above it. An unknown value logs a warning and falls back to "json".
     """
     
     def __init__(
@@ -70,6 +74,8 @@ class WebhookExporter:
             "run_id": getattr(self.ecotrace, "_run_id", ""),
             "run_label": getattr(self.ecotrace, "_run_label", "")
         }
+        if self.format == "discord":
+            payload = self._discord_payload(carbon_emitted, func_name, duration)
         
         try:
             req_headers = {"Content-Type": "application/json"}
@@ -78,3 +84,18 @@ class WebhookExporter:
             response.raise_for_status()
         except Exception as e:
             logger.debug(f"Failed to send webhook metric: {e}")
+
+    def _discord_payload(self, carbon_emitted: float, func_name: str, duration: float) -> Dict[str, Any]:
+        """Builds a Discord embed, green below carbon_limit (or without one) and red at or above it."""
+        limit = getattr(self.ecotrace, "carbon_limit", None)
+        over_limit = isinstance(limit, (int, float)) and carbon_emitted >= limit
+        return {
+            "embeds": [{
+                "title": f"EcoTrace: {func_name}",
+                "color": DISCORD_COLOR_RED if over_limit else DISCORD_COLOR_GREEN,
+                "fields": [
+                    {"name": "Carbon", "value": f"{carbon_emitted:.6f} gCO2", "inline": True},
+                    {"name": "Duration", "value": f"{duration:.2f} s", "inline": True},
+                ],
+            }]
+        }
