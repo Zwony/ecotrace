@@ -20,6 +20,78 @@ def test_cli_run_success(mock_run_path, dummy_script):
     mock_run_path.assert_called_once_with(dummy_script, run_name="__main__")
     assert exc.value.code == 0
 
+
+@pytest.fixture
+def export_environment(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("ecotrace.core.load_cli_config", lambda: {})
+    monkeypatch.setattr("ecotrace.core.identify_user_region", lambda: None)
+    monkeypatch.setattr("ecotrace.core.get_all_gpu_info", lambda *_: [])
+    monkeypatch.setattr(
+        "ecotrace.core.get_ram_info", lambda: {"total_gb": 8, "type": "DDR4"}
+    )
+    monkeypatch.setattr(
+        "ecotrace.core.get_cpu_info",
+        lambda *_: {"brand": "Test CPU", "cores": 1, "tdp": 10},
+    )
+    monkeypatch.setattr(
+        "ecotrace.core.HardwareMonitor",
+        lambda: SimpleNamespace(
+            rapl_available=False, apple_silicon_available=False,
+            get_cpu_energy_j=lambda: None,
+            estimate_cpu_power_w=lambda *_: 0.0,
+        ),
+    )
+    for name in (
+        "ECOTRACE_CLOUD_KEY", "GEMINI_API_KEY", "ECOTRACE_GRID_API_KEY"
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
+@pytest.mark.parametrize("suffix", [".csv", ".CSV"])
+def test_cli_run_exports_csv_session(
+    dummy_script, tmp_path, export_environment, capsys, suffix
+):
+    import csv
+    import json
+
+    output = tmp_path / ("session" + suffix)
+    with patch.object(
+        sys, "argv", ["ecotrace", "run", "-o", str(output), dummy_script]
+    ):
+        with pytest.raises(SystemExit) as exc:
+            main()
+    assert exc.value.code == 0
+    with output.open(newline="", encoding="utf-8") as report:
+        rows = list(csv.DictReader(report))
+    assert len(rows) == 1
+    assert rows[0]["region"]
+    assert rows[0]["run_id"]
+    assert float(rows[0]["duration_s"]) >= 0
+    assert float(rows[0]["total_carbon_gco2"]) >= 0
+    assert "cpu" in json.loads(rows[0]["hardware"])
+    console = capsys.readouterr().out
+    assert "Carbon Summary Report" in console
+    assert "[EXPORT] CSV report written:" in console
+
+
+def test_cli_run_output_defaults_to_json(
+    dummy_script, tmp_path, export_environment
+):
+    import json
+
+    output = tmp_path / "session.report"
+    with patch.object(
+        sys, "argv", ["ecotrace", "run", "--output", str(output), dummy_script]
+    ):
+        with pytest.raises(SystemExit) as exc:
+            main()
+    assert exc.value.code == 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert "meta" in report
+    assert "summary" in report
+
+
 def test_cli_run_file_not_found(capsys):
     test_args = ["ecotrace", "run", "non_existent_file.py"]
     with patch.object(sys, 'argv', test_args):

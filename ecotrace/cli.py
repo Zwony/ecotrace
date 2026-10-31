@@ -19,6 +19,7 @@ import sys
 import os
 import time
 import csv
+import json
 import runpy
 import shutil
 
@@ -51,7 +52,7 @@ def _cmd_run(args):
 
     Uses ``runpy.run_path`` to run the target script in the current process,
     preserving psutil process-scoped isolation. After execution, prints a
-    carbon summary and optionally exports to JSON.
+    carbon summary and optionally exports to JSON or CSV.
 
     Args:
         args: Parsed argparse namespace containing ``script`` path and
@@ -123,10 +124,27 @@ def _cmd_run(args):
 
     if args.output:
         try:
-            eco.export_json(args.output)
-            print(f"\n[EXPORT] JSON report written: {args.output}")
+            if os.path.splitext(args.output)[1].lower() == ".csv":
+                summary = eco.get_summary()
+                row = {
+                    key: (
+                        json.dumps(value)
+                        if isinstance(value, (dict, list)) else value
+                    )
+                    for key, value in summary.items()
+                }
+                with open(
+                    args.output, "w", newline="", encoding="utf-8"
+                ) as report:
+                    writer = csv.DictWriter(report, fieldnames=list(row))
+                    writer.writeheader()
+                    writer.writerow(row)
+                print(f"\n[EXPORT] CSV report written: {args.output}")
+            else:
+                eco.export_json(args.output)
+                print(f"\n[EXPORT] JSON report written: {args.output}")
         except Exception as e:
-            print(f"[WARNING] JSON export failed: {e}")
+            print(f"[WARNING] Report export failed: {e}")
 
     sys.exit(exit_code)
 
@@ -1044,7 +1062,10 @@ def main():
     run_parser.add_argument("script", help="Python file to execute (.py)")
     run_parser.add_argument("script_args", nargs=argparse.REMAINDER, help="Arguments for the script")
     run_parser.add_argument("-r", "--region", default="GLOBAL", help="ISO region code (default: GLOBAL)")
-    run_parser.add_argument("-o", "--output", default=None, help="Write results to a JSON file")
+    run_parser.add_argument(
+        "-o", "--output", default=None,
+        help="Write results to JSON or CSV (inferred from extension)"
+    )
     run_parser.add_argument("-l", "--label", default=None, help="Human-readable label for this run (stored in CSV)")
 
     analyze_parser = subparsers.add_parser(
