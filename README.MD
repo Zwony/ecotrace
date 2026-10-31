@@ -195,6 +195,21 @@ Or connect programmatically via Python:
 eco = EcoTrace(api_key="eco_usr_abc123...", region_code="US")
 ```
 
+### Save a CLI run report
+
+Place `--output` (or `-o`) before the script path to save a report while
+keeping the console summary:
+
+```bash
+ecotrace run --output report.json my_script.py
+ecotrace run -o session.csv my_script.py
+```
+
+A `.csv` extension (case insensitive) writes one row from `get_summary()`
+for the current session. Nested objects, including `hardware` and a configured `budget`, use JSON
+inside their CSV cells. Other extensions use the existing JSON report
+format, including hardware metadata, audit-log measurements and totals.
+
 ### Expected Output
 When initialized, EcoTrace performs automated hardware detection:
 
