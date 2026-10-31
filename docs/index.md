@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center" markdown="1">
 
 <img src="images/logo.png" width="200" alt="EcoTrace Logo">
 
