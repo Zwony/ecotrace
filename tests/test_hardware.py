@@ -18,6 +18,11 @@ def test_apple_silicon_tdp():
         info = get_cpu_info(db)
         assert info["tdp"] == 90.0
 
+    with patch("ecotrace.cpu.fetch_raw_cpu_info", return_value={"brand_raw": "Apple M4 Pro"}):
+        db = {"apple m4 pro": 35.0}
+        info = get_cpu_info(db)
+        assert info["tdp"] == 35.0
+
     with patch("ecotrace.cpu.fetch_raw_cpu_info", return_value={"brand_raw": "Apple M9 Ultra"}):
         info = get_cpu_info({})
         assert info["tdp"] == 25.0  # Apple fallback TDP

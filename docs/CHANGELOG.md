@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-11-01
+
+### Added
+- **Discord & Slack Card Exporters (`WebhookExporter`)**: Added `format="discord"` and `format="slack"` support to `WebhookExporter`. Builds structured Discord embeds with budget-aware green/red color signaling based on `carbon_limit`, and Slack Block Kit metric sections with fallback plain text (contributed by @Aqureshi106 in #229).
+- **CLI Session CSV Export (`ecotrace run --output`)**: Supported exporting run summaries directly into `.csv` files via `ecotrace run -o session.csv` or `--output`, serializing nested dictionaries into cell JSON with zero new dependencies (contributed by @awais-ur-rehman in #233).
+- **FastAPI Reference Example**: Added `examples/fastapi_tracking.py` demonstrating `EcoTraceMiddleware` request instrumentation, custom carbon response headers (`X-Eco-*`), and endpoint health/compute profiling (contributed by @Vritika22Mandapaka in #228).
+- **Next-Gen CPU Specification Profiles**: Expanded hardware database (`ecotrace/cpu_data.csv`) with TDP and core mappings for Apple Silicon M4 Pro/Max, Intel Core Ultra (Arrow Lake / Meteor Lake 285K, 265K, 245K, 185H, 155H, 125H), and AMD Ryzen 9000 Zen 5 series (9950X, 9900X, 9700X, 9600X).
+- **Official Ecosystem Integration Guides**: Added comprehensive reference docs for LangChain callback tracking (`docs/integrations/langchain.md`) and HuggingFace Transformers trainer callbacks (`docs/integrations/huggingface.md`).
+
 ## [1.7.1] - 2026-10-20
 
 ### Fixed
