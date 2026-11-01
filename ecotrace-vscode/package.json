@@ -104,5 +104,8 @@
     "eslint": "^10.13.0",
     "@typescript-eslint/parser": "^8.69.0",
     "@typescript-eslint/eslint-plugin": "^8.72.1"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
   }
 }
