@@ -30,7 +30,7 @@ def _get_version():
         from ecotrace import __version__
         return __version__
     except ImportError:
-        return "1.7.1"
+        return "1.8.0"
 
 
 BANNER = """

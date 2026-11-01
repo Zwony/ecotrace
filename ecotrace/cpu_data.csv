@@ -3976,6 +3976,18 @@ Apple M3,,,TSMC,,,22.0,8,8,,,,,,,,Apple,Mobile/Desktop,apple-spec
 Apple M3 Pro,,,TSMC,,,30.0,12,12,,,,,,,,Apple,Mobile/Desktop,apple-spec
 Apple M3 Max,,,TSMC,,,78.0,16,16,,,,,,,,Apple,Mobile/Desktop,apple-spec
 Apple M4,,,TSMC,,,22.0,10,10,,,,,,,,Apple,Mobile/Desktop,apple-spec
+Apple M4 Pro,,,TSMC,,,35.0,14,14,,,,,,,,Apple,Mobile/Desktop,apple-spec
+Apple M4 Max,,,TSMC,,,78.0,16,16,,,,,,,,Apple,Mobile/Desktop,apple-spec
+Intel Core Ultra 9 285K,Arrow Lake,Core Ultra 9,TSMC,2024-10-24,3.7 GHz,125.0,24,24,,,,,,,,Intel,Desktop,intel-spec
+Intel Core Ultra 7 265K,Arrow Lake,Core Ultra 7,TSMC,2024-10-24,3.9 GHz,125.0,20,20,,,,,,,,Intel,Desktop,intel-spec
+Intel Core Ultra 5 245K,Arrow Lake,Core Ultra 5,TSMC,2024-10-24,4.2 GHz,125.0,14,14,,,,,,,,Intel,Desktop,intel-spec
+Intel Core Ultra 9 185H,Meteor Lake,Core Ultra 9,Intel 4,2023-12-14,2.3 GHz,45.0,16,22,,,,,,,,Intel,Mobile,intel-spec
+Intel Core Ultra 7 155H,Meteor Lake,Core Ultra 7,Intel 4,2023-12-14,1.4 GHz,28.0,16,22,,,,,,,,Intel,Mobile,intel-spec
+Intel Core Ultra 5 125H,Meteor Lake,Core Ultra 5,Intel 4,2023-12-14,1.2 GHz,28.0,14,18,,,,,,,,Intel,Mobile,intel-spec
+AMD Ryzen 9 9950X,Granite Ridge,Ryzen 9 (Zen 5),TSMC,2024-08-15,4.3 GHz,170.0,16,32,,,,,,,,AMD,Desktop,amd-spec
+AMD Ryzen 9 9900X,Granite Ridge,Ryzen 9 (Zen 5),TSMC,2024-08-15,4.4 GHz,120.0,12,24,,,,,,,,AMD,Desktop,amd-spec
+AMD Ryzen 7 9700X,Granite Ridge,Ryzen 7 (Zen 5),TSMC,2024-08-08,3.8 GHz,65.0,8,16,,,,,,,,AMD,Desktop,amd-spec
+AMD Ryzen 5 9600X,Granite Ridge,Ryzen 5 (Zen 5),TSMC,2024-08-08,3.9 GHz,65.0,6,12,,,,,,,,AMD,Desktop,amd-spec
 AMD A10 Micro-6700T APU,,,,Q2 2015,1.2 GHz,5.0,4,4,,,,,,,,AMD,FT3b,benchmark-spec-dataset
 AMD A10 PRO-7350B APU,,,,Q2 2014,2.1 GHz,19.0,4,,,,,,,,,AMD,FP3,benchmark-spec-dataset
 AMD A10 PRO-7800B APU,,,,Q4 2014,3.5 GHz,65.0,4,,,,,,,,,AMD,FM2+,benchmark-spec-dataset

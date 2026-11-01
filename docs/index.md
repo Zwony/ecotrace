@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.7.1 — Performance & Telemetry Stability Patch.** High-performance in-memory CPU database caching, defensive isolation in LangChain tracking callbacks, narrow terminal ASCII scaling fixes, and container environment safeguards.
+**v1.8.0 — Community & Hardware Expansion Release.** Slack and Discord rich card webhook exporters, CLI run CSV session exports, FastAPI middleware reference, expanded TDP coverage for Apple M4, Intel Core Ultra, and AMD Ryzen 9000 processors, plus official LangChain and HuggingFace integration guides.
 ---
 
 **EcoTrace is a lightweight, zero-configuration hardware profiler for Python applications, AI training pipelines, and LLM workloads. Measure exact process-scoped energy consumption (Joules/kWh), runtime latency, and operational carbon footprint ($gCO_2$) without background daemons.**
@@ -47,15 +47,15 @@ Hardware-Level Telemetry (RAPL / NVML / Apple Silicon) • Process-Scoped Isolat
 
 ---
 
-## Core Features in v1.7.0
+## Core Features in v1.8.0
 
-> **Latest Release.** v1.7.0 introduces native LangChain callback instrumentation, global carbon grid database expansion to 200+ countries, terminal ASCII table reporting, and streamlined CPU architecture resolution.
+> **Latest Release.** v1.8.0 brings community-driven webhook enhancements (Slack and Discord rich cards), CLI run CSV session export, reference FastAPI middleware integration, and broadened next-generation hardware profiles.
 
-- **Native LangChain Callback (`ecotrace.callbacks.langchain`)** — Thread-safe `EcoTraceLangChainCallback` for LangChain and chat models. Measures process-scoped energy and carbon consumption per `run_id`, recording model names, execution durations, emissions ($gCO_2$), and provider token usage.
-- **Global Grid Expansion (200+ Countries/Zones)** — Built-in `CARBON_INTENSITY_MAP` upgraded with verified country-level generation intensity data from the Ember Climate 2025/2026 dataset, providing offline local grid resolution across 209 countries and territories with zero configuration.
-- **Terminal ASCII Analysis Table (`ecotrace analyze --table`)** — Bordered per-function breakdown table with responsive terminal width auto-scaling, column totals, and zero new third-party dependencies.
-- **Unified Hardware Specification Resolution** — Direct matching against the 6,980+ CPU specification dataset for all x86 and Apple Silicon architectures, eliminating deprecated hardcoded mappings.
-- **HuggingFace & CodeCarbon Drop-in Interoperability** — Full compatibility with HuggingFace `TrainerCallback` and CodeCarbon API signatures (`EmissionsTracker`, `@track_emissions`).
+- **Slack Block Kit & Discord Embed Exporters (`WebhookExporter`)** — Export real-time emissions to Slack channels and Discord servers with budget-aware embed color coding based on `carbon_limit` thresholds.
+- **CLI Session CSV Export (`ecotrace run -o session.csv`)** — Persist run-level metrics directly into CSV tables without stdout redirection, complete with structured hardware metadata serialization.
+- **Next-Gen Hardware Specification Coverage** — Added architecture and TDP profiles for Apple Silicon M4 (Base, Pro, Max), Intel Core Ultra (Arrow Lake and Meteor Lake), and AMD Ryzen 9000 Zen 5 processors.
+- **FastAPI Reference Integration (`examples/fastapi_tracking.py`)** — Production reference demonstrating `EcoTraceMiddleware` attachment and request-level carbon telemetry headers (`X-Eco-*`).
+- **Native LangChain & HuggingFace Callbacks** — End-to-end process-scoped carbon and token profiling for LLMs, RAG pipelines, and model training workflows.
 
 ---
 

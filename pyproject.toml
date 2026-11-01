@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "1.7.1"
+version = "1.8.0"
 description = "EcoTrace: High-precision energy (Joules/kWh), latency, and carbon profiler for Python & LLMs. Process-scoped hardware telemetry with 50ms sampling, RAPL/NVML support, and zero configuration."
 keywords = ["profiler", "energy-efficiency", "finops", "latency", "llm-profiling", "langchain", "carbon-footprint", "green-computing", "cpu-monitoring", "gpu-monitoring"]
 classifiers = [
