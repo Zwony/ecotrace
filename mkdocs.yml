@@ -82,6 +82,7 @@ nav:
       - Code of Conduct: CODE_OF_CONDUCT.MD
       - Security: SECURITY.MD
       - Support: SUPPORT.md
+      - FAQ: FAQ.md
   - History:
       - Changelog: CHANGELOG.md
       - v1.8.0: history/releases/RELEASE_v1.8.0.md
