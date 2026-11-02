@@ -360,7 +360,7 @@ If you use EcoTrace in academic research or sustainability audits, please cite:
 
 ## Contributing
 
-We welcome contributions! Please see our [**CONTRIBUTING.MD**](CONTRIBUTING.MD) for guidelines on reporting bugs, suggesting features, or contributing hardware data.
+We welcome contributions! Please see our [**CONTRIBUTING.md**](CONTRIBUTING.md) for guidelines on reporting bugs, suggesting features, or contributing hardware data.
 
 ---
 
@@ -368,7 +368,7 @@ We welcome contributions! Please see our [**CONTRIBUTING.MD**](CONTRIBUTING.MD) 
 
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/hs58XXb3Uq)
 
-[CHANGELOG.md](CHANGELOG.md) · [SECURITY.MD](SECURITY.MD)
+[CHANGELOG.md](CHANGELOG.md) · [SECURITY.md](SECURITY.md)
 
 ---
 

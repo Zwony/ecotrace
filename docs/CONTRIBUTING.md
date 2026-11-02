@@ -7,7 +7,7 @@ EcoTrace is an open-source project. Contributions of any kind — code, document
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
-- [First-Time Contributors & Mentorship](#first-time-contributors--mentorship)
+- [First-Time Contributors & Mentorship](#first-time-contributors-mentorship)
 - [Getting Started](#getting-started)
 - [How to Contribute](#how-to-contribute)
 - [Development Setup](#development-setup)
@@ -20,7 +20,7 @@ EcoTrace is an open-source project. Contributions of any kind — code, document
 
 ## Code of Conduct
 
-By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.MD). We are dedicated to providing a respectful, inclusive, and constructive environment for everyone.
+By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md). We are dedicated to providing a respectful, inclusive, and constructive environment for everyone.
 
 ---
 
