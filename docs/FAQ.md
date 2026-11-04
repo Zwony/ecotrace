@@ -12,13 +12,17 @@ about them.
 
 ## Why do my numbers change inside Docker, and what is `/sys/class/powercap`?
 
-On Linux, EcoTrace prefers to measure CPU energy directly from the
-Intel/AMD RAPL counters the kernel exposes through the powercap
-interface. It checks exactly one path:
+On Linux, EcoTrace prefers to read CPU energy from the kernel's powercap
+interface. It checks exactly one path, the Intel RAPL package-0 counter:
 
 ```
 /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj
 ```
+
+That path is the whole of the current detection. AMD processors expose
+their own powercap entries under different names, and EcoTrace does not
+look for them today, so an AMD host falls through to estimation even
+where the kernel is publishing counters.
 
 **If that file is missing or can't be read, EcoTrace won't warn you,
 raise, or exit.** It notes it at `DEBUG` level and quietly switches to
