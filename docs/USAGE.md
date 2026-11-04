@@ -160,6 +160,46 @@ result = eco.compare(bubble_sort, quick_sort)
 
 ---
 
+## Profiling Polars pipelines
+
+Polars executes group-by, join, and `LazyFrame.collect()` on a Rust thread pool and releases the GIL for those kernels. EcoTrace samples **process-wide** CPU every 50 ms on a background thread via `psutil.Process`. Those operating-system counters include every thread in the process, so the Rust workers are part of the measurement.
+
+Instrument the call that runs the query. `@eco.track` on a function that returns a `LazyFrame` records plan construction. Wrap `collect()` — eager or streaming — with `@eco.track` or `eco.track_block()` to record execution.
+
+```python
+from ecotrace import EcoTrace
+import polars as pl
+
+eco = EcoTrace(region_code="DE", check_updates=False)
+
+@eco.track
+def lazy_join(orders: pl.DataFrame, customers: pl.DataFrame) -> pl.DataFrame:
+    return (
+        orders.lazy()
+        .join(customers.lazy(), on="customer_id", how="inner")
+        .group_by("region")
+        .agg(pl.col("amount").sum().alias("revenue"))
+        .collect()
+    )
+
+result = lazy_join(orders, customers)
+
+query = orders.lazy().group_by("category").agg(pl.col("amount").sum().alias("revenue"))
+with eco.track_block("streaming_collect"):
+    streamed = query.collect(engine="streaming")
+```
+
+`examples/polars_workload.py` is a runnable script for eager group-by, a lazy join, and streaming collect. Polars is not installed with EcoTrace:
+
+```bash
+pip install polars
+python examples/polars_workload.py
+```
+
+Older Polars builds take `collect(streaming=True)` instead of `engine="streaming"`. The example tries both, then falls back to an in-memory collect.
+
+---
+
 ## Carbon Budget Mode
 
 Set a hard limit and receive alerts when thresholds are approached or exceeded.
