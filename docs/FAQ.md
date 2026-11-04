@@ -24,12 +24,25 @@ their own powercap entries under different names, and EcoTrace does not
 look for them today, so an AMD host falls through to estimation even
 where the kernel is publishing counters.
 
-**If that file is missing or can't be read, EcoTrace won't warn you,
-raise, or exit.** It notes it at `DEBUG` level and quietly switches to
-estimating instead. That's deliberate; it's what keeps EcoTrace working
-out of the box on machines with no counters at all. But it's worth
-knowing about because it means a run inside a container looks perfectly
-fine while reporting different numbers than the same code on the host.
+**EcoTrace never raises or exits when the counter is unavailable — it
+switches to estimating instead.** That is deliberate: it keeps EcoTrace
+working out of the box on machines with no counters at all. What it logs
+on the way, though, depends on which way the check failed, and the three
+cases are worth telling apart:
+
+- **The path isn't there at all** (the usual container case). The check
+  returns straight away and logs nothing.
+- **The path is there but unreadable** (present, wrong permissions). The
+  check logs `RAPL found but permission denied.` at `DEBUG`, which you
+  won't see at the default `WARNING` level.
+- **Either way, once EcoTrace settles on prediction mode on Linux**, it
+  logs at `INFO` that the energy sensor is
+  `Prediction Mode (Boavizta Advanced Estimation, ~15-20% error margin)`
+  and then raises an actual `WARNING`:
+  `RAPL access denied! Run with 'sudo' for 0% deviation exact CPU profiling.`
+  That warning is visible at the default level, so a container run does
+  tell you it fell back — just in a message about `sudo` rather than
+  about your container.
 
 For the hardware counters to work inside a container, two things have to
 be true:
