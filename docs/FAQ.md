@@ -64,19 +64,34 @@ cat /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj
 - `Permission denied` means condition 2 is failing; the path is there,
   but the container's user cannot read it.
 
-You can ask EcoTrace directly which mode it has selected:
+You can ask EcoTrace directly which mode it has selected. There are
+three, not two, so checking `rapl_available` on its own isn't enough —
+`False` there still leaves powermetrics in play on a Mac:
 
 ```python
 from ecotrace.hardware import HardwareMonitor
 
-print(HardwareMonitor().rapl_available)   # True = hardware counters, False = estimation
+hw = HardwareMonitor()
+if hw.rapl_available:
+    print("RAPL (exact hardware)")
+elif hw.apple_silicon_available:
+    print("Apple Silicon powermetrics (exact hardware)")
+else:
+    print("Prediction Mode (Boavizta estimation)")
 ```
+
+That order mirrors the one EcoTrace uses internally when it picks a
+sensor.
 
 Two things to keep in mind. EcoTrace reads **package 0 only**
 (`intel-rapl:0`), so on a multi-socket machine the other packages aren't
-counted. And RAPL is an Intel/AMD feature on Linux — on Windows, on
-macOS (Apple silicon included) and on ARM there's nothing to expose, so
-you'll get estimation no matter how the container is set up.
+counted. And powercap RAPL is a Linux feature: on Windows and on Linux
+hosts without a readable `intel-rapl` counter you get estimation. macOS
+is the exception worth knowing — on Apple silicon EcoTrace probes
+`sudo -n powermetrics`, and when that succeeds it measures the CPU
+package directly rather than estimating. Without passwordless `sudo` the
+probe fails and you fall back to estimation, which is why the same Mac
+can report differently depending on how the process was launched.
 
 ---
 
@@ -163,9 +178,11 @@ export MPLBACKEND=Agg
 
 That's all you need. EcoTrace doesn't detect CI and there's no flag to
 force estimation mode — on a runner without readable counters it falls
-back on its own, silently, exactly as above. If you'd like your CI logs
-to record which mode a run used, read `HardwareMonitor().rapl_available`
-and print it yourself.
+back on its own, logging the `RAPL access denied!` warning described
+above. If you'd like your CI logs
+to record which mode a run used, print it yourself with the three-way
+check above — on a Linux runner `rapl_available` is the one that
+matters, but the same snippet works everywhere.
 
 ---
 
