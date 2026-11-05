@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import base64
 import logging
+import math
 from typing import TYPE_CHECKING, Dict, Optional
-from urllib.parse import quote
 
 logger = logging.getLogger("ecotrace.exporters.prometheus")
 
@@ -31,7 +32,17 @@ def _escape_label_value(value: str) -> str:
     )
 
 
-def format_metrics(
+def _format_value(value: float) -> str:
+    """Formats a sample value, spelling NaN and infinity as Prometheus does."""
+    value = float(value)
+    if math.isnan(value):
+        return "NaN"
+    if math.isinf(value):
+        return "+Inf" if value > 0 else "-Inf"
+    return repr(value)
+
+
+def _format_metrics(
     carbon_emitted: float, func_name: str, duration: float, run_id: str
 ) -> str:
     """Formats one measurement in the Prometheus text exposition format.
@@ -47,13 +58,24 @@ def format_metrics(
         "# HELP %s Carbon emitted by the measured function, in gCO2."
         % CARBON_METRIC,
         "# TYPE %s gauge" % CARBON_METRIC,
-        "%s%s %r" % (CARBON_METRIC, labels, float(carbon_emitted)),
+        "%s%s %s" % (CARBON_METRIC, labels, _format_value(carbon_emitted)),
         "# HELP %s Execution time of the measured function, in seconds."
         % DURATION_METRIC,
         "# TYPE %s gauge" % DURATION_METRIC,
-        "%s%s %r" % (DURATION_METRIC, labels, float(duration)),
+        "%s%s %s" % (DURATION_METRIC, labels, _format_value(duration)),
     ]
     return "\n".join(lines) + "\n"
+
+
+def _grouping_segment(name: str, value: str) -> str:
+    """Builds one ``<name>@base64/<value>`` grouping key path segment.
+
+    Base64 (URL-safe) lets any value through the URL path, including
+    ``/``; the Pushgateway reads an empty value as ``=``.
+    """
+    encoded = base64.urlsafe_b64encode(str(value).encode("utf-8"))
+    encoded = encoded.decode("ascii").rstrip("=")
+    return "%s@base64/%s" % (name, encoded or "=")
 
 
 class PrometheusExporter:
@@ -62,9 +84,17 @@ class PrometheusExporter:
     After each measurement it POSTs two gauges,
     ``ecotrace_carbon_emitted_gco2`` and
     ``ecotrace_execution_duration_seconds``, labelled with the function
-    name and run ID, to ``<url>/metrics/job/<job>``. POST adds to the
-    job's group, so samples from different functions and runs coexist.
-    Network and HTTP errors are logged and never raised.
+    name and run ID. The function name and run ID are also the push's
+    grouping key, so each push goes to
+    ``<url>/metrics/job/<job>/function@base64/.../run_id@base64/...``.
+    The Pushgateway replaces metrics only within a group, so every
+    function and run keeps its own latest values instead of overwriting
+    each other. Network and HTTP errors are logged and never raised.
+
+    The Pushgateway keeps groups until they are deleted, and each
+    EcoTrace process has a new run ID, so groups accumulate over runs.
+    Delete old ones with an HTTP DELETE on the same URL, or through the
+    Pushgateway's API or web UI.
 
     Example::
 
@@ -108,15 +138,23 @@ class PrometheusExporter:
         self.job = job
         self.headers = headers or {}
         self.timeout = timeout
-        self.push_url = "%s/metrics/job/%s" % (
+        self.job_url = "%s/metrics/%s" % (
             url.rstrip("/"),
-            quote(job, safe=""),
+            _grouping_segment("job", job),
         )
 
         self.ecotrace.add_exporter(self)
         logger.info(
-            "Prometheus Exporter attached to EcoTrace (push url: %s).",
-            self.push_url,
+            "Prometheus Exporter attached to EcoTrace (pushgateway: %s).",
+            self.url,
+        )
+
+    def push_url(self, func_name: str, run_id: str) -> str:
+        """Returns the Pushgateway URL for one function and run's group."""
+        return "%s/%s/%s" % (
+            self.job_url,
+            _grouping_segment("function", func_name),
+            _grouping_segment("run_id", run_id),
         )
 
     def export(
@@ -144,13 +182,13 @@ class PrometheusExporter:
 
         if run_id is None:
             run_id = getattr(self.ecotrace, "_run_id", "")
-        body = format_metrics(carbon_emitted, func_name, duration, run_id)
+        body = _format_metrics(carbon_emitted, func_name, duration, run_id)
 
         try:
             req_headers = {"Content-Type": CONTENT_TYPE}
             req_headers.update(self.headers)
             response = requests.post(
-                self.push_url,
+                self.push_url(func_name, run_id),
                 data=body.encode("utf-8"),
                 headers=req_headers,
                 timeout=self.timeout,

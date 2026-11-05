@@ -30,4 +30,9 @@ def __getattr__(name: str):
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
-__all__ = ["CloudExporter", "OTelExporter", "PrometheusExporter", "WebhookExporter"]
+__all__ = [
+    "CloudExporter",
+    "OTelExporter",
+    "PrometheusExporter",
+    "WebhookExporter",
+]
