@@ -277,4 +277,108 @@ def test_ecotrace_auto_registers_cloud_exporter():
     eco._exporters[0].close()
 
 
+from ecotrace.exporters.prometheus import PrometheusExporter, format_metrics
+
+@patch('requests.post')
+def test_prometheus_exporter_registration_and_push(mock_post):
+    """Verify PrometheusExporter attaches to EcoTrace and pushes both gauges to the Pushgateway."""
+    mock_post.return_value.status_code = 200
+
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "test_run_id"
+    eco.region_code = "US"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://localhost:9091/", headers={"X-Test": "Value"})
+
+    assert len(eco._exporters) == 1
+    assert eco._exporters[0] is exporter
+
+    eco._accumulate_carbon(carbon_emitted=0.005, func_name="test_function", duration=1.2)
+    eco._exporter_pool.shutdown(wait=True)
+
+    mock_post.assert_called_once()
+    args, kwargs = mock_post.call_args
+    assert args[0] == "http://localhost:9091/metrics/job/ecotrace"
+    assert kwargs["headers"] == {"Content-Type": "text/plain; version=0.0.4", "X-Test": "Value"}
+    assert kwargs["timeout"] == 5
+    body = kwargs["data"].decode("utf-8")
+    assert 'ecotrace_carbon_emitted_gco2{function="test_function",run_id="test_run_id"} 0.005\n' in body
+    assert 'ecotrace_execution_duration_seconds{function="test_function",run_id="test_run_id"} 1.2\n' in body
+    assert "# TYPE ecotrace_carbon_emitted_gco2 gauge\n" in body
+    assert "# TYPE ecotrace_execution_duration_seconds gauge\n" in body
+
+def test_prometheus_format_matches_text_exposition():
+    """The body is two HELP/TYPE/sample blocks and ends with the newline the Pushgateway requires."""
+    body = format_metrics(0.005, "train", 1.2, "abc123")
+
+    assert body.endswith("\n")
+    assert body.splitlines() == [
+        "# HELP ecotrace_carbon_emitted_gco2 Carbon emitted by the measured function, in gCO2.",
+        "# TYPE ecotrace_carbon_emitted_gco2 gauge",
+        'ecotrace_carbon_emitted_gco2{function="train",run_id="abc123"} 0.005',
+        "# HELP ecotrace_execution_duration_seconds Execution time of the measured function, in seconds.",
+        "# TYPE ecotrace_execution_duration_seconds gauge",
+        'ecotrace_execution_duration_seconds{function="train",run_id="abc123"} 1.2',
+    ]
+
+def test_prometheus_format_escapes_label_values():
+    """Backslashes, double quotes and newlines in a function name cannot break the body."""
+    body = format_metrics(1.0, 'say "hi"\\now\nnext', 2.0, "r1")
+
+    assert 'function="say \\"hi\\"\\\\now\\nnext"' in body
+    assert len(body.splitlines()) == 6
+
+@patch('requests.post')
+def test_prometheus_exporter_custom_job_and_run_id(mock_post):
+    """A custom job name is URL-quoted, and the run_id EcoTrace passes wins over the instance's."""
+    mock_post.return_value.status_code = 200
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "instance_run"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091", job="nightly train")
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="passed_run")
+
+    args, kwargs = mock_post.call_args
+    assert args[0] == "http://pgw:9091/metrics/job/nightly%20train"
+    assert 'run_id="passed_run"' in kwargs["data"].decode("utf-8")
+
+@patch('requests.post')
+def test_prometheus_exporter_falls_back_to_instance_run_id(mock_post):
+    """Without a run_id argument the exporter uses the EcoTrace instance's run ID."""
+    mock_post.return_value.status_code = 200
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "instance_run"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.5, "fit", 3.0, "DE")
+
+    assert 'run_id="instance_run"' in mock_post.call_args.kwargs["data"].decode("utf-8")
+
+@patch('requests.post', side_effect=ConnectionError("pushgateway down"))
+def test_prometheus_exporter_swallows_push_errors(mock_post):
+    """A failed push is logged, never raised into the user's code."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="r1")
+
+    mock_post.assert_called_once()
+
+def test_prometheus_exporter_missing_dependency():
+    """Verify PrometheusExporter handles missing requests gracefully."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+
+    with patch('ecotrace.exporters.prometheus.requests', None):
+        exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+        assert exporter.url is None
+        assert eco._exporters == []
+        exporter.export(0.5, "test", 1.0, "GLOBAL")
+
+def test_prometheus_exporter_lazy_import_from_package():
+    """PrometheusExporter is importable from ecotrace.exporters like the other exporters."""
+    import ecotrace.exporters as exporters
+
+    assert exporters.PrometheusExporter is PrometheusExporter
+    assert "PrometheusExporter" in exporters.__all__
+
+
 
