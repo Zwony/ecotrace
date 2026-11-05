@@ -325,9 +325,10 @@ def test_prometheus_format_matches_text_exposition():
 
 def test_prometheus_format_escapes_label_values():
     """Backslashes, double quotes and newlines in a function name cannot break the body."""
-    body = _format_metrics(1.0, 'say "hi"\\now\nnext', 2.0, "r1")
+    body = _format_metrics(1.0, 'say "hi"\\now\nnext', 2.0, 'r"1')
 
     assert 'function="say \\"hi\\"\\\\now\\nnext"' in body
+    assert 'run_id="r\\"1"' in body
     assert len(body.splitlines()) == 6
 
 def test_prometheus_format_spells_non_finite_values():
@@ -366,6 +367,42 @@ def test_prometheus_exporter_falls_back_to_instance_run_id(mock_post):
     args, kwargs = mock_post.call_args
     assert args[0].endswith("/run_id@base64/aW5zdGFuY2VfcnVu")
     assert 'run_id="instance_run"' in kwargs["data"].decode("utf-8")
+
+@patch('requests.post')
+def test_prometheus_exporter_keeps_empty_run_id_and_custom_timeout(mock_post):
+    """An explicit empty run_id is sent as-is (only None falls back to the instance's), and timeout is passed through."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "instance_run"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091", timeout=2.5)
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="")
+
+    args, kwargs = mock_post.call_args
+    assert args[0].endswith("/run_id@base64/=")
+    assert 'run_id=""' in kwargs["data"].decode("utf-8")
+    assert kwargs["timeout"] == 2.5
+
+@patch('requests.post')
+def test_prometheus_exporter_sends_unicode_function_name_as_utf8(mock_post):
+    """A non-ASCII function name reaches the Pushgateway as UTF-8, in the body and the URL-safe grouping key."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.5, "entraîner_模型", 3.0, "DE", run_id="r1")
+
+    args, kwargs = mock_post.call_args
+    assert 'function="entraîner_模型"'.encode("utf-8") in kwargs["data"]
+    assert "/function@base64/ZW50cmHDrm5lcl_mqKHlnos/" in args[0]
+
+@patch('requests.post')
+def test_prometheus_exporter_user_headers_override_content_type(mock_post):
+    """A Content-Type in headers replaces the default, as with WebhookExporter."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091", headers={"Content-Type": "text/plain"})
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="r1")
+
+    assert mock_post.call_args.kwargs["headers"] == {"Content-Type": "text/plain"}
 
 @patch('requests.post')
 def test_prometheus_exporter_groups_each_function_separately(mock_post):
