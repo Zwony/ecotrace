@@ -97,9 +97,18 @@ can report differently depending on how the process was launched.
 
 ## What is the difference between RAPL measurement and TDP estimation?
 
-**RAPL** is a measurement. The CPU maintains an energy counter in
-hardware and EcoTrace reads it, so the figure reflects what the silicon
-actually reported.
+The short answer is where the *power* number comes from. Neither mode
+reports a raw sensor reading: both feed into the same calculation in
+`core._compute_carbon()`, which scales the result, adds RAM energy on
+top, and converts to grams of CO2 using the configured carbon intensity.
+
+**RAPL** is a hardware measurement. The CPU maintains an energy counter
+and EcoTrace reads the delta across your measured window. That delta is
+not reported as-is: it is multiplied by normalised CPU utilisation
+before it becomes watt-hours, so what you see is derived from the
+counter rather than equal to it. If your process is one of several on a
+busy box, that scaling is what attributes a share of package energy to
+your code rather than charging you for the whole socket.
 
 **TDP estimation** is a model. When no counter is readable, EcoTrace
 maps CPU utilisation onto a fraction of the processor's rated Thermal
