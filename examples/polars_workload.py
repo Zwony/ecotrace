@@ -37,11 +37,13 @@ REGION = "GLOBAL"
 
 def build_dataset(n_rows: int = N_ROWS) -> pl.DataFrame:
     """Build a synthetic, fixed-seed transaction dataset."""
+    # random.Random is used here only to generate synthetic benchmark data
+    # with a reproducible seed; it has no security or cryptographic purpose.
     rng = random.Random(SEED)
     return pl.DataFrame({
         "id": range(n_rows),
-        "category": [rng.randrange(N_CATEGORIES) for _ in range(n_rows)],
-        "country": [rng.choice(COUNTRIES) for _ in range(n_rows)],
+        "category": [rng.randrange(N_CATEGORIES) for _ in range(n_rows)],  # NOSONAR
+        "country": [rng.choice(COUNTRIES) for _ in range(n_rows)],  # NOSONAR
         "amount": [rng.uniform(1.0, 1000.0) for _ in range(n_rows)],
     })
 
