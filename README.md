@@ -210,6 +210,32 @@ for the current session. Nested objects, including `hardware` and a configured `
 inside their CSV cells. Other extensions use the existing JSON report
 format, including hardware metadata, audit-log measurements and totals.
 
+### Export a session summary as Markdown or HTML
+
+Render the dictionary from `get_summary()` as a Markdown table (for PR
+comments, job summaries or docs) or as a self-contained HTML card:
+
+```python
+from ecotrace import EcoTrace
+from ecotrace.exporters import to_html, to_markdown
+
+eco = EcoTrace(run_label="nightly-benchmark")
+
+@eco.track
+def process_data():
+    return sum(i * i for i in range(10_000_000))
+
+process_data()
+
+summary = eco.get_summary()
+print(to_markdown(summary))
+html_card = to_html(summary)  # <div class="ecotrace-summary">...</div>
+```
+
+Both show the run label, total energy (kWh), duration (s) and total carbon
+(gCO₂eq). Missing values appear as `N/A`, and user-provided text is escaped
+for each format.
+
 ### Expected Output
 When initialized, EcoTrace performs automated hardware detection:
 

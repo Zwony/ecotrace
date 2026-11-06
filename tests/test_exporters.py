@@ -1,7 +1,11 @@
+import subprocess
+import sys
+from html.parser import HTMLParser
 import pytest
 from unittest.mock import MagicMock, patch
 from ecotrace.core import EcoTrace
 from ecotrace.exporters.otel import OTelExporter
+from ecotrace.exporters.summary import to_html, to_markdown
 
 def test_add_exporter_core_api():
     """Verify the core EcoTrace instance accepts and retains exporters."""
@@ -277,4 +281,378 @@ def test_ecotrace_auto_registers_cloud_exporter():
     eco._exporters[0].close()
 
 
+# =========================================================================
+# Summary exporters: shared test helpers (#183)
+# =========================================================================
 
+
+def _sample_summary(**overrides):
+    """A get_summary()-shaped dict with nonzero, distinguishable values."""
+    summary = {
+        "run_id": "abc123def456",
+        "run_label": "nightly-run",
+        "duration_s": 12.5,
+        "functions_tracked": 3,
+        "total_carbon_gco2": 3.21,
+        "total_energy_kwh": 0.0125,
+        "region": "US",
+        "carbon_intensity": 386,
+        "intensity_source": "static",
+        "budget": None,
+        "equivalence": "",
+        "hardware": {},
+    }
+    summary.update(overrides)
+    return summary
+
+
+class _HTMLSummaryParser(HTMLParser):
+    """Check the card markup to_html() generates and collect displayed text.
+
+    Only the elements the exporter emits are nesting-checked; any other tag
+    (such as one injected through unescaped input) is still recorded in
+    ``start_tags``. This is not a general HTML validator and does not
+    require XML-compatible HTML. Character references are decoded, so cell
+    text is exactly what a browser would display.
+    """
+
+    CARD_ELEMENTS = {"div", "table", "caption", "tr", "th", "td"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.start_tags = []
+        self.roots = []
+        self.rows = []
+        self.errors = []
+        self.open_tags = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        self.start_tags.append((tag, attrs))
+        if tag not in self.CARD_ELEMENTS:
+            return
+        if not self.open_tags:
+            self.roots.append((tag, attrs))
+        self.open_tags.append(tag)
+        if tag == "tr":
+            self.rows.append([])
+        elif tag in ("th", "td") and self.rows:
+            self.rows[-1].append([tag, ""])
+
+    def handle_endtag(self, tag):
+        if tag not in self.CARD_ELEMENTS:
+            return
+        if not self.open_tags or self.open_tags[-1] != tag:
+            self.errors.append(f"unexpected </{tag}>, open: {self.open_tags}")
+            return
+        self.open_tags.pop()
+
+    def handle_data(self, data):
+        if not self.open_tags:
+            if data.strip():
+                self.errors.append(f"text outside the card: {data!r}")
+        elif self.rows and self.rows[-1] and "tr" in self.open_tags:
+            self.rows[-1][-1][1] += data
+
+
+def _parse_html_summary(html_text):
+    """Parse to_html() output into (parser, {label: displayed value})."""
+    parser = _HTMLSummaryParser()
+    parser.feed(html_text)
+    parser.close()
+    assert not parser.errors, parser.errors
+    assert not parser.open_tags, f"unclosed tags: {parser.open_tags}"
+
+    rows = {}
+    for row in parser.rows:
+        if [cell_tag for cell_tag, _ in row] == ["th", "td"]:
+            rows[row[0][1]] = row[1][1]
+    return parser, rows
+
+
+def _markdown_rows(summary):
+    """Render with to_markdown() and return {label: cell text}."""
+    # Relies on to_markdown()'s fixed two-column "| label | value |" layout
+    # and is only called with values that contain no pipes; the escaping
+    # tests below assert exact lines instead.
+    lines = to_markdown(summary).splitlines()
+    return dict(line[2:-2].split(" | ") for line in lines[2:])
+
+
+def _html_rows(summary):
+    """Render with to_html() and return {label: displayed text}."""
+    _, rows = _parse_html_summary(to_html(summary))
+    return rows
+
+
+@pytest.fixture(params=["markdown", "html"])
+def rendered_rows(request):
+    """Render a summary with each exporter; return {label: value}."""
+    return {"markdown": _markdown_rows, "html": _html_rows}[request.param]
+
+
+# =========================================================================
+# Summary exporters: behavior shared by to_markdown() and to_html() (#183)
+# =========================================================================
+# Each test runs once per exporter and asserts the same literal expected
+# values for both, so the two formats must display identical values.
+
+
+def test_summary_formats_metrics_with_units(rendered_rows):
+    rows = rendered_rows(_sample_summary())
+
+    assert rows["Total Energy"] == "0.0125000000 kWh"
+    assert rows["Duration"] == "12.5000 s"
+    assert rows["Total Carbon"] == "3.21000000 gCO₂eq"
+
+
+def test_summary_shows_small_nonzero_energy_without_rounding_to_zero(
+    rendered_rows,
+):
+    """A ~0.1 s tracked call uses ~1.4e-7 kWh; it must not display as zero."""
+    summary = _sample_summary(total_energy_kwh=1.4268757826291852e-07)
+
+    assert rendered_rows(summary)["Total Energy"] == "0.0000001427 kWh"
+
+
+def test_summary_includes_run_label(rendered_rows):
+    rows = rendered_rows(_sample_summary(run_label="nightly-run"))
+
+    assert rows["Run Label"] == "nightly-run"
+
+
+@pytest.mark.parametrize("run_label", ["", None, "missing"])
+def test_summary_shows_na_for_empty_or_missing_run_label(
+    rendered_rows, run_label
+):
+    summary = _sample_summary(run_label=run_label)
+    if run_label == "missing":
+        del summary["run_label"]
+
+    assert rendered_rows(summary)["Run Label"] == "N/A"
+
+
+@pytest.mark.parametrize(
+    "missing_key, row_label",
+    [
+        ("total_energy_kwh", "Total Energy"),
+        ("duration_s", "Duration"),
+        ("total_carbon_gco2", "Total Carbon"),
+    ],
+)
+def test_summary_shows_na_for_missing_or_none_metrics(
+    rendered_rows, missing_key, row_label
+):
+    absent = _sample_summary()
+    del absent[missing_key]
+    assert rendered_rows(absent)[row_label] == "N/A"
+
+    none_summary = _sample_summary(**{missing_key: None})
+    assert rendered_rows(none_summary)[row_label] == "N/A"
+
+
+def test_summary_shows_zero_values_as_numbers_not_na(rendered_rows):
+    summary = _sample_summary(
+        total_energy_kwh=0.0, duration_s=0, total_carbon_gco2=0.0
+    )
+    rows = rendered_rows(summary)
+
+    assert rows["Total Energy"] == "0.0000000000 kWh"
+    assert rows["Duration"] == "0.0000 s"
+    assert rows["Total Carbon"] == "0.00000000 gCO₂eq"
+
+
+# =========================================================================
+# Summary exporters: to_markdown() structure and escaping (#183)
+# =========================================================================
+
+
+def test_to_markdown_renders_the_exact_table():
+    assert to_markdown(_sample_summary()) == (
+        "| Metric | Value |\n"
+        "| --- | --- |\n"
+        "| Run Label | nightly-run |\n"
+        "| Total Energy | 0.0125000000 kWh |\n"
+        "| Duration | 12.5000 s |\n"
+        "| Total Carbon | 3.21000000 gCO₂eq |\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "run_label, expected_row",
+    [
+        ("train|eval", r"| Run Label | train\|eval |"),
+        # GFM: "\\" is a literal backslash and "\|" a literal pipe, so the
+        # input "a\|b" stays one cell.
+        (r"a\|b", r"| Run Label | a\\\|b |"),
+        ("line one\nline two", "| Run Label | line one line two |"),
+        ("line one\r\nline two", "| Run Label | line one line two |"),
+        ("line one\rline two", "| Run Label | line one line two |"),
+    ],
+    ids=["pipe", "backslash-before-pipe", "lf", "crlf", "cr"],
+)
+def test_to_markdown_escapes_run_label_into_one_cell(run_label, expected_row):
+    lines = to_markdown(_sample_summary(run_label=run_label)).splitlines()
+
+    assert lines[2] == expected_row
+    assert len(lines) == 6  # header, separator, four summary rows
+
+
+# =========================================================================
+# Summary exporters: to_html() structure and escaping (#183)
+# =========================================================================
+
+
+def test_to_html_returns_a_standalone_summary_card():
+    html_text = to_html(_sample_summary())
+
+    assert isinstance(html_text, str)
+    parser, rows = _parse_html_summary(html_text)
+
+    assert len(parser.roots) == 1, "expected one card element wrapping all"
+    _, root_attrs = parser.roots[0]
+    assert "ecotrace-summary" in (root_attrs.get("class") or "").split()
+    assert "table" in [tag for tag, _ in parser.start_tags]
+    assert {"Run Label", "Total Energy", "Duration", "Total Carbon"} <= (
+        rows.keys()
+    )
+    for tag, attrs in parser.start_tags:
+        assert tag not in {"script", "link", "iframe"}, f"external: <{tag}>"
+        assert "src" not in attrs and "href" not in attrs, (tag, attrs)
+
+
+@pytest.mark.parametrize(
+    "run_label, escaped_fragment",
+    [
+        ("<script>alert('x')</script>", "&lt;script&gt;"),
+        ('Tom & "Jerry" <b>bold</b>', "&lt;b&gt;bold&lt;/b&gt;"),
+        ('" onmouseover="alert(1)', "&quot; onmouseover=&quot;"),
+        ("AT&amp;T", "AT&amp;amp;T"),
+    ],
+    ids=["script", "markup", "attribute-breakout", "literal-entity"],
+)
+def test_to_html_escapes_special_characters_in_run_label(
+    run_label, escaped_fragment
+):
+    html_text = to_html(_sample_summary(run_label=run_label))
+
+    # The raw markup carries the escaped form and no executable script...
+    assert escaped_fragment in html_text
+    assert "<script" not in html_text.lower()
+    # ...the browser displays the label literally...
+    parser, rows = _parse_html_summary(html_text)
+    assert rows["Run Label"] == run_label
+    # ...and none of it is interpreted as elements or attributes.
+    tags = {tag for tag, _ in parser.start_tags}
+    assert not tags & {"script", "b"}
+    for tag, attrs in parser.start_tags:
+        assert not any(name.startswith("on") for name in attrs), (tag, attrs)
+
+# =========================================================================
+# Public imports from ecotrace.exporters (#183)
+# =========================================================================
+
+
+def test_summary_exporters_are_importable_from_package():
+    from ecotrace.exporters import summary, to_html, to_markdown
+
+    assert to_markdown is summary.to_markdown
+    assert to_html is summary.to_html
+
+    sample = _sample_summary()
+    assert "| Total Energy | 0.0125000000 kWh |" in to_markdown(sample)
+    assert '<div class="ecotrace-summary">' in to_html(sample)
+
+
+def test_existing_exporters_still_importable_from_package():
+    from ecotrace.exporters import (
+        CloudExporter as PackageCloud,
+        OTelExporter as PackageOTel,
+        WebhookExporter as PackageWebhook,
+    )
+    from ecotrace.exporters.cloud import CloudExporter as ModuleCloud
+    from ecotrace.exporters.otel import OTelExporter as ModuleOTel
+    from ecotrace.exporters.webhook import WebhookExporter as ModuleWebhook
+
+    assert PackageCloud is ModuleCloud
+    assert PackageOTel is ModuleOTel
+    assert PackageWebhook is ModuleWebhook
+
+
+def test_exporters_package_all_lists_every_public_name():
+    import ecotrace.exporters as exporters
+
+    assert set(exporters.__all__) == {
+        "CloudExporter",
+        "OTelExporter",
+        "WebhookExporter",
+        "to_html",
+        "to_markdown",
+    }
+    for name in exporters.__all__:
+        assert callable(getattr(exporters, name)), name
+
+
+def test_exporters_package_loads_summary_module_lazily():
+    """Importing the package must not import summary.py until it is used."""
+    code = (
+        "import sys\n"
+        "import ecotrace.exporters as exporters\n"
+        "assert 'ecotrace.exporters.summary' not in sys.modules\n"
+        "exporters.to_html\n"
+        "assert 'ecotrace.exporters.summary' in sys.modules\n"
+    )
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_exporters_package_rejects_unknown_names():
+    import ecotrace.exporters as exporters
+
+    with pytest.raises(AttributeError):
+        exporters.to_pdf
+
+
+# =========================================================================
+# End-to-end: real get_summary() -> summary exporters (#183)
+# =========================================================================
+
+
+def test_real_get_summary_renders_in_markdown_and_html(monkeypatch, tmp_path):
+    """Feed a real EcoTrace session summary through both exporters.
+
+    Runs offline: no GPU, live grid API, cloud exporter or update check.
+    """
+    for env_var in (
+        "ECOTRACE_GRID_API_KEY", "ECOTRACE_CLOUD_KEY", "GEMINI_API_KEY"
+    ):
+        monkeypatch.delenv(env_var, raising=False)
+    monkeypatch.chdir(tmp_path)  # the audit-log CSV is written to the cwd
+
+    with patch("ecotrace.core.get_all_gpu_info", return_value=[]), \
+            patch("ecotrace.core.load_cli_config", return_value={}):
+        eco = EcoTrace(
+            region_code="US",
+            check_updates=False,
+            quiet=True,
+            run_label="integration-run",
+        )
+    assert eco._exporters == []  # no cloud exporter was registered
+
+    eco._accumulate_carbon(0.5, "integration_func", 1.0)
+    summary = eco.get_summary()
+
+    assert "total_energy_kwh" in summary
+    assert summary["total_energy_kwh"] == pytest.approx(
+        0.5 / eco.carbon_intensity
+    )
+    assert summary["total_energy_kwh"] > 0
+
+    expected = {
+        "Run Label": "integration-run",
+        "Total Energy": f"{summary['total_energy_kwh']:.10f} kWh",
+        "Duration": f"{summary['duration_s']:.4f} s",
+        "Total Carbon": "0.50000000 gCO₂eq",
+    }
+    assert _markdown_rows(summary) == expected
+    assert _html_rows(summary) == expected
+    assert expected["Total Energy"] != "0.0000000000 kWh"
