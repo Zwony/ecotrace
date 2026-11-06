@@ -277,4 +277,200 @@ def test_ecotrace_auto_registers_cloud_exporter():
     eco._exporters[0].close()
 
 
+import requests
+from ecotrace.exporters.prometheus import PrometheusExporter, _format_metrics
+
+@patch('requests.post')
+def test_prometheus_exporter_registration_and_push(mock_post):
+    """Verify PrometheusExporter attaches to EcoTrace and pushes both gauges to the function's and run's group."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "test_run_id"
+    eco.region_code = "US"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://localhost:9091/", headers={"X-Test": "Value"})
+
+    assert len(eco._exporters) == 1
+    assert eco._exporters[0] is exporter
+
+    eco._accumulate_carbon(carbon_emitted=0.005, func_name="test_function", duration=1.2)
+    eco._exporter_pool.shutdown(wait=True)
+
+    mock_post.assert_called_once()
+    args, kwargs = mock_post.call_args
+    # job=ecotrace, function=test_function, run_id=test_run_id, base64url-encoded grouping key
+    assert args[0] == (
+        "http://localhost:9091/metrics/job@base64/ZWNvdHJhY2U"
+        "/function@base64/dGVzdF9mdW5jdGlvbg/run_id@base64/dGVzdF9ydW5faWQ"
+    )
+    assert kwargs["headers"] == {"Content-Type": "text/plain; version=0.0.4", "X-Test": "Value"}
+    assert kwargs["timeout"] == 5
+    body = kwargs["data"].decode("utf-8")
+    assert 'ecotrace_carbon_emitted_gco2{function="test_function",run_id="test_run_id"} 0.005\n' in body
+    assert 'ecotrace_execution_duration_seconds{function="test_function",run_id="test_run_id"} 1.2\n' in body
+    assert "# TYPE ecotrace_carbon_emitted_gco2 gauge\n" in body
+    assert "# TYPE ecotrace_execution_duration_seconds gauge\n" in body
+
+def test_prometheus_format_matches_text_exposition():
+    """The body is two HELP/TYPE/sample blocks and ends with the newline the Pushgateway requires."""
+    body = _format_metrics(0.005, "train", 1.2, "abc123")
+
+    assert body.endswith("\n")
+    assert body.splitlines() == [
+        "# HELP ecotrace_carbon_emitted_gco2 Carbon emitted by the measured function, in gCO2.",
+        "# TYPE ecotrace_carbon_emitted_gco2 gauge",
+        'ecotrace_carbon_emitted_gco2{function="train",run_id="abc123"} 0.005',
+        "# HELP ecotrace_execution_duration_seconds Execution time of the measured function, in seconds.",
+        "# TYPE ecotrace_execution_duration_seconds gauge",
+        'ecotrace_execution_duration_seconds{function="train",run_id="abc123"} 1.2',
+    ]
+
+def test_prometheus_format_escapes_label_values():
+    """Backslashes, double quotes and newlines in a function name cannot break the body."""
+    body = _format_metrics(1.0, 'say "hi"\\now\nnext', 2.0, 'r"1')
+
+    assert 'function="say \\"hi\\"\\\\now\\nnext"' in body
+    assert 'run_id="r\\"1"' in body
+    assert len(body.splitlines()) == 6
+
+def test_prometheus_format_spells_non_finite_values():
+    """NaN and infinities use the exposition format's spelling, not Python's repr."""
+    body = _format_metrics(float("nan"), "f", float("inf"), "r1")
+
+    assert body.splitlines()[2].endswith(" NaN")
+    assert body.splitlines()[5].endswith(" +Inf")
+    assert _format_metrics(1.0, "f", float("-inf"), "r1").splitlines()[5].endswith(" -Inf")
+
+@patch('requests.post')
+def test_prometheus_exporter_custom_job_and_run_id(mock_post):
+    """A custom job name is base64-encoded, and the run_id EcoTrace passes wins over the instance's."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "instance_run"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091", job="nightly train")
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="passed_run")
+
+    args, kwargs = mock_post.call_args
+    assert args[0] == (
+        "http://pgw:9091/metrics/job@base64/bmlnaHRseSB0cmFpbg"
+        "/function@base64/Zml0/run_id@base64/cGFzc2VkX3J1bg"
+    )
+    assert 'run_id="passed_run"' in kwargs["data"].decode("utf-8")
+
+@patch('requests.post')
+def test_prometheus_exporter_falls_back_to_instance_run_id(mock_post):
+    """Without a run_id argument the exporter uses the EcoTrace instance's run ID."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "instance_run"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.5, "fit", 3.0, "DE")
+
+    args, kwargs = mock_post.call_args
+    assert args[0].endswith("/run_id@base64/aW5zdGFuY2VfcnVu")
+    assert 'run_id="instance_run"' in kwargs["data"].decode("utf-8")
+
+@patch('requests.post')
+def test_prometheus_exporter_keeps_empty_run_id_and_custom_timeout(mock_post):
+    """An explicit empty run_id is sent as-is (only None falls back to the instance's), and timeout is passed through."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    eco._run_id = "instance_run"
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091", timeout=2.5)
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="")
+
+    args, kwargs = mock_post.call_args
+    assert args[0].endswith("/run_id@base64/=")
+    assert 'run_id=""' in kwargs["data"].decode("utf-8")
+    assert kwargs["timeout"] == 2.5
+
+@patch('requests.post')
+def test_prometheus_exporter_sends_unicode_function_name_as_utf8(mock_post):
+    """A non-ASCII function name reaches the Pushgateway as UTF-8, in the body and the URL-safe grouping key."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.5, "entraîner_模型", 3.0, "DE", run_id="r1")
+
+    args, kwargs = mock_post.call_args
+    assert 'function="entraîner_模型"'.encode("utf-8") in kwargs["data"]
+    assert "/function@base64/ZW50cmHDrm5lcl_mqKHlnos/" in args[0]
+
+@patch('requests.post')
+def test_prometheus_exporter_user_headers_override_content_type(mock_post):
+    """A Content-Type in headers replaces the default, as with WebhookExporter."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091", headers={"Content-Type": "text/plain"})
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="r1")
+
+    assert mock_post.call_args.kwargs["headers"] == {"Content-Type": "text/plain"}
+
+@patch('requests.post')
+def test_prometheus_exporter_groups_each_function_separately(mock_post):
+    """Two functions in one run push to two groups, so the second push cannot replace the first's samples."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.1, "a", 1.0, "DE", run_id="r1")
+    exporter.export(0.2, "b", 2.0, "DE", run_id="r1")
+
+    urls = [c.args[0] for c in mock_post.call_args_list]
+    assert urls == [
+        "http://pgw:9091/metrics/job@base64/ZWNvdHJhY2U/function@base64/YQ/run_id@base64/cjE",
+        "http://pgw:9091/metrics/job@base64/ZWNvdHJhY2U/function@base64/Yg/run_id@base64/cjE",
+    ]
+
+@patch('requests.post')
+def test_prometheus_exporter_encodes_awkward_function_names(mock_post):
+    """A slash in a function name stays inside one path segment, and an empty name uses the Pushgateway's '=' form."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.1, "models/train.step", 1.0, "DE", run_id="r1")
+    exporter.export(0.1, "", 1.0, "DE", run_id="r1")
+
+    first, second = [c.args[0] for c in mock_post.call_args_list]
+    assert "/function@base64/bW9kZWxzL3RyYWluLnN0ZXA/" in first
+    assert "/function@base64/=/" in second
+
+@patch('requests.post', side_effect=ConnectionError("pushgateway down"))
+def test_prometheus_exporter_swallows_push_errors(mock_post):
+    """A failed push is logged, never raised into the user's code."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    exporter.export(0.5, "fit", 3.0, "DE", run_id="r1")
+
+    mock_post.assert_called_once()
+
+@patch('requests.post')
+def test_prometheus_exporter_swallows_http_error_status(mock_post, caplog):
+    """A 4xx/5xx from the Pushgateway is logged at debug level, never raised."""
+    mock_post.return_value.raise_for_status.side_effect = requests.HTTPError("400 Bad Request")
+    eco = EcoTrace(quiet=True, check_updates=False)
+    exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+
+    with caplog.at_level("DEBUG", logger="ecotrace.exporters.prometheus"):
+        exporter.export(0.5, "fit", 3.0, "DE", run_id="r1")
+
+    mock_post.return_value.raise_for_status.assert_called_once()
+    assert "400 Bad Request" in caplog.text
+
+def test_prometheus_exporter_missing_dependency():
+    """Verify PrometheusExporter handles missing requests gracefully."""
+    eco = EcoTrace(quiet=True, check_updates=False)
+
+    with patch('ecotrace.exporters.prometheus.requests', None):
+        exporter = PrometheusExporter(ecotrace_instance=eco, url="http://pgw:9091")
+        assert exporter.url is None
+        assert eco._exporters == []
+        exporter.export(0.5, "test", 1.0, "GLOBAL")
+
+def test_prometheus_exporter_lazy_import_from_package():
+    """PrometheusExporter is importable from ecotrace.exporters like the other exporters."""
+    import ecotrace.exporters as exporters
+
+    assert exporters.PrometheusExporter is PrometheusExporter
+    assert "PrometheusExporter" in exporters.__all__
+
+
 
