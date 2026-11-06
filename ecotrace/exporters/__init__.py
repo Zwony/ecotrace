@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .cloud import CloudExporter
     from .otel import OTelExporter
     from .summary import to_html, to_markdown
+    from .prometheus import PrometheusExporter
     from .webhook import WebhookExporter
 
 
@@ -24,6 +25,9 @@ def __getattr__(name: str):
     if name == "OTelExporter":
         from .otel import OTelExporter
         return OTelExporter
+    if name == "PrometheusExporter":
+        from .prometheus import PrometheusExporter
+        return PrometheusExporter
     if name == "WebhookExporter":
         from .webhook import WebhookExporter
         return WebhookExporter
@@ -42,4 +46,6 @@ __all__ = [
     "WebhookExporter",
     "to_html",
     "to_markdown",
+    "PrometheusExporter",
+    "WebhookExporter",
 ]
