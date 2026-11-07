@@ -149,3 +149,42 @@ def test_django_middleware_naming_compatibility():
     assert EcoTraceDjangoMiddleware is EcoTraceMiddleware
 
 
+# Keys returned by get_summary() before #183, in their original order. The CLI
+# CSV export writes one column per key in this order (ecotrace/cli.py).
+EXISTING_SUMMARY_KEYS = (
+    "run_id",
+    "run_label",
+    "duration_s",
+    "functions_tracked",
+    "total_carbon_gco2",
+    "region",
+    "carbon_intensity",
+    "intensity_source",
+    "budget",
+    "equivalence",
+    "hardware",
+)
+
+
+def test_get_summary_includes_total_energy_kwh(ecotrace_instance):
+    """get_summary() exposes total_energy_kwh and keeps existing keys."""
+    # Nonzero so the test can't pass on the 0.0 default value alone.
+    ecotrace_instance.total_energy_kwh = 0.0125
+
+    summary = ecotrace_instance.get_summary()
+
+    assert "total_energy_kwh" in summary
+    assert isinstance(summary["total_energy_kwh"], float)
+    assert summary["total_energy_kwh"] == pytest.approx(0.0125)
+
+    missing_keys = set(EXISTING_SUMMARY_KEYS) - summary.keys()
+    assert not missing_keys, f"get_summary() dropped keys: {missing_keys}"
+
+
+def test_get_summary_keeps_existing_key_order_with_energy_last(
+    ecotrace_instance,
+):
+    """New keys are appended so CLI CSV column positions don't shift."""
+    keys = list(ecotrace_instance.get_summary())
+
+    assert keys == [*EXISTING_SUMMARY_KEYS, "total_energy_kwh"]

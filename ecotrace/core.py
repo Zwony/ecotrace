@@ -556,6 +556,7 @@ class EcoTrace:
                 - ``budget``: Budget status dict (``None`` if no limit set).
                 - ``equivalence``: Human-readable carbon comparison string.
                 - ``hardware``: CPU/GPU/energy sensor metadata dict.
+                - ``total_energy_kwh``: Cumulative energy consumed in kWh.
         """
         session_duration = time.perf_counter() - self._session_start_time
         current_pause = 0.0
@@ -605,6 +606,7 @@ class EcoTrace:
                 "gpu_count": self.gpu_count if hasattr(self, "gpu_count") else (1 if self.gpu_info else 0),
                 "energy_sensor": sensor,
             },
+            "total_energy_kwh": self.total_energy_kwh,
         }
 
     def _print_session_summary(self):
