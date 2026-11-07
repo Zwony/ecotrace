@@ -47,5 +47,4 @@ __all__ = [
     "to_html",
     "to_markdown",
     "PrometheusExporter",
-    "WebhookExporter",
 ]
