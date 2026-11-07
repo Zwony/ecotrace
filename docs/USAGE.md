@@ -314,6 +314,34 @@ pip install ecotrace[ai]
 
 ---
 
+## Profiling Polars Workloads
+
+Measure CPU utilization and carbon footprint for Polars pipelines with `eco.track_block()` or `@eco.track`. A full worked example with eager and lazy pipelines is in [`examples/polars_workload.py`](../examples/polars_workload.py).
+
+```python
+from ecotrace import EcoTrace
+
+eco = EcoTrace(region_code="TR")
+
+with eco.track_block("polars_pipeline"):
+    result = df.lazy().filter(pl.col("amount") > 50.0).group_by("category").agg(
+        pl.col("amount").sum()
+    ).collect()
+```
+
+**`collect()` must run inside the tracked scope.** Building a `LazyFrame` with `.lazy()` does no work — the query only executes when `.collect()` is called. Tracking the `.lazy()` call instead of the `.collect()` call would measure an empty query plan, not the computation it describes.
+
+### How accurate is the CPU figure?
+
+EcoTrace samples process CPU usage on a background thread every `MONITOR_INTERVAL_S` (50ms). We compared this sampled average against OS-reported process CPU time (`psutil.Process().cpu_times()`) as ground truth, for eager and lazy Polars pipelines running a few hundred milliseconds to a few seconds:
+
+- For workloads lasting at least a few multiples of the 50ms sampling interval, the sampled CPU% lands within roughly ±25% of ground truth — a usable signal for comparing relative parallel-CPU load between implementations (e.g. "Polars used more parallel CPU than Pandas for the same work"), consistent with the pattern already described in [`docs/benchmarks/01_pandas_vs_polars.md`](benchmarks/01_pandas_vs_polars.md).
+- **Workloads shorter than roughly 150–200ms are unreliable.** With fewer than a handful of samples in the tracked window, the reported CPU% can be far off in either direction — in our tests, a ~55ms workload under-reported by over 20x. If a sampling window captures zero samples at all, EcoTrace instead reports 100% utilization as a fallback, which is equally misleading. Track blocks or batches of work large enough to span at least a few sampling intervals, not single short calls.
+
+**Carbon and energy figures are TDP-modeled by default, not metered** — EcoTrace estimates power from CPU utilization × the CPU's rated TDP, unless hardware energy counters are available (Linux RAPL, which needs root access, or Apple Silicon `powermetrics`, which needs passwordless `sudo`). Note that this hardware-metered path only exists for `@eco.track`; `eco.track_block()` always uses the TDP model regardless of what sensors are available on the machine.
+
+---
+
 ## Benchmarks
 
 The following figures were recorded on a 13th Gen Intel Core i7-13700H (20 cores, 45W TDP) in the TR region (475 gCO2/kWh).
