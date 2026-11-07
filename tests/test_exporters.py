@@ -480,8 +480,6 @@ def test_prometheus_exporter_lazy_import_from_package():
     assert "PrometheusExporter" in exporters.__all__
 
 
-
-
 def _sample_summary(**overrides):
     """A get_summary()-shaped dict with nonzero, distinguishable values."""
     summary = {
