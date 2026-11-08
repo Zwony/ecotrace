@@ -40,9 +40,14 @@ cases are worth telling apart:
   `Prediction Mode (Boavizta Advanced Estimation, ~15-20% error margin)`
   and then raises an actual `WARNING`:
   `RAPL access denied! Run with 'sudo' for 0% deviation exact CPU profiling.`
-  That warning is visible at the default level, so a container run does
-  tell you it fell back — just in a message about `sudo` rather than
-  about your container.
+  Both messages come from `EcoTrace.__init__` and are only emitted when
+  the instance is created without `quiet=True`; with `quiet=True` the
+  fallback happens silently. They also go through the `ecotrace` logger,
+  so if you've raised its level above `WARNING` (see
+  [silencing logs](#how-do-i-silence-verbose-logs-in-production)) you
+  won't see the warning either. With the defaults, though, the warning is
+  visible, so a container run does tell you it fell back — just in a
+  message about `sudo` rather than about your container.
 
 For the hardware counters to work inside a container, two things have to
 be true:
@@ -169,9 +174,11 @@ import. It isn't a problem, but you can't avoid it by skipping PDF
 generation.
 
 **Set the Matplotlib backend explicitly.** Since the import happens
-regardless, Matplotlib picks a backend, and which one it picks depends
-on the platform rather than on whether a display is actually there. Pin
-it so the choice isn't left to chance:
+regardless, Matplotlib picks a backend. Its automatic choice depends on
+which GUI toolkits and display environment it finds, and that can vary
+between runners and images in ways that are easy to overlook. Pinning
+the non-interactive `Agg` backend in headless CI keeps the choice
+predictable:
 
 ```yaml
 # .github/workflows/your-workflow.yml
@@ -188,7 +195,8 @@ export MPLBACKEND=Agg
 That's all you need. EcoTrace doesn't detect CI and there's no flag to
 force estimation mode — on a runner without readable counters it falls
 back on its own, logging the `RAPL access denied!` warning described
-above. If you'd like your CI logs
+above unless the instance was created with `quiet=True` or the
+`ecotrace` logger's level hides it. If you'd like your CI logs
 to record which mode a run used, print it yourself with the three-way
 check above — on a Linux runner `rapl_available` is the one that
 matters, but the same snippet works everywhere.
