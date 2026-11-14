@@ -384,6 +384,18 @@ If you use EcoTrace in academic research or sustainability audits, please cite:
 
 ---
 
+## Sponsorship and Institutional Partnerships
+
+EcoTrace is community-driven and open-source. We actively collaborate with universities, research laboratories, and enterprise partners on green computing validation, research grants, and carbon accounting workflows.
+
+* **Academic Labs and Universities:** Methodology validation, empirical energy benchmarking, joint publications, and research grants.
+* **Infrastructure Sponsors:** Compute credits, bare-metal CI testbeds (heterogeneous CPU/GPU architectures).
+* **Individual Backers:** Support development directly via [GitHub Sponsors](https://github.com/sponsors/Zwony).
+
+For institutional backing and research collaboration, see our [**Sponsorship and Partnership Guide**](SPONSORSHIP.md) or contact us directly at [**ecotraceteam@gmail.com**](mailto:ecotraceteam@gmail.com).
+
+---
+
 ## Contributing
 
 We welcome contributions! Please see our [**CONTRIBUTING.md**](CONTRIBUTING.md) for guidelines on reporting bugs, suggesting features, or contributing hardware data.
