@@ -103,7 +103,7 @@
     "typescript": "^7.0.2",
     "eslint": "^10.14.0",
     "@typescript-eslint/parser": "^8.69.0",
-    "@typescript-eslint/eslint-plugin": "^8.72.1"
+    "@typescript-eslint/eslint-plugin": "^8.72.2"
   },
   "overrides": {
     "minimatch": "^11.0.1"
