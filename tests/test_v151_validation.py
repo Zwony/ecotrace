@@ -17,8 +17,8 @@ from ecotrace.ml import EcoTraceML
 
 
 def test_package_version_is_1_8_0():
-    """Verify top-level package version is bumped to 1.8.0."""
-    assert __version__ == "1.8.0"
+    """Verify top-level package version is bumped to 1.9.0."""
+    assert __version__ == "1.9.0"
 
 
 def test_logger_default_level_is_warning():
