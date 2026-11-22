@@ -85,6 +85,7 @@ nav:
       - FAQ: FAQ.md
   - History:
       - Changelog: CHANGELOG.md
+      - v1.9.0: history/releases/RELEASE_v1.9.0.md
       - v1.8.0: history/releases/RELEASE_v1.8.0.md
       - v1.7.1: history/releases/RELEASE_v1.7.1.md
       - v1.7.0: history/releases/RELEASE_v1.7.0.md

@@ -1,14 +1,13 @@
 [build-system]
 requires = [
-    "setuptools>=61.0; python_version < '3.10'",
-    "setuptools>=84.2.1; python_version >= '3.10'",
+    "setuptools>=84.2.1",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecotrace"
-version = "1.8.0"
+version = "1.9.0"
 description = "EcoTrace: High-precision energy (Joules/kWh), latency, and carbon profiler for Python & LLMs. Process-scoped hardware telemetry with 50ms sampling, RAPL/NVML support, and zero configuration."
 keywords = ["profiler", "energy-efficiency", "finops", "latency", "llm-profiling", "langchain", "carbon-footprint", "green-computing", "cpu-monitoring", "gpu-monitoring"]
 classifiers = [
@@ -16,16 +15,13 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14"
 ]
-readme = "README.MD"
-requires-python = ">=3.8"
+readme = "README.md"
+requires-python = ">=3.11"
 
 authors = [
   { name="Emre Ozkal", email="ecotraceteam@gmail.com" }

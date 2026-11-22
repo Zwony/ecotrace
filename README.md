@@ -6,7 +6,7 @@
 
 ### High-Precision Energy and Emissions Instrumentation
 ---
-**v1.8.0 — Community & Hardware Expansion Release.** Slack and Discord rich card webhook exporters, CLI run CSV session exports, FastAPI middleware reference, expanded TDP coverage for Apple M4, Intel Core Ultra, and AMD Ryzen 9000 processors, plus official LangChain and HuggingFace integration guides.
+**v1.9.0 - Observability & Reporting Release.** Prometheus Pushgateway metrics, Markdown and HTML session reports, and a Polars profiling example. Requires Python 3.11 or later.
 ---
 
 **EcoTrace is a lightweight, zero-configuration hardware profiler for Python applications, AI training pipelines, and LLM workloads. Measure exact process-scoped energy consumption (Joules/kWh), runtime latency, and operational carbon footprint ($gCO_2$) without background daemons.**
@@ -17,7 +17,7 @@ Hardware-Level Telemetry (RAPL / NVML / Apple Silicon) • Process-Scoped Isolat
 
 [![PyPI - Version](https://img.shields.io/pypi/v/ecotrace.svg?color=2E8B57&style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/ecotrace/)
 [![LangChain Official Integration](https://img.shields.io/badge/LangChain-Official%20Integration-1C3C3C?style=flat-square&logo=langchain&logoColor=white)](https://python.langchain.com/docs/integrations/providers/all_providers/)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Downloads](https://img.shields.io/pepy/dt/ecotrace?style=flat-square&color=blue&logo=pypi&logoColor=white)](https://pepy.tech/project/ecotrace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22834060.svg)](https://doi.org/10.5281/zenodo.22834060)
@@ -48,15 +48,12 @@ Hardware-Level Telemetry (RAPL / NVML / Apple Silicon) • Process-Scoped Isolat
 
 ---
 
-## Core Features in v1.8.0
+## Core Features in v1.9.0
 
-> **Latest Release.** v1.8.0 brings community-driven webhook enhancements (Slack and Discord rich cards), CLI run CSV session export, reference FastAPI middleware integration, and broadened next-generation hardware profiles.
-
-- **Slack Block Kit & Discord Embed Exporters (`WebhookExporter`)** — Export real-time emissions to Slack channels and Discord servers with budget-aware embed color coding based on `carbon_limit` thresholds.
-- **CLI Session CSV Export (`ecotrace run -o session.csv`)** — Persist run-level metrics directly into CSV tables without stdout redirection, complete with structured hardware metadata serialization.
-- **Next-Gen Hardware Specification Coverage** — Added architecture and TDP profiles for Apple Silicon M4 (Base, Pro, Max), Intel Core Ultra (Arrow Lake and Meteor Lake), and AMD Ryzen 9000 Zen 5 processors.
-- **FastAPI Reference Integration (`examples/fastapi_tracking.py`)** — Production reference demonstrating `EcoTraceMiddleware` attachment and request-level carbon telemetry headers (`X-Eco-*`).
-- **Native LangChain & HuggingFace Callbacks** — End-to-end process-scoped carbon and token profiling for LLMs, RAG pipelines, and model training workflows.
+- **Prometheus Pushgateway** sends carbon emissions and execution duration metrics for each tracked function and run.
+- **Markdown and HTML session reports** render session summaries that include cumulative energy in kWh.
+- **Polars profiling example** shows how to measure eager operations and lazy pipelines.
+- **CI/CD and Docker troubleshooting** covers sensor fallbacks and setup in the FAQ.
 
 ---
 
@@ -376,7 +373,7 @@ If you use EcoTrace in academic research or sustainability audits, please cite:
   title = {EcoTrace: High-Precision Energy and Emissions Instrumentation for Python},
   year = {2026},
   publisher = {Zenodo},
-  version = {v1.8.0},
+  version = {v1.9.0},
   doi = {10.5281/zenodo.22834060},
   url = {https://doi.org/10.5281/zenodo.22834060}
 }

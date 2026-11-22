@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-11-22
+
+### Added
+
+- The Prometheus Pushgateway exporter sends carbon and duration gauges grouped by function and run (#232, #250).
+- Markdown and HTML reports render session summaries, including cumulative energy from EcoTrace.get_summary() (#183, #252).
+- A Polars profiling example and tests show how to track eager operations and lazy pipelines (#195, #251).
+- A CI/CD and Docker FAQ documents troubleshooting and sensor fallbacks (#215, #248).
+
+### Changed
+
+- Python 3.11 or later is required. Upgrade Python before installing this release on Python 3.8, 3.9, or 3.10.
+- CI runs Python 3.11 through 3.14 on Ubuntu 24.04.
+
+### Fixed
+
+- Use the correct README filename in package metadata on case-sensitive filesystems.
+
 ## [1.8.0] - 2026-11-01
 
 ### Added
